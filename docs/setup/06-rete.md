@@ -30,12 +30,8 @@ ssh root@<LOCAL_IP>
 # Password: <DEVICE_PASSWORD>
 ```
 
-⚠️ **Nota importante**
-
-Questo accesso è considerato **temporaneo e non sicuro**:
-
-- viene usato solo per configurazione e verifica
-- in esercizio normale la rete della serra viene **spenta dal Raspberry**
+> [!WARNING]
+> L'accesso SSH alla serra via Wi-Fi serve solo per configurazione e verifica. Nel funzionamento normale il Raspberry spegne la rete della serra: prima di attivare il timer del passo 09, assicurati che la UART funzioni.
 
 ---
 
@@ -99,8 +95,9 @@ A questo punto:
 
 ## Continua il percorso
 
-**Prima di proseguire:** Conosci gli indirizzi della serra e del Raspberry e hai verificato il collegamento UART. Il broker MQTT sarà predisposto nel passo 08.
+> [!TIP]
+> **Verifica prima di proseguire:** Conosci gli indirizzi della serra e del Raspberry e hai verificato il collegamento UART. Il broker MQTT sarà predisposto nel passo 08.
 
-[Passo 07 · Installare e provare il controller CLI →](07-controller-cli.md)
-
-[← Passo 05 · Configurare la serra per l'uso locale](05-modifiche-serra.md) · [Indice completo](../index.md)
+| Passo precedente | Passo successivo |
+| :--- | ---: |
+| [← 05 · Configurare la serra per l'uso locale](05-modifiche-serra.md) | [07 · Installare e provare il controller CLI →](07-controller-cli.md) |

@@ -88,7 +88,8 @@ ExecStart=/usr/local/bin/serra state sync
 
 ### Timer
 
-Nota: viene usato OnBootSec + OnUnitActiveSec, così l’azione parte dopo ~ 2 minuti dal boot e poi ciclicamente viene ripetuta ogni 30 minuti.
+> [!NOTE]
+> Il timer usa `OnBootSec` e `OnUnitActiveSec`: la sincronizzazione parte circa 2 minuti dopo il boot e si ripete ogni 30 minuti.
 
 ```bash
 sudo nano /etc/systemd/system/serra-state-sync.timer
@@ -193,8 +194,9 @@ Sostituisci `<RASPBERRY_IP>` prima di eseguire i comandi. Il file `/etc/serra-mq
 
 ## Continua il percorso
 
-**Prima di proseguire:** I timer sono attivi e i relativi servizi risultano verificati.
+> [!TIP]
+> **Verifica prima di proseguire:** I timer sono attivi e i relativi servizi risultano verificati.
 
-[Passo 10 · Collegare Home Assistant →](10-home-assistant.md)
-
-[← Passo 08 · Configurare il bridge MQTT](08-bridge-mqtt.md) · [Indice completo](../index.md)
+| Passo precedente | Passo successivo |
+| :--- | ---: |
+| [← 08 · Configurare il bridge MQTT](08-bridge-mqtt.md) | [10 · Collegare Home Assistant →](10-home-assistant.md) |

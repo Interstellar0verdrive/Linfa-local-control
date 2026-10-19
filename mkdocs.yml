@@ -5,6 +5,10 @@ repo_url: https://github.com/Interstellar0verdrive/Linfa-local-control
 repo_name: Interstellar0verdrive/Linfa-local-control
 edit_uri: edit/main/docs/
 
+plugins:
+  - search
+  - gh-admonitions
+
 theme:
   name: material
   language: it
@@ -45,6 +49,7 @@ nav:
       - Accesso e dump del modulo: approfondimenti/accesso-e-dump.md
 
 markdown_extensions:
+  - admonition
   - attr_list
   - tables
   - toc:

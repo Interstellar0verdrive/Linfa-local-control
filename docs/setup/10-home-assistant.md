@@ -2,9 +2,8 @@
 
 **Percorso guidato:** [Indice dei capitoli](../index.md)
 
-Questo capitolo descrive come integrare la serra in Home Assistant **senza alcun accesso diretto alla serra**, usando esclusivamente MQTT.
-
-Home Assistant **non parla mai con la serra**, ma solo con il broker MQTT.
+> [!NOTE]
+> Home Assistant comunica con il broker MQTT, non direttamente con la serra. Il Raspberry traduce i comandi MQTT in comandi UART.
 
 ---
 
@@ -137,8 +136,9 @@ A questo punto il sistema è completo:
 
 ## Percorso completato
 
-**Prima di proseguire:** Home Assistant riceve gli stati MQTT e puoi inviare un comando di prova.
+> [!TIP]
+> **Verifica finale:** Home Assistant riceve gli stati MQTT e puoi inviare un comando di prova.
 
-[Torna al README del progetto](https://github.com/Interstellar0verdrive/Linfa-local-control)
-
-[← Passo 09 · Attivare i servizi automatici](09-servizi-automatici.md) · [Indice completo](../index.md)
+| Passo precedente | Passo successivo |
+| :--- | ---: |
+| [← 09 · Attivare i servizi automatici](09-servizi-automatici.md) | [Indice completo →](../index.md) |

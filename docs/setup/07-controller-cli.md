@@ -169,17 +169,16 @@ cat /home/pi/.serra_state.json | jq .
 # ...
 ```
 
-Nota:
-
-- questo file è la *source of truth* per gli stati pubblicati su MQTT
-- non è telemetria hardware diretta
+> [!NOTE]
+> Il file di stato è la fonte logica degli stati pubblicati su MQTT. Registra l'ultimo stato noto al controller; non è una misura hardware diretta.
 
 ---
 
 ## Continua il percorso
 
-**Prima di proseguire:** Il comando `serra state sync` funziona dal Raspberry tramite UART.
+> [!TIP]
+> **Verifica prima di proseguire:** Il comando `serra state sync` funziona dal Raspberry tramite UART.
 
-[Passo 08 · Configurare il bridge MQTT →](08-bridge-mqtt.md)
-
-[← Passo 06 · Verificare la rete](06-rete.md) · [Indice completo](../index.md)
+| Passo precedente | Passo successivo |
+| :--- | ---: |
+| [← 06 · Verificare la rete](06-rete.md) | [08 · Configurare il bridge MQTT →](08-bridge-mqtt.md) |

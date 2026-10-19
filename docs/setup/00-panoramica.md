@@ -104,8 +104,9 @@ Punti chiave:
 
 ## Continua il percorso
 
-**Prima di proseguire:** Hai compreso il ruolo di serra, Raspberry, UART, MQTT e Home Assistant.
+> [!TIP]
+> **Verifica prima di proseguire:** Hai compreso il ruolo di serra, Raspberry, UART, MQTT e Home Assistant.
 
-[Passo 01 · Hardware e collegamenti →](01-hardware.md)
-
-[Indice completo](../index.md)
+| Passo precedente | Passo successivo |
+| :--- | ---: |
+| [← Indice completo](../index.md) | [01 · Hardware e collegamenti →](01-hardware.md) |

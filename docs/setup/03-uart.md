@@ -57,7 +57,8 @@ Password: Se la serra non è stata ancora modificata: lasciare vuoto (premere so
 
 Se il login va a buon fine, ci si trova **dentro la serra**, senza passare da Wi-Fi o cloud.
 
-⚠️ Questo accesso è **diretto e privilegiato**: da qui è possibile fare danni se si modificano file di sistema.
+> [!CAUTION]
+> La console dà accesso root diretto alla serra. In questo passo usa solo i comandi di verifica e non modificare i file di sistema.
 
 ---
 
@@ -135,8 +136,9 @@ Nel passo 04 userai ancora la console per impostare la password root della serra
 
 ## Continua il percorso
 
-**Prima di proseguire:** La console risponde, puoi effettuare il login e il comando di prova funziona.
+> [!TIP]
+> **Verifica prima di proseguire:** La console risponde, puoi effettuare il login e il comando di prova funziona.
 
-[Passo 04 · Impostare la password root →](04-password-root.md)
-
-[← Passo 02 · Preparare il Raspberry Pi](02-raspberry.md) · [Indice completo](../index.md)
+| Passo precedente | Passo successivo |
+| :--- | ---: |
+| [← 02 · Preparare il Raspberry Pi](02-raspberry.md) | [04 · Impostare la password root →](04-password-root.md) |

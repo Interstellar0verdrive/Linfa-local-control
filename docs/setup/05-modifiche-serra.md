@@ -52,10 +52,11 @@ curl -i -X POST "http://<LOCAL_IP>/credentials" \
 
 Da questo momento in poi, la serra si connetterà alla rete di casa e verrà mappata a questo ip:
 
-> Nome Client: Linfa Weezy
-MAC Address: `<DEVICE_MAC>`
-IP Address (assegnato tramite MAC Address): `<LOCAL_IP>`
->
+Esempio di dati da verificare nel router:
+
+| Dispositivo | Indirizzo MAC | Indirizzo IP |
+| :--- | :--- | :--- |
+| Linfa Weezy | `<DEVICE_MAC>` | `<LOCAL_IP>` |
 
 Ci si può connettere alla serra così:
 
@@ -64,9 +65,8 @@ ssh root@<LOCAL_IP>
 # Usare la password: <DEVICE_PASSWORD>
 ```
 
-> Attenzione! Abbiamo così cambiato anche lo user-token, per evitare che la serra si connetta e sia riconosciuta dal cloud.
->
-> Perciò è stato impostato un token fittizio: “offline-token”.
+> [!WARNING]
+> La procedura cambia anche lo `user-token` della serra, sostituendolo con `offline-token`. Conserva il token originale in modo sicuro se vuoi poter ripristinare la configurazione precedente.
 
 Per ripristinare allo stato precedente, dovrebbe bastare rimuovere: `/opt/data/token` `/opt/data/SSID` `/opt/data/pwd`
 Questo dovrebbe funzionare:
@@ -118,10 +118,7 @@ hexdump -C /opt/data/token
 # 0000000d
 ```
 
-> NOTA
-Ci sono due nomi: `user-token` nella URL e `usr-token` nei CGI.
-È normale: **sono due cose diverse** (parametro UI vs chiave JSON “usr-token”). Ma **il valore** (la stringa UUID) è quello che conta per /opt/data/token.
->
+**Nota sui nomi:** `user-token` nella URL e `usr-token` nei CGI sono parametri diversi. Per `/opt/data/token` conta il valore del token, non il nome del parametro.
 
 Per ripristinare il token originale:
 
@@ -170,8 +167,9 @@ Per ripristinare allo stato originale: `chmod 755 /var/update`
 
 ## Continua il percorso
 
-**Prima di proseguire:** Hai verificato le modifiche che hai scelto di applicare alla serra.
+> [!TIP]
+> **Verifica prima di proseguire:** Hai verificato le modifiche che hai scelto di applicare alla serra.
 
-[Passo 06 · Verificare la rete →](06-rete.md)
-
-[← Passo 04 · Impostare la password root](04-password-root.md) · [Indice completo](../index.md)
+| Passo precedente | Passo successivo |
+| :--- | ---: |
+| [← 04 · Impostare la password root](04-password-root.md) | [06 · Verificare la rete →](06-rete.md) |

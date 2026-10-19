@@ -93,11 +93,8 @@ Collegamenti essenziali:
 | GND | GND |
 | VCC | **NON collegare** |
 
-Note critiche:
-
-- TX e RX **vanno incrociati**.
-- Collegare sempre **GND**, altrimenti la comunicazione è instabile o assente.
-- Usare solo livelli **3.3V TTL**: il VoCore **non è tollerante a 5V**.
+> [!CAUTION]
+> Usa solo livelli **3,3 V TTL**: il VoCore non tollera 5 V. **Non collegare VCC.** Collega GND e incrocia TX con RX.
 
 Baudrate console:
 
@@ -144,8 +141,9 @@ Note di compatibilità:
 
 ## Continua il percorso
 
-**Prima di proseguire:** Hai identificato TX, RX e GND e usi un adattatore TTL a 3,3 V senza collegare VCC.
+> [!TIP]
+> **Verifica prima di proseguire:** Hai identificato TX, RX e GND e usi un adattatore TTL a 3,3 V senza collegare VCC.
 
-[Passo 02 · Preparare il Raspberry Pi →](02-raspberry.md)
-
-[← Passo 00 · Panoramica e obiettivi](00-panoramica.md) · [Indice completo](../index.md)
+| Passo precedente | Passo successivo |
+| :--- | ---: |
+| [← 00 · Panoramica e obiettivi](00-panoramica.md) | [02 · Preparare il Raspberry Pi →](02-raspberry.md) |
