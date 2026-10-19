@@ -1,4 +1,6 @@
-# Hardware
+# 01 · Hardware e collegamenti
+
+**Percorso guidato:** [Indice dei capitoli](../index.md)
 
 ## Serra Linfa Weezy (VoCore2)
 
@@ -141,3 +143,11 @@ Note di compatibilità:
 - Il nome del device può cambiare tra reboot: lo script serra usa un path configurabile.
 
 ---
+
+## Continua il percorso
+
+**Prima di proseguire:** Hai identificato TX, RX e GND e usi un adattatore TTL a 3,3 V senza collegare VCC.
+
+[Passo 02 · Preparare il Raspberry Pi →](02-raspberry.md)
+
+[← Passo 00 · Panoramica e obiettivi](00-panoramica.md) · [Indice completo](../index.md)

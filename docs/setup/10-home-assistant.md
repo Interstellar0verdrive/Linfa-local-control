@@ -1,4 +1,6 @@
-# Home Assistant
+# 10 · Collegare Home Assistant
+
+**Percorso guidato:** [Indice dei capitoli](../index.md)
 
 Questo capitolo descrive come integrare la serra in Home Assistant **senza alcun accesso diretto alla serra**, usando esclusivamente MQTT.
 
@@ -6,43 +8,7 @@ Home Assistant **non parla mai con la serra**, ma solo con il broker MQTT.
 
 ---
 
-## Prerequisiti
-
-### Broker MQTT
-
-È necessario un broker MQTT raggiungibile sia da:
-
-- Raspberry
-- Home Assistant
-
-Soluzioni tipiche:
-
-- Mosquitto add-on su Home Assistant
-- Broker MQTT esterno (NAS, server Linux)
-
-Requisiti minimi:
-
-- porta 1883
-- autenticazione user/password
-- supporto messaggi retained
-
----
-
-### Credenziali MQTT
-
-Le stesse credenziali devono essere:
-
-- in `/etc/serra-mqtt.env` sul Raspberry
-- configurate in Home Assistant
-
-Esempio (usato nel setup):
-
-```bash
-host: <LOCAL_IP>
-port: 1883
-user: <MQTT_USER>
-password: <DEVICE_PASSWORD>
-```
+Il broker MQTT e le sue credenziali sono stati predisposti nel [passo 08](08-bridge-mqtt.md).
 
 ---
 
@@ -168,3 +134,11 @@ A questo punto il sistema è completo:
 - ✅ Setup replicabile da zero seguendo la guida
 
 ---
+
+## Percorso completato
+
+**Prima di proseguire:** Home Assistant riceve gli stati MQTT e puoi inviare un comando di prova.
+
+[Torna al README del progetto](https://github.com/Interstellar0verdrive/Linfa-local-control)
+
+[← Passo 09 · Attivare i servizi automatici](09-servizi-automatici.md) · [Indice completo](../index.md)

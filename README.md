@@ -16,7 +16,9 @@ Controllo locale sperimentale per serre **Robonica Linfa** tramite Raspberry Pi,
 
 ## Documentazione
 
-Inizia da [Panoramica e percorso di installazione](docs/index.md). I capitoli dettagliati sono in [`docs/setup/`](docs/setup/index.md). La documentazione è pensata per essere pubblicata anche con GitHub Pages e MkDocs Material, mantenendo gli stessi file Markdown nella repository.
+Segui la [guida passo per passo](docs/index.md): undici capitoli numerati, dal funzionamento del sistema al collegamento con Home Assistant. Ogni capitolo indica cosa verificare e rimanda al successivo. Le analisi facoltative sono raccolte negli approfondimenti.
+
+I file Markdown sono consultabili direttamente su GitHub. La configurazione MkDocs Material è pronta per una futura pubblicazione con GitHub Pages, con navigazione laterale e temi chiaro/scuro.
 
 ## Codice incluso
 

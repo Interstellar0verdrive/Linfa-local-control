@@ -1,4 +1,6 @@
-# Verifica collegamento UART
+# 03 · Verificare la console UART
+
+**Percorso guidato:** [Indice dei capitoli](../index.md)
 
 Prima di eseguire **qualsiasi comando di controllo**, script o policy, è fondamentale verificare che il collegamento UART tra Raspberry e serra funzioni correttamente.
 
@@ -127,6 +129,14 @@ Se la console non risponde:
 - ✅ Nessuna modifica persistente sulla serra
 - ✅ Pronti per il controllo esterno via Raspberry
 
-Da qui in poi **tutto il controllo avverrà dal Raspberry**, usando la UART come canale di comando, **senza più operare manualmente sulla console della serra**.
+Nel passo 04 userai ancora la console per impostare la password root della serra. Poi il controller sul Raspberry invierà i comandi via UART.
 
 ---
+
+## Continua il percorso
+
+**Prima di proseguire:** La console risponde, puoi effettuare il login e il comando di prova funziona.
+
+[Passo 04 · Impostare la password root →](04-password-root.md)
+
+[← Passo 02 · Preparare il Raspberry Pi](02-raspberry.md) · [Indice completo](../index.md)

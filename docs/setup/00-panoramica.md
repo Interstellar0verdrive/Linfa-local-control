@@ -1,4 +1,6 @@
-# Panoramica e obiettivi
+# 00 · Panoramica e obiettivi
+
+**Percorso guidato:** [Indice dei capitoli](../index.md)
 
 ## Cosa stiamo facendo e perché
 
@@ -99,3 +101,11 @@ Punti chiave:
 - I topic MQTT sono “retained” per consentire ad HA di vedere subito l’ultimo stato anche dopo riavvii o riconnessioni.
 
 ---
+
+## Continua il percorso
+
+**Prima di proseguire:** Hai compreso il ruolo di serra, Raspberry, UART, MQTT e Home Assistant.
+
+[Passo 01 · Hardware e collegamenti →](01-hardware.md)
+
+[Indice completo](../index.md)

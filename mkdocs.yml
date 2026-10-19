@@ -27,18 +27,22 @@ theme:
         name: Passa al tema chiaro
 
 nav:
-  - Introduzione: index.md
-  - Guida di preparazione:
-      - Percorso: setup/index.md
-      - Panoramica: setup/panoramica.md
-      - Hardware: setup/hardware.md
-      - Raspberry Pi: setup/raspberry.md
-      - Collegamento UART: setup/uart.md
-      - Preparazione della serra: setup/preparazione-serra.md
-      - Modifiche alla serra: setup/modifiche-serra.md
-      - Rete: setup/rete.md
-      - Controller e MQTT: setup/controller-mqtt.md
-      - Home Assistant: setup/home-assistant.md
+  - Inizia qui: index.md
+  - Percorso guidato:
+      - '00 · Panoramica e obiettivi': setup/00-panoramica.md
+      - '01 · Hardware e collegamenti': setup/01-hardware.md
+      - '02 · Preparare il Raspberry Pi': setup/02-raspberry.md
+      - '03 · Verificare la console UART': setup/03-uart.md
+      - '04 · Impostare la password root': setup/04-password-root.md
+      - "05 · Configurare la serra per l'uso locale": setup/05-modifiche-serra.md
+      - '06 · Verificare la rete': setup/06-rete.md
+      - '07 · Installare e provare il controller CLI': setup/07-controller-cli.md
+      - '08 · Configurare il bridge MQTT': setup/08-bridge-mqtt.md
+      - '09 · Attivare i servizi automatici': setup/09-servizi-automatici.md
+      - '10 · Collegare Home Assistant': setup/10-home-assistant.md
+  - Approfondimenti facoltativi:
+      - Analisi del traffico cloud: approfondimenti/traffico-cloud.md
+      - Accesso e dump del modulo: approfondimenti/accesso-e-dump.md
 
 markdown_extensions:
   - attr_list

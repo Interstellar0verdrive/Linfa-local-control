@@ -1,9 +1,11 @@
-# Preparazione del Raspberry
+# 02 · Preparare il Raspberry Pi
+
+**Percorso guidato:** [Indice dei capitoli](../index.md)
 
 Obiettivo di questa sezione: preparare un Raspberry Pi “vergine” (solo OS + rete) con tutto l’ambiente necessario per:
 
 - aprire la console UART della serra (debug con picocom)
-- eseguire script Python (controller + bridge, che verranno copiati nel capitolo 8)
+- eseguire script Python (controller e bridge, che verranno copiati nel passo 07)
 - parlare con MQTT (lato Python + strumenti CLI per test)
 - predisporre permessi e cartelle standard
 
@@ -164,14 +166,14 @@ mkdir -p /home/pi/serra/_bak
 
 Suggerimento pratico:
 
-- nel capitolo 8 copierai serra_controller.py e serra_mqtt_bridge.py in /home/pi/
-- oppure (più ordinato) dentro /home/pi/serra/ e poi farai symlink; scegliamo nel capitolo 8 e lo rendiamo “canonical”.
+- nel passo 07 copierai `serra_controller.py` e `serra_mqtt_bridge.py` in `/home/pi/`
+- useremo poi un symlink per rendere disponibile il comando `serra`.
 
 ---
 
 ## (Opzionale) Verifica raggiungibilità broker MQTT prima di configurare il bridge
 
-Se il broker MQTT esiste già (es. Home Assistant/Mosquitto su <LOCAL_IP>:1883), puoi fare un test “grezzo”:
+Se il broker MQTT esiste già (es. Home Assistant/Mosquitto su `<LOCAL_IP>`:1883), puoi fare un test “grezzo”:
 
 ```bash
 mosquitto_pub -h <LOCAL_IP> -p 1883 -u <MQTT_USER> -P 'PASSWORD' -t serra/test -m "hello"
@@ -195,3 +197,11 @@ Alla fine di questo capitolo, il Raspberry deve avere:
 - ✅ cartelle predisposte per i file del progetto
 
 ---
+
+## Continua il percorso
+
+**Prima di proseguire:** Python, picocom, i pacchetti richiesti e i permessi seriali sono pronti.
+
+[Passo 03 · Verificare la console UART →](03-uart.md)
+
+[← Passo 01 · Hardware e collegamenti](01-hardware.md) · [Indice completo](../index.md)

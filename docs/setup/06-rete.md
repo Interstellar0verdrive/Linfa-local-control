@@ -1,6 +1,8 @@
-# Stato di rete prima del controllo via Raspberry
+# 06 · Verificare la rete
 
-Questa sezione fotografa la situazione **una volta completata la configurazione di rete**, ma **prima** di collegare il Raspberry alla serra via UART e prima di applicare policy di isolamento.
+**Percorso guidato:** [Indice dei capitoli](../index.md)
+
+Questa sezione fotografa la situazione **una volta completata la configurazione di rete**, con il collegamento UART già verificato, ma prima di attivare il controllo automatico.
 
 Serve come riferimento rapido per:
 
@@ -16,10 +18,10 @@ Dopo la configurazione iniziale (via API locali), la serra può collegarsi alla 
 
 Caratteristiche:
 
-- **IP assegnato dal router** (assegnato dal router via MAC address): <LOCAL_IP>
-- MAC address: <DEVICE_MAC> (wifi)
+- **IP assegnato dal router** (assegnato dal router via MAC address): `<LOCAL_IP>`
+- MAC address: `<DEVICE_MAC>` (wifi)
 - **Utente SSH**: root
-- **Password root**: <DEVICE_PASSWORD> *(modificata manualmente)*
+- **Password root**: `<DEVICE_PASSWORD>` *(modificata manualmente)*
 
 Accesso SSH (quando la rete NON è ancora disabilitata):
 
@@ -77,9 +79,9 @@ La serra e il Raspberry condividono la stessa rete locale **solo in fase di setu
 
 Parametri (da trattare come segreti):
 
-- **SSID Wi-Fi**: <WIFI_SSID>
+- **SSID Wi-Fi**: `<WIFI_SSID>`
 - **Sicurezza**: WPA2-PSK
-- **Password Wi-Fi**: <WIFI_PASSWORD>
+- **Password Wi-Fi**: `<WIFI_PASSWORD>`
 
 ---
 
@@ -94,3 +96,11 @@ A questo punto:
 - ❌ Nessun controllo attivo da Home Assistant
 
 ---
+
+## Continua il percorso
+
+**Prima di proseguire:** Conosci gli indirizzi della serra e del Raspberry e hai verificato il collegamento UART. Il broker MQTT sarà predisposto nel passo 08.
+
+[Passo 07 · Installare e provare il controller CLI →](07-controller-cli.md)
+
+[← Passo 05 · Configurare la serra per l'uso locale](05-modifiche-serra.md) · [Indice completo](../index.md)

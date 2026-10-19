@@ -1,4 +1,6 @@
-# Modifiche alla serra
+# 05 · Configurare la serra per l'uso locale
+
+**Percorso guidato:** [Indice dei capitoli](../index.md)
 
 In origine la serra ha uno **user-token** e un **UUID** come questi:
 
@@ -51,8 +53,8 @@ curl -i -X POST "http://<LOCAL_IP>/credentials" \
 Da questo momento in poi, la serra si connetterà alla rete di casa e verrà mappata a questo ip:
 
 > Nome Client: Linfa Weezy
-MAC Address: <DEVICE_MAC>
-IP Address (assegnato tramite MAC Address): <LOCAL_IP>
+MAC Address: `<DEVICE_MAC>`
+IP Address (assegnato tramite MAC Address): `<LOCAL_IP>`
 >
 
 Ci si può connettere alla serra così:
@@ -165,3 +167,11 @@ ls -la /var/update
 Per ripristinare allo stato originale: `chmod 755 /var/update`
 
 ---
+
+## Continua il percorso
+
+**Prima di proseguire:** Hai verificato le modifiche che hai scelto di applicare alla serra.
+
+[Passo 06 · Verificare la rete →](06-rete.md)
+
+[← Passo 04 · Impostare la password root](04-password-root.md) · [Indice completo](../index.md)
