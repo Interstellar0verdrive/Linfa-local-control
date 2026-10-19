@@ -106,9 +106,7 @@ Baudrate console:
 
 ![Modulo VoCore e collegamenti seriali sulla scheda della serra](../assets/vocore-wiring.jpg)
 
-Verifica comunque i pin sulla tua scheda prima di collegare l'adattatore.
-
-Tenendo il VoCore a destra, da destra a sinistra i 3 pin sono: GND, Rx, Tx
+Verifica comunque i pin sulla tua scheda prima di collegare l'adattatore. Tenendo il VoCore a destra, da destra a sinistra i 3 pin sono: GND, Rx, Tx
 
 ![Adattatore USB TTL e pin seriali](../assets/uart-adapter.jpg)
 
