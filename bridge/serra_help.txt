@@ -1,0 +1,259 @@
+SERRA CONTROLLER — GUIDA RAPIDA CLI
+===================================
+
+SINTASSI GENERALE
+  serra <categoria> <azione> [opzioni]
+
+CATEGORIE DISPONIBILI
+  lights     # Controllo pannello LED (full spectrum / canali colore)
+  fans       # Controllo ventole (Fan1, Fan2, Fan frontale)
+  pump       # Pompe (main ricircolo + nutrienti 0/1/2)
+  ring       # LED ring di stato (RGB)
+  checkup    # Routine test componenti (smoke test)
+  net        # Abilita/Disabilita rete della serra (Wi-Fi + DHCP + NTP)
+  state      # Gestione stato e sincronizzazione MQTT
+
+INFORMAZIONI IMPORTANTI
+  • Luci e ring: il parametro "fade" è in secondi approssimati
+    (internamente convertito in valore HEX)
+  • Ventole: sotto ~40% possono bloccarsi; per "low/medium" lo script
+    esegue un WAKE breve al 100% prima di scendere
+  • Nutrienti: il comando P#,X,Y usa solo il terzo valore (100 ≈ 1s, 500 ≈ 5s)
+  • Pump main: W<N> = N secondi (intero), W0 = stop immediato
+
+============================================================
+LUCI (lights)
+============================================================
+
+COMANDI RAPIDI
+  serra lights on        # Accende TUTTI i LED (canale A), 100%, fade 0
+  serra lights off       # Spegne TUTTI i LED (canale A), fade 0
+
+CANALI DISPONIBILI
+  A    # Tutti i LED (full spectrum)
+  G    # Solo verdi
+  B    # Blu + bianchi
+  R    # Prima metà rossi
+  D    # Seconda metà rossi
+
+ESEMPI
+  serra lights on --intensity 80 --fade 15   # Full spectrum 80%, fade ~15s
+  serra lights off --fade 120                # Spegne tutto con fade ~120s
+  serra lights set G -i 100 -f 10            # Verdi 100% con fade ~10s
+  serra lights set G -i 0                    # Spegne verdi (fade 0)
+
+OPZIONI
+  -i, --intensity   # Intensità 0..100 (default: 100)
+  -f, --fade        # Durata fade in secondi (default: 0)
+
+============================================================
+VENTOLE (fans)
+============================================================
+
+COMANDI RAPIDI
+  serra fans on       # Accende tutte le ventole a "medium"
+  serra fans off      # Spegne tutte le ventole
+
+VENTOLE DISPONIBILI
+  1      # Fan 1
+  2      # Fan 2
+  F      # Fan frontale
+  all    # Tutte le ventole
+
+LIVELLI DI INTENSITÀ
+  off       # 0%
+  low       # ~50%  (attenzione: sotto ~40% può bloccarsi)
+  medium    # ~75%
+  high      # 100%
+
+ESEMPI
+  serra fans set 1 -i high      # Fan 1 al 100%
+  serra fans set F -i low       # Fan frontale a ~50% (con wake automatico)
+  serra fans set all -i medium  # Tutte a ~75%
+  serra fans on --intensity low # Tutte a low (wake → low)
+
+OPZIONI
+  -i, --intensity   # Livello: off|low|medium|high (default: medium)
+
+NOTA: Per far partire ventole ferme a low/medium, lo script esegue
+automaticamente un WAKE breve al 100% prima di impostare il livello richiesto.
+
+============================================================
+POMPA PRINCIPALE (pump main)
+============================================================
+
+COMANDI
+  serra pump main on              # ON per 1 secondo (default)
+  serra pump main on --seconds 3  # ON per 3 secondi
+  serra pump main on -s 10        # ON per 10 secondi
+  serra pump main off             # STOP immediato
+
+OPZIONI
+  -s, --seconds   # Durata in secondi, intero (default: 1, max: 300)
+
+ATTENZIONE: 30+ secondi è una durata elevata; usare con cautela.
+
+============================================================
+POMPE NUTRIENTI (pump nutrient)
+============================================================
+
+MAPPATURA GOCCIOLATORI
+  nutrient 0   # Gocciolatore a destra (vasetto verde)    → P0
+  nutrient 1   # Gocciolatore al centro (vasetto azzurro) → P1
+  nutrient 2   # Gocciolatore a sinistra (vasetto rosso)  → P2
+
+ESEMPI
+  serra pump nutrient 0                              # 1s, 1 volta
+  serra pump nutrient 0 -s 0.5 -t 1 -i 2             # 0.5s, 1 volta, pausa 2s
+  serra pump nutrient 1 -s 1 -t 3 -i 1               # 1s, 3 volte, pausa 1s
+  serra pump nutrient 2 --seconds 5 --times 2        # 5s, 2 volte
+
+OPZIONI
+  -s, --seconds    # Durata erogazione in secondi (default: 1.0, max: 30)
+  -t, --times      # Numero ripetizioni (default: 1, max: 100)
+  -i, --interval   # Pausa tra ripetizioni in secondi (default: 1.0, max: 120)
+
+NOTE:
+  • La erogazione dipende da tenuta vasetti e livello liquido
+  • Con ripetizioni multiple, il comando resta attivo fino al termine
+  • Interrompibile con Ctrl+C
+
+============================================================
+LED RING (ring)
+============================================================
+
+COMANDI BASE
+  serra ring on                 # Accende bianco, fade 0
+  serra ring on -c green -f 5   # Accende verde con fade ~5s
+  serra ring off                # Spegne, fade 0
+  serra ring off --fade 10      # Spegne con fade ~10s
+
+MODALITÀ BLINK
+  serra ring blink                           # 5 lampeggi bianchi (default)
+  serra ring blink -c red -t 3               # 3 lampeggi rossi
+  serra ring blink -c F90023 -t 3 -f 2 -d 3  # 3 lampeggi, colore HEX, fade 2s, ON 3s
+
+COLORI DISPONIBILI
+  white, red, green, yellow, orange, blue, purple, off
+  Oppure codice HEX a 6 cifre (es: F90023, 00FF00)
+
+OPZIONI
+  -c, --color      # Colore nome o HEX (default: white)
+  -f, --fade       # Durata fade in secondi (default: 0)
+  -t, --times      # Numero lampeggi (default: 5, max: 100)
+  -d, --duration   # Durata ON per lampeggio (default: 1s, max: 60s)
+  -i, --interval   # Pausa OFF tra lampeggi (default: 1s, max: 10s)
+
+NOTE:
+  • Il blink resta attivo fino al termine dei cicli (Ctrl+C per interrompere)
+  • Valori fade decimali vengono arrotondati (0.5 → 0, nessun fade)
+
+============================================================
+CHECKUP
+============================================================
+
+Esegue una sequenza di test per verificare il funzionamento dei componenti.
+
+⚠️  ATTENZIONE: La routine è INTRUSIVA!
+    Sovrascrive tutti i valori attuali e termina con tutto SPENTO.
+
+ESEMPI
+  serra checkup                            # Checkup completo
+  serra checkup --fans off --pump-main off # Esclude ventole e pompa main
+  serra checkup -l off -lr off -f off      # Testa solo le pompe
+
+OPZIONI
+  -l,  --lights          # on|off (default: on)
+  -f,  --fans            # on|off (default: on)
+  -lr, --led-ring        # on|off (default: on)
+  -pm, --pump-main       # on|off (default: on)
+  -pn, --pump-nutrients  # on|off (default: on)
+
+SEQUENZA CHECKUP (default)
+  1. Luci: canali singoli G/B/R/D (2s ciascuno) → OFF
+  2. Luci: full spectrum (5s) → OFF
+  3. Ventole: Fan1, Fan2, FanF al 100% (5s ciascuna) → OFF
+  4. Ring: rosso, 3 blink → OFF
+  5. Nutrienti: pompe 0, 1, 2 (~1s ciascuna) → OFF
+  6. Pompa main: 3s → OFF
+  7. State sync finale
+
+============================================================
+RETE (net)
+============================================================
+
+⚠️  ATTENZIONE: I comandi agiscono sulla serra (VoCore), NON sul Raspberry.
+    Obiettivo: disabilitare cloud / ridurre instabilità Wi-Fi.
+
+COMANDI
+  serra net off              # Disabilita rete completamente
+  serra net off --ntp on     # Rete giù ma NTP attivo (sconsigliato)
+  serra net on               # Riattiva rete (fino al prossimo riavvio)
+
+OPZIONI
+  on|off         # Azione principale
+  -n, --ntp      # on|off (default: segue l'azione principale)
+
+COS'È NTP?
+  NTP sincronizza l'orario via internet (pool.ntp.org).
+  Se la rete è disabilitata, NTP fallisce e può generare spam in console.
+  Per questo viene spento automaticamente con "net off".
+
+============================================================
+STATE / SYNC (MQTT)
+============================================================
+
+COMANDO
+  serra state sync   # Ricalcola stati time-based e ripubblica su MQTT
+
+FUNZIONALITÀ
+  • Aggiorna running_now per pompe e fade in base al tempo corrente
+  • Ripubblica tutti gli stati su /serra/state/*
+  • Aggiorna last_seen
+
+NOTE:
+  • Non legge telemetria reale dalla serra (es. ventole attive)
+  • Pubblica lo "stato atteso" basato sui comandi inviati
+  • Per aggiornamenti automatici, configurare un systemd timer
+    che esegua 'serra state sync' periodicamente
+
+============================================================
+VARIABILI DI AMBIENTE
+============================================================
+
+  SERRA_UART_PORT       # Porta UART (default: /dev/ttyUSB0)
+  SERRA_UART_BAUD       # Baudrate (default: 115200)
+  SERRA_ROOT_USER       # Utente console (default: root)
+  SERRA_ROOT_PASSWORD   # Password console (obbligatoria; nessun valore predefinito)
+  SERRA_STATE_FILE      # File stato JSON (default: ~/.serra_state.json)
+  SERRA_MQTT_HOST       # Host MQTT (vuoto = MQTT disabilitato)
+  SERRA_MQTT_PORT       # Porta MQTT (default: 1883)
+  SERRA_MQTT_USER       # Utente MQTT
+  SERRA_MQTT_PASS       # Password MQTT
+  SERRA_MQTT_TOPIC      # Topic base MQTT (default: serra)
+  SERRA_CLI             # Nome CLI per logging (default: serra)
+
+============================================================
+RIFERIMENTO RAPIDO
+============================================================
+
+LUCI
+  serra lights on/off [-i 0..100] [-f secondi]
+  serra lights set <A|G|B|R|D> [-i 0..100] [-f secondi]
+
+VENTOLE
+  serra fans on/off [-i off|low|medium|high]
+  serra fans set <1|2|F|all> [-i off|low|medium|high]
+
+POMPE
+  serra pump main on/off [-s secondi]
+  serra pump nutrient <0|1|2> [-s secondi] [-t ripetizioni] [-i intervallo]
+
+RING
+  serra ring on/off [-c colore] [-f fade]
+  serra ring blink [-c colore] [-t volte] [-f fade] [-d durata] [-i intervallo]
+
+ALTRO
+  serra checkup [-l on|off] [-f on|off] [-lr on|off] [-pm on|off] [-pn on|off]
+  serra net on/off [-n on|off]
+  serra state sync
