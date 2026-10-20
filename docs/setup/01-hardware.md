@@ -1,147 +1,102 @@
 # 01 · Hardware e collegamenti
 
-**Percorso guidato:** [Indice dei capitoli](../index.md)
+## La serra Linfa Weezy
 
-## Serra Linfa Weezy (VoCore2)
+La serra è basata su un **VoCore2**, un piccolo modulo con CPU MIPS e Linux personalizzato (kernel 3.18 e BusyBox). Gestisce direttamente il pannello LED, le ventole, la pompa principale, le tre pompe dei nutrienti, l’anello LED RGB e la rete Wi-Fi integrata.
 
-La serra Linfa Weezy è basata su un **VoCore2**, un piccolo modulo embedded con:
+<div class="info-grid" markdown="1">
+<div class="info-card" markdown="1">
+<span class="card-icon" aria-hidden="true">⌘</span>
+**Console seriale**
 
-- CPU MIPS
-- Linux custom (kernel 3.18 + BusyBox)
-- gestione diretta di:
-    - pannello LED
-    - ventole
-    - pompe (principale + 3 nutrienti)
-    - LED ring RGB
-    - rete Wi-Fi integrata
+Il modulo espone una console root via UART, usata per comunicare con il Raspberry.
+</div>
+<div class="info-card" markdown="1">
+<span class="card-icon" aria-hidden="true">◇</span>
+**Firmware invariato**
 
-Caratteristiche rilevanti per questo progetto:
+Il progetto non modifica il firmware: i comandi sono eseguiti durante il funzionamento.
+</div>
+</div>
 
-- Espone una **console root via UART** (login diretto senza restrizioni).
-- Il firmware non viene modificato: tutte le azioni avvengono tramite comandi runtime.
-- In assenza del Raspberry esterno, la serra torna al comportamento originale (cloud incluso) ripristinando i permessi sulla cartella var/update e il token.
+> [!NOTE] Comportamento originale
+> Il funzionamento originale, cloud incluso, può essere ripristinato **ripristinando il token e i permessi di `/var/update`**. Quando il controllo locale è in uso, il Raspberry disabilita attivamente la Wi-Fi della serra: è una policy esterna, non una modifica permanente alla configurazione stock del VoCore.
 
-Nota importante:
+Per i dettagli sul modulo: [specifiche VoCore2](https://vocore.io/v2.html).
 
-- La Wi-Fi della serra **viene disabilitata attivamente dal Raspberry** per motivi di sicurezza.
-- Questo non modifica la configurazione stock del VoCore: è una policy applicata dall’esterno.
+## Il Raspberry Pi
 
-Maggiori dettagli sul modulo VoCore:
-[https://vocore.io/v2.html](https://vocore.io/v2.html)
+Il Raspberry Pi è il **controller esterno** e il punto di integrazione con MQTT e Home Assistant. Può collegarsi alla rete domestica tramite Ethernet o Wi-Fi.
 
----
+<div class="spec-card" markdown="1">
+<div markdown="1"><span>MODELLO USATO</span>**Raspberry Pi 3B**<small>Altri modelli con USB standard, come 3B+, 4 o Zero 2 W, sono utilizzabili.</small></div>
+<div markdown="1"><span>MEMORIA</span>**microSD ≥ 16 GB**<small>Capacità consigliata per il sistema operativo.</small></div>
+<div markdown="1"><span>SISTEMA</span>**Raspberry Pi OS**<small>Versione Lite consigliata.</small></div>
+</div>
 
-## Raspberry Pi (controller)
+### Il suo ruolo nel sistema
 
-Il Raspberry Pi funge da **controller esterno** e da punto di integrazione con MQTT / Home Assistant.
+- Comunica con la serra via USB → UART.
+- Esegue la CLI `serra` e il bridge MQTT.
+- Applica le policy, come la disabilitazione della Wi-Fi della serra all’avvio.
+- Pubblica stati e comandi su MQTT.
 
-Configurazione utilizzata:
+## L’adattatore USB → TTL
 
-- Modello: **Raspberry Pi 3B**
+Per accedere alla console UART del VoCore serve un adattatore seriale **a livelli logici di 3,3 V**. Sono comunemente usati FTDI FT232RL / FT232-AZ, Silicon Labs CP2102 / CP2104 e CH340 / CH341.
 
-    (qualsiasi modello con USB standard va bene: 3B, 3B+, 4, Zero 2 W)
+<div class="requirement-strip"><span class="requirement-label">REQUISITI ESSENZIALI</span><span>3,3 V TTL</span><span>TX</span><span>RX</span><span>GND</span><span class="struck">VCC non collegato</span></div>
 
-- Storage: microSD (≥ 16 GB consigliati)
-- Sistema operativo: Raspberry Pi OS (Lite consigliato)
+> [!CAUTION] Non alimentare il VoCore dall’adattatore
+> L’adattatore serve soltanto per la comunicazione seriale. **Non collegare VCC** e non usare livelli logici a 5 V: il VoCore non li tollera.
 
-Responsabilità del Raspberry:
+## Cablaggio UART
 
-- Connessione fisica alla serra tramite USB → UART
-- Esecuzione della CLI serra
-- Esecuzione del bridge MQTT
-- Applicazione delle policy (es. disabilitazione rete serra al boot)
-- Pubblicazione stati e comandi su MQTT
+Collega la massa in comune e **incrocia TX con RX**. Verifica sempre i pin sulla tua scheda prima di collegare l’adattatore.
 
-Il Raspberry può essere connesso via Ethernet **oppure** via Wi-Fi alla rete domestica
+<div class="wiring-card" aria-label="Collegamenti tra adattatore USB TTL e serra">
+  <div class="wiring-head"><span>ADATTATORE USB → TTL</span><span>SERRA · VOCORE2</span></div>
+  <div class="wiring-row"><span><b>TX</b></span><span class="wire-line" aria-hidden="true">↗</span><span><b>RX</b></span></div>
+  <div class="wiring-row"><span><b>RX</b></span><span class="wire-line" aria-hidden="true">↘</span><span><b>TX</b></span></div>
+  <div class="wiring-row"><span><b>GND</b></span><span class="wire-line" aria-hidden="true">⟶</span><span><b>GND</b></span></div>
+  <div class="wiring-row is-disconnected"><span><b>VCC</b></span><span class="wire-line" aria-hidden="true">×</span><span><b>NON COLLEGARE</b></span></div>
+</div>
 
----
+<div class="serial-settings"><span><small>VELOCITÀ</small><strong>115200 baud</strong></span><span><small>FORMATO</small><strong>8N1</strong></span><span><small>LIVELLI LOGICI</small><strong>3,3 V TTL</strong></span></div>
 
-## Adattatore USB → TTL 3.3V (FT232, CP2102, CH340)
+<div class="photo-grid" markdown="1">
+<figure markdown="1">
 
-Per collegarsi alla console UART del VoCore è necessario un **adattatore USB → TTL a 3.3V**.
+![Modulo VoCore montato sulla scheda della serra, con i tre fili della connessione seriale](../assets/vocore-wiring.jpg)
 
-Chip compatibili e testati comunemente:
+<figcaption><span>01</span><strong>Pin seriali sulla serra</strong><small>Con il VoCore a destra, i pin da destra a sinistra sono GND, RX e TX. Verificali sulla tua scheda.</small></figcaption>
+</figure>
+<figure markdown="1">
 
-- **FTDI FT232RL / FT232-AZ**
-- **Silicon Labs CP2102 / CP2104**
-- **CH340 / CH341**
+![Adattatore USB TTL con i fili collegati ai pin seriali](../assets/uart-adapter.jpg)
 
-Requisiti fondamentali:
+<figcaption><span>02</span><strong>Adattatore USB → TTL</strong><small>GND va a GND; TX e RX vanno incrociati rispetto al VoCore.</small></figcaption>
+</figure>
+</div>
 
-- **Livelli logici 3.3V** (NON 5V)
-- Esporre almeno:
-    - TX
-    - RX
-    - GND
-- Non è necessario collegare VCC
+## Verifica la porta seriale
 
-Nota:
+Una volta collegato l’adattatore al Raspberry, il dispositivo compare di solito come `/dev/ttyUSB0`, `/dev/ttyUSB1` o, con alcuni adattatori, `/dev/ttyACM0`.
 
-- Il VoCore **non deve essere alimentato** dall’adattatore TTL.
-- L’adattatore serve solo per la comunicazione seriale.
-
----
-
-## Cablaggio (TX / RX / GND, note 3.3V)
-
-Collegamenti essenziali:
-
-| **Adattatore USB→TTL** | **Serra (VoCore)** |
-| --- | --- |
-| TX | RX |
-| RX | TX |
-| GND | GND |
-| VCC | **NON collegare** |
-
-> [!CAUTION]
-> Usa solo livelli **3,3 V TTL**: il VoCore non tollera 5 V. **Non collegare VCC.** Collega GND e incrocia TX con RX.
-
-Baudrate console:
-
-- **115200 baud**
-- 8N1 (default)
-
-![Modulo VoCore e collegamenti seriali sulla scheda della serra](../assets/vocore-wiring.jpg)
-
-Verifica comunque i pin sulla tua scheda prima di collegare l'adattatore. Tenendo il VoCore a destra, da destra a sinistra i 3 pin sono: GND, Rx, Tx
-
-![Adattatore USB TTL e pin seriali](../assets/uart-adapter.jpg)
-
-Nell’adattatore vanno collegati come al solito, GND con GND e Tx e Rx invertiti rispetto al VoCore
-
----
-
-## Note su /dev/ttyUSB* e compatibilità
-
-Quando l’adattatore USB→TTL viene collegato al Raspberry:
-
-- viene esposto come:
-    - /dev/ttyUSB0, /dev/ttyUSB1, …
-
-        **oppure**
-
-    - /dev/ttyACM0 (alcuni CP210x)
-
-Verifica rapida (dal Raspberry):
+Verifica dal Raspberry:
 
 ```bash
 ls -l /dev/ttyUSB* /dev/ttyACM*
-# Deve restituire qualcosa tipo:
-# ls: cannot access '/dev/ttyACM*': No such file or directory
-# crw-rw---- 1 root dialout 188, 0 Jan 24 16:17  /dev/ttyUSB0
 ```
 
-Note di compatibilità:
+È normale che uno dei due pattern non trovi alcun dispositivo: l’altro deve mostrare una porta seriale, ad esempio `/dev/ttyUSB0`. Il nome può cambiare tra riavvii; lo script `serra` usa un percorso configurabile.
 
-- FTDI e CP210x sono generalmente più stabili su Linux.
-- CH340 funziona correttamente ma può richiedere driver sui sistemi non Linux.
-- Il nome del device può cambiare tra reboot: lo script serra usa un path configurabile.
-
----
+> [!TIP] Note di compatibilità
+> FTDI e CP210x sono generalmente più stabili su Linux. CH340 funziona correttamente, ma può richiedere driver sui sistemi non Linux.
 
 ## Continua il percorso
 
-> [!TIP]
+> [!TIP] Controllo
 > **Verifica prima di proseguire:** Hai identificato TX, RX e GND e usi un adattatore TTL a 3,3 V senza collegare VCC.
 
 <table width="100%" class="step-nav">

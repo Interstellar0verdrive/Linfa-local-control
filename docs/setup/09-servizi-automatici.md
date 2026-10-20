@@ -88,7 +88,7 @@ ExecStart=/usr/local/bin/serra state sync
 
 ### Timer
 
-> [!NOTE]
+> [!NOTE] Nota
 > Il timer usa `OnBootSec` e `OnUnitActiveSec`: la sincronizzazione parte circa 2 minuti dopo il boot e si ripete ogni 30 minuti.
 
 ```bash
@@ -194,7 +194,7 @@ Sostituisci `<RASPBERRY_IP>` prima di eseguire i comandi. Il file `/etc/serra-mq
 
 ## Continua il percorso
 
-> [!TIP]
+> [!TIP] Controllo
 > **Verifica prima di proseguire:** I timer sono attivi e i relativi servizi risultano verificati.
 
 <table width="100%" class="step-nav">

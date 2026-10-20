@@ -169,14 +169,14 @@ cat /home/pi/.serra_state.json | jq .
 # ...
 ```
 
-> [!NOTE]
+> [!NOTE] Nota
 > Il file di stato è la fonte logica degli stati pubblicati su MQTT. Registra l'ultimo stato noto al controller; non è una misura hardware diretta.
 
 ---
 
 ## Continua il percorso
 
-> [!TIP]
+> [!TIP] Controllo
 > **Verifica prima di proseguire:** Il comando `serra state sync` funziona dal Raspberry tramite UART.
 
 <table width="100%" class="step-nav">

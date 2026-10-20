@@ -57,7 +57,7 @@ Password: Se la serra non è stata ancora modificata: lasciare vuoto (premere so
 
 Se il login va a buon fine, ci si trova **dentro la serra**, senza passare da Wi-Fi o cloud.
 
-> [!CAUTION]
+> [!CAUTION] Attenzione
 > La console dà accesso root diretto alla serra. In questo passo usa solo i comandi di verifica e non modificare i file di sistema.
 
 ---
@@ -136,7 +136,7 @@ Nel passo 04 userai ancora la console per impostare la password root della serra
 
 ## Continua il percorso
 
-> [!TIP]
+> [!TIP] Controllo
 > **Verifica prima di proseguire:** La console risponde, puoi effettuare il login e il comando di prova funziona.
 
 <table width="100%" class="step-nav">

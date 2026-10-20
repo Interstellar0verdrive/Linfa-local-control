@@ -2,7 +2,7 @@
 
 **Percorso guidato:** [Indice dei capitoli](../index.md)
 
-> [!IMPORTANT]
+> [!IMPORTANT] Da sapere prima di iniziare
 > Il controller richiede una password root sulla serra, da usare tramite `SERRA_ROOT_PASSWORD`. Questa è distinta dalla password del Raspberry: conservala localmente e non caricarla nella repository.
 
 Hai già verificato l'accesso alla console nel [passo 03](03-uart.md).
@@ -40,7 +40,7 @@ Chiudi la sessione della serra e ripeti il login dalla console UART per verifica
 
 ## Continua il percorso
 
-> [!TIP]
+> [!TIP] Controllo
 > **Verifica prima di proseguire:** Hai impostato e verificato la password root della serra.
 
 <table width="100%" class="step-nav">

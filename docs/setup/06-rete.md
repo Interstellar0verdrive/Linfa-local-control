@@ -30,7 +30,7 @@ ssh root@<LOCAL_IP>
 # Password: <DEVICE_PASSWORD>
 ```
 
-> [!WARNING]
+> [!WARNING] Attenzione
 > L'accesso SSH alla serra via Wi-Fi serve solo per configurazione e verifica. Nel funzionamento normale il Raspberry spegne la rete della serra: prima di attivare il timer del passo 09, assicurati che la UART funzioni.
 
 ---
@@ -95,7 +95,7 @@ A questo punto:
 
 ## Continua il percorso
 
-> [!TIP]
+> [!TIP] Controllo
 > **Verifica prima di proseguire:** Conosci gli indirizzi della serra e del Raspberry e hai verificato il collegamento UART. Il broker MQTT sarà predisposto nel passo 08.
 
 <table width="100%" class="step-nav">

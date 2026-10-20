@@ -9,7 +9,7 @@ Obiettivo di questa sezione: preparare un Raspberry Pi “vergine” (solo OS + 
 - parlare con MQTT (lato Python + strumenti CLI per test)
 - predisporre permessi e cartelle standard
 
-> [!IMPORTANT]
+> [!IMPORTANT] Da sapere prima di iniziare
 > Prima di iniziare: Raspberry con Debian/Raspberry Pi OS aggiornabile via APT, connesso alla rete domestica, adattatore USB→TTL a 3,3 V collegato e un utente con `sudo` (negli esempi: `pi`). La password del Raspberry è distinta dalla password root della serra.
 
 ---
@@ -196,7 +196,7 @@ Alla fine di questo capitolo, il Raspberry deve avere:
 
 ## Continua il percorso
 
-> [!TIP]
+> [!TIP] Controllo
 > **Verifica prima di proseguire:** Python, picocom, i pacchetti richiesti e i permessi seriali sono pronti.
 
 <table width="100%" class="step-nav">

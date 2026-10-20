@@ -65,7 +65,7 @@ ssh root@<LOCAL_IP>
 # Usare la password: <DEVICE_PASSWORD>
 ```
 
-> [!WARNING]
+> [!WARNING] Attenzione
 > La procedura cambia anche lo `user-token` della serra, sostituendolo con `offline-token`. Conserva il token originale in modo sicuro se vuoi poter ripristinare la configurazione precedente.
 
 Per ripristinare allo stato precedente, dovrebbe bastare rimuovere: `/opt/data/token` `/opt/data/SSID` `/opt/data/pwd`
@@ -167,7 +167,7 @@ Per ripristinare allo stato originale: `chmod 755 /var/update`
 
 ## Continua il percorso
 
-> [!TIP]
+> [!TIP] Controllo
 > **Verifica prima di proseguire:** Hai verificato le modifiche che hai scelto di applicare alla serra.
 
 <table width="100%" class="step-nav">

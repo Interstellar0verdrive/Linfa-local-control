@@ -46,7 +46,7 @@ password: <MQTT_PASSWORD>
 
 ## Creazione file /etc/serra-mqtt.env
 
-> [!CAUTION]
+> [!CAUTION] Attenzione
 > `/etc/serra-mqtt.env` contiene le credenziali MQTT e la password root della serra. Conservalo solo sul Raspberry e non caricarlo nella repository o nelle issue.
 
 Puoi partire dal [modello senza credenziali](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/serra-mqtt.env.example).
@@ -186,7 +186,7 @@ Per uscire: `CTRL + C`
 
 ## Continua il percorso
 
-> [!TIP]
+> [!TIP] Controllo
 > **Verifica prima di proseguire:** Il servizio bridge è attivo e i topic di stato e comando rispondono.
 
 <table width="100%" class="step-nav">

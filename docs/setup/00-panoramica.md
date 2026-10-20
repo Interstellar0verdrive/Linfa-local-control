@@ -104,7 +104,7 @@ Punti chiave:
 
 ## Continua il percorso
 
-> [!TIP]
+> [!TIP] Controllo
 > **Verifica prima di proseguire:** Hai compreso il ruolo di serra, Raspberry, UART, MQTT e Home Assistant.
 
 <table width="100%" class="step-nav">

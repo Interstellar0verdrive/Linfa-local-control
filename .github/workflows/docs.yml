@@ -2,6 +2,15 @@ name: Publish documentation
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'theme/**'
+      - 'mkdocs.yml'
+      - 'mkdocs_hooks.py'
+      - 'docs-requirements.txt'
+      - '.github/workflows/docs.yml'
 
 permissions:
   contents: read

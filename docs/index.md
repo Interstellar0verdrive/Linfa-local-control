@@ -1,26 +1,36 @@
-# Guida passo per passo
+Questa guida accompagna la preparazione di una serra Robonica Linfa per il controllo locale con Raspberry Pi, UART, MQTT e Home Assistant. Segui i capitoli nell'ordine: ogni passo termina con una verifica e il collegamento al successivo.
 
-Segui i capitoli nell'ordine indicato. Alla fine di ogni pagina trovi un controllo del risultato e il collegamento diretto al passo successivo. Puoi leggere gli stessi file qui su GitHub oppure nel sito di documentazione quando sarà pubblicato.
+> [!IMPORTANT] Compatibilità e responsabilità
+> La procedura è stata provata su **Linfa Weezy**. La compatibilità con la Linfa standard è da verificare. Il progetto è indipendente da Robonica S.r.l.; [leggi il disclaimer completo](https://github.com/Interstellar0verdrive/Linfa-local-control#linfa-local-control) prima di aprire il dispositivo.
 
-La procedura è stata provata su **Linfa Weezy**. La compatibilità con la Linfa standard resta da verificare. Il progetto è indipendente da Robonica S.r.l.; [leggi il disclaimer nel README](https://github.com/Interstellar0verdrive/Linfa-local-control#linfa-local-control) prima di aprire il dispositivo.
+## Il percorso, dall'inizio alla fine
 
-## Percorso completo
+<div class="chapter-grid" markdown="1">
 
-| Passo | Cosa fai | Quando puoi proseguire |
-| :--- | :--- | :--- |
-| 00 | [Panoramica e obiettivi](setup/00-panoramica.md) | Hai compreso il ruolo di serra, Raspberry, UART, MQTT e Home Assistant. |
-| 01 | [Hardware e collegamenti](setup/01-hardware.md) | Hai identificato TX, RX e GND e usi un adattatore TTL a 3,3 V senza collegare VCC. |
-| 02 | [Preparare il Raspberry Pi](setup/02-raspberry.md) | Python, picocom, i pacchetti richiesti e i permessi seriali sono pronti. |
-| 03 | [Verificare la console UART](setup/03-uart.md) | La console risponde, puoi effettuare il login e il comando di prova funziona. |
-| 04 | [Impostare la password root](setup/04-password-root.md) | Hai impostato una password root sulla serra e la conserverai per la configurazione locale. |
-| 05 | [Configurare la serra per l'uso locale](setup/05-modifiche-serra.md) | Hai verificato le modifiche che hai scelto di applicare alla serra. |
-| 06 | [Verificare la rete](setup/06-rete.md) | Conosci gli indirizzi della serra e del Raspberry; il broker sarà predisposto nel passo 08. |
-| 07 | [Installare e provare il controller CLI](setup/07-controller-cli.md) | Il comando `serra state sync` funziona dal Raspberry tramite UART. |
-| 08 | [Configurare il bridge MQTT](setup/08-bridge-mqtt.md) | Il servizio bridge è attivo e i topic di stato e comando rispondono. |
-| 09 | [Attivare i servizi automatici](setup/09-servizi-automatici.md) | I timer sono attivi e i relativi servizi risultano verificati. |
-| 10 | [Collegare Home Assistant](setup/10-home-assistant.md) | Home Assistant riceve gli stati MQTT e puoi inviare un comando di prova. |
+- **00** [Panoramica e obiettivi](setup/00-panoramica.md)
+  Scopri i componenti, il loro ruolo e i limiti del sistema.
+- **01** [Hardware e collegamenti](setup/01-hardware.md)
+  Identifica il VoCore, prepara Raspberry e adattatore seriale, collega TX/RX/GND.
+- **02** [Preparare il Raspberry Pi](setup/02-raspberry.md)
+  Installa il sistema, i pacchetti necessari e configura i permessi seriali.
+- **03** [Verificare la console UART](setup/03-uart.md)
+  Apri la console della serra ed esegui i primi comandi di controllo.
+- **04** [Impostare la password root](setup/04-password-root.md)
+  Proteggi l'accesso al modulo e verifica la nuova password.
+- **05** [Configurare la serra per l'uso locale](setup/05-modifiche-serra.md)
+  Applica e controlla le modifiche alla configurazione della serra.
+- **06** [Verificare la rete](setup/06-rete.md)
+  Controlla indirizzi, connessione domestica e accesso al Raspberry.
+- **07** [Installare e provare il controller CLI](setup/07-controller-cli.md)
+  Installa il controller seriale e prova comandi e sincronizzazione.
+- **08** [Configurare il bridge MQTT](setup/08-bridge-mqtt.md)
+  Collega Raspberry e broker, poi verifica stati e comandi MQTT.
+- **09** [Attivare i servizi automatici](setup/09-servizi-automatici.md)
+  Attiva i timer per la policy di rete e la sincronizzazione periodica.
+- **10** [Collegare Home Assistant](setup/10-home-assistant.md)
+  Integra i topic MQTT e prova il flusso completo.
 
-[Inizia dal passo 00 · Panoramica e obiettivi →](setup/00-panoramica.md)
+</div>
 
 ## Prima di copiare i comandi
 
@@ -28,7 +38,7 @@ I valori tra parentesi angolari, come `<LOCAL_IP>` e `<WIFI_PASSWORD>`, sono seg
 
 ## Approfondimenti facoltativi
 
-Questi contenuti spiegano l'indagine tecnica originale e non interrompono il percorso:
+Questi contenuti raccontano l'indagine tecnica originale e non interrompono il percorso:
 
 - [Analisi del traffico cloud](approfondimenti/traffico-cloud.md)
 - [Accesso e dump del modulo](approfondimenti/accesso-e-dump.md)

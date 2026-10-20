@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="{{ page_summary }}">
+  <meta name="color-scheme" content="light dark">
+  <title>{{ page_title }} — Linfa Local Control</title>
+  <script>
+    (() => {
+      const media = matchMedia('(prefers-color-scheme: dark)');
+      let preference = 'auto';
+      try {
+        const saved = localStorage.getItem('linfa-docs-theme-preference');
+        if (['auto', 'light', 'dark'].includes(saved)) preference = saved;
+      } catch (_) { /* Storage is optional. */ }
+      document.documentElement.dataset.themePreference = preference;
+      document.documentElement.dataset.theme = preference === 'auto' ? (media.matches ? 'dark' : 'light') : preference;
+    })();
+  </script>
+  <link rel="stylesheet" href="{{ 'stylesheets/site.css'|url }}">
+  <script src="{{ 'javascripts/site.js'|url }}" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#contenuto">Vai al contenuto</a>
+  <div class="site-shell">
+    <aside class="site-sidebar" id="site-sidebar" aria-label="Percorso guidato">
+      <div class="sidebar-head">
+        <a class="brand" href="{{ ''|url }}" aria-label="Linfa Local Control, indice della documentazione">
+          <span class="brand-mark" aria-hidden="true">L<span class="brand-dot"></span></span>
+          <span class="brand-copy"><strong>Linfa</strong><small>Local Control</small></span>
+        </a>
+        <button class="sidebar-close" type="button" aria-label="Chiudi l'indice" data-close-menu>×</button>
+      </div>
+      <div class="sidebar-scroll">
+        <div class="sidebar-label">DOCUMENTAZIONE</div>
+        <p class="sidebar-intro">Dalla modifica hardware al controllo locale con Home Assistant.</p>
+        <nav class="chapter-nav" aria-label="Capitoli">
+          {% for item in steps %}
+          <a href="{{ item.url|url }}"{% if step and step.number == item.number %} class="is-active" aria-current="page"{% endif %}><span>{{ item.number }}</span>{{ item.title }}</a>
+          {% endfor %}
+        </nav>
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-label">ALTRI CONTENUTI</div>
+        <a class="sidebar-extra{% if is_home %} is-active{% endif %}" href="{{ ''|url }}">Indice completo <span aria-hidden="true">↗</span></a>
+        {% for item in extras %}<a class="sidebar-extra{% if item.active %} is-active{% endif %}" href="{{ item.url|url }}">{{ item.title }} <span aria-hidden="true">↗</span></a>{% endfor %}
+        <a class="sidebar-extra" href="{{ config.repo_url }}">Repository GitHub <span aria-hidden="true">↗</span></a>
+      </div>
+      <div class="sidebar-foot"><span class="status-dot" aria-hidden="true"></span> Guida indipendente · non ufficiale</div>
+    </aside>
+
+    <div class="mobile-scrim" data-close-menu aria-hidden="true"></div>
+
+    <div class="page-region">
+      <header class="topbar">
+        <button class="menu-button" type="button" aria-label="Apri l'indice" aria-controls="site-sidebar" aria-expanded="false" data-open-menu><span></span><span></span><span></span></button>
+        <div class="topbar-path"><a href="{{ ''|url }}">Documentazione</a><span class="path-separator">/</span><strong>{% if step %}Passo {{ step.number }}{% elif is_home %}Indice{% else %}Approfondimento{% endif %}</strong></div>
+        <div class="topbar-actions">
+          <a class="topbar-github" href="{{ config.repo_url }}">GitHub <span aria-hidden="true">↗</span></a>
+          <label class="theme-control"><span class="visually-hidden">Tema</span><select data-theme-select aria-label="Tema: segui il sistema, chiaro o scuro"><option value="auto">◐ &nbsp;Sistema</option><option value="light">☀ &nbsp;Chiaro</option><option value="dark">☾ &nbsp;Scuro</option></select></label>
+        </div>
+      </header>
+
+      <div class="content-layout">
+        <main id="contenuto" class="article" tabindex="-1">
+          <div class="reading-progress" aria-label="{% if step %}Passo {{ step.number }} di 10{% else %}Indice della guida{% endif %}"><span style="width: {% if step %}{{ ((step.number|int + 1) / 11 * 100)|round(1) }}{% else %}100{% endif %}%"></span></div>
+          <div class="eyebrow"><span class="eyebrow-square" aria-hidden="true"></span>{% if step %}PASSO {{ step.number }}{% else %}LINFA LOCAL CONTROL{% endif %}<span class="eyebrow-line"></span>{{ page_phase }}</div>
+          <h1>{% if step %}<span class="hero-number">{{ step.number }}.</span> {% endif %}{{ page_title }}</h1>
+          <p class="lead">{{ page_summary }}</p>
+          {% if is_home or (step and step.number == '01') %}<div class="hero-meta"><span class="meta-chip">◉ &nbsp;Verificato su Linfa Weezy</span><span class="meta-chip muted">Linfa standard da verificare</span></div>{% endif %}
+
+          {% if toc_items and not is_home %}
+          <nav class="quick-jump" aria-label="Vai a una sezione">{% for item in toc_items[:5] %}<a href="#{{ item.id }}">{{ item.title }}</a>{% endfor %}</nav>
+          {% endif %}
+
+          {% if step and step.number == '01' %}
+          <div class="overview" aria-label="I tre componenti del sistema">
+            <div class="overview-item"><span class="overview-number">01</span><strong>Serra</strong><span>VoCore2 e dispositivi interni</span></div>
+            <div class="overview-item"><span class="overview-number">02</span><strong>Raspberry Pi</strong><span>Controller esterno</span></div>
+            <div class="overview-item"><span class="overview-number">03</span><strong>USB → TTL</strong><span>Collegamento UART a 3,3 V</span></div>
+          </div>
+          {% endif %}
+
+          <div class="markdown-body">{{ page.content|safe }}</div>
+
+          {% if step %}
+          <aside class="completion-callout"><span class="completion-mark" aria-hidden="true">✓</span><div><strong>{% if step_next %}Prima di proseguire{% else %}Percorso completato{% endif %}</strong><p>{{ step.check }}</p></div></aside>
+          <nav class="step-nav" aria-label="Passi della guida">
+            <a href="{{ (step_prev.url if step_prev else '')|url }}"><small>← {% if step_prev %}PASSO PRECEDENTE{% else %}TORNA ALL'INDICE{% endif %}</small><strong>{{ step_prev.title if step_prev else 'Indice completo' }}</strong></a>
+            <a href="{{ (step_next.url if step_next else '')|url }}"><small>{% if step_next %}PASSO SUCCESSIVO{% else %}TORNA ALL'INDICE{% endif %} →</small><strong>{{ step_next.title if step_next else 'Indice completo' }}</strong></a>
+          </nav>
+          {% elif is_home %}
+          <nav class="step-nav single" aria-label="Inizia la guida"><a href="{{ steps[0].url|url }}"><small>INIZIA IL PERCORSO →</small><strong>00 · Panoramica e obiettivi</strong></a></nav>
+          {% endif %}
+          <footer class="article-footer">Progetto indipendente e non ufficiale. <a href="{{ config.repo_url }}#linfa-local-control">Leggi il disclaimer completo</a> prima di intervenire sul dispositivo.</footer>
+        </main>
+
+        {% if toc_items and not is_home %}
+        <aside class="page-toc" aria-label="In questa pagina"><div class="toc-inner"><span class="toc-title">IN QUESTA PAGINA</span>{% for item in toc_items %}<a href="#{{ item.id }}">{{ item.title }}</a>{% endfor %}<span class="toc-bottom">{% if step %}PASSO {{ step.number }} / 10{% else %}APPROFONDIMENTO{% endif %}</span></div></aside>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</body>
+</html>

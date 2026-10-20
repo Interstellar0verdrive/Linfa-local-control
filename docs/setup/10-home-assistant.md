@@ -2,7 +2,7 @@
 
 **Percorso guidato:** [Indice dei capitoli](../index.md)
 
-> [!NOTE]
+> [!NOTE] Nota
 > Home Assistant comunica con il broker MQTT, non direttamente con la serra. Il Raspberry traduce i comandi MQTT in comandi UART.
 
 ---
@@ -136,7 +136,7 @@ A questo punto il sistema è completo:
 
 ## Percorso completato
 
-> [!TIP]
+> [!TIP] Controllo
 > **Verifica finale:** Home Assistant riceve gli stati MQTT e puoi inviare un comando di prova.
 
 <table width="100%" class="step-nav">
