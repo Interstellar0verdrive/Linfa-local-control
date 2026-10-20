@@ -199,6 +199,9 @@ Alla fine di questo capitolo, il Raspberry deve avere:
 > [!TIP]
 > **Verifica prima di proseguire:** Python, picocom, i pacchetti richiesti e i permessi seriali sono pronti.
 
-| Passo precedente | Passo successivo |
-| :--- | ---: |
-| [← 01 · Hardware e collegamenti](01-hardware.md) | [03 · Verificare la console UART →](03-uart.md) |
+<table width="100%" class="step-nav">
+  <tr>
+    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="01-hardware.md">← 01 · Hardware e collegamenti</a></td>
+    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="03-uart.md">03 · Verificare la console UART →</a></td>
+  </tr>
+</table>

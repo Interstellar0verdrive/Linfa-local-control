@@ -189,6 +189,9 @@ Per uscire: `CTRL + C`
 > [!TIP]
 > **Verifica prima di proseguire:** Il servizio bridge è attivo e i topic di stato e comando rispondono.
 
-| Passo precedente | Passo successivo |
-| :--- | ---: |
-| [← 07 · Installare e provare il controller CLI](07-controller-cli.md) | [09 · Attivare i servizi automatici →](09-servizi-automatici.md) |
+<table width="100%" class="step-nav">
+  <tr>
+    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="07-controller-cli.md">← 07 · Installare e provare il controller CLI</a></td>
+    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="09-servizi-automatici.md">09 · Attivare i servizi automatici →</a></td>
+  </tr>
+</table>

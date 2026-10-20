@@ -170,6 +170,9 @@ Per ripristinare allo stato originale: `chmod 755 /var/update`
 > [!TIP]
 > **Verifica prima di proseguire:** Hai verificato le modifiche che hai scelto di applicare alla serra.
 
-| Passo precedente | Passo successivo |
-| :--- | ---: |
-| [← 04 · Impostare la password root](04-password-root.md) | [06 · Verificare la rete →](06-rete.md) |
+<table width="100%" class="step-nav">
+  <tr>
+    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="04-password-root.md">← 04 · Impostare la password root</a></td>
+    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="06-rete.md">06 · Verificare la rete →</a></td>
+  </tr>
+</table>

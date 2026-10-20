@@ -30,6 +30,12 @@ theme:
         icon: material/brightness-4
         name: Passa al tema chiaro
 
+extra_css:
+  - stylesheets/extra.css
+
+hooks:
+  - mkdocs_hooks.py
+
 nav:
   - Inizia qui: index.md
   - Percorso guidato:

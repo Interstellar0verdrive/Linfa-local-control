@@ -139,6 +139,9 @@ Nel passo 04 userai ancora la console per impostare la password root della serra
 > [!TIP]
 > **Verifica prima di proseguire:** La console risponde, puoi effettuare il login e il comando di prova funziona.
 
-| Passo precedente | Passo successivo |
-| :--- | ---: |
-| [← 02 · Preparare il Raspberry Pi](02-raspberry.md) | [04 · Impostare la password root →](04-password-root.md) |
+<table width="100%" class="step-nav">
+  <tr>
+    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="02-raspberry.md">← 02 · Preparare il Raspberry Pi</a></td>
+    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="04-password-root.md">04 · Impostare la password root →</a></td>
+  </tr>
+</table>

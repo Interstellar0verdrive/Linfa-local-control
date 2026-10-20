@@ -139,6 +139,9 @@ A questo punto il sistema è completo:
 > [!TIP]
 > **Verifica finale:** Home Assistant riceve gli stati MQTT e puoi inviare un comando di prova.
 
-| Passo precedente | Passo successivo |
-| :--- | ---: |
-| [← 09 · Attivare i servizi automatici](09-servizi-automatici.md) | [Indice completo →](../index.md) |
+<table width="100%" class="step-nav">
+  <tr>
+    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="09-servizi-automatici.md">← 09 · Attivare i servizi automatici</a></td>
+    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="../index.md">Indice completo →</a></td>
+  </tr>
+</table>

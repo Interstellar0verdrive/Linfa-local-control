@@ -179,6 +179,9 @@ cat /home/pi/.serra_state.json | jq .
 > [!TIP]
 > **Verifica prima di proseguire:** Il comando `serra state sync` funziona dal Raspberry tramite UART.
 
-| Passo precedente | Passo successivo |
-| :--- | ---: |
-| [← 06 · Verificare la rete](06-rete.md) | [08 · Configurare il bridge MQTT →](08-bridge-mqtt.md) |
+<table width="100%" class="step-nav">
+  <tr>
+    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="06-rete.md">← 06 · Verificare la rete</a></td>
+    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="08-bridge-mqtt.md">08 · Configurare il bridge MQTT →</a></td>
+  </tr>
+</table>

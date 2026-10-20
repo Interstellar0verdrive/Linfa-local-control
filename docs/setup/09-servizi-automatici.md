@@ -197,6 +197,9 @@ Sostituisci `<RASPBERRY_IP>` prima di eseguire i comandi. Il file `/etc/serra-mq
 > [!TIP]
 > **Verifica prima di proseguire:** I timer sono attivi e i relativi servizi risultano verificati.
 
-| Passo precedente | Passo successivo |
-| :--- | ---: |
-| [← 08 · Configurare il bridge MQTT](08-bridge-mqtt.md) | [10 · Collegare Home Assistant →](10-home-assistant.md) |
+<table width="100%" class="step-nav">
+  <tr>
+    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="08-bridge-mqtt.md">← 08 · Configurare il bridge MQTT</a></td>
+    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="10-home-assistant.md">10 · Collegare Home Assistant →</a></td>
+  </tr>
+</table>

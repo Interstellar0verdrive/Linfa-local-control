@@ -43,6 +43,9 @@ Chiudi la sessione della serra e ripeti il login dalla console UART per verifica
 > [!TIP]
 > **Verifica prima di proseguire:** Hai impostato e verificato la password root della serra.
 
-| Passo precedente | Passo successivo |
-| :--- | ---: |
-| [← 03 · Verificare la console UART](03-uart.md) | [05 · Configurare la serra per l'uso locale →](05-modifiche-serra.md) |
+<table width="100%" class="step-nav">
+  <tr>
+    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="03-uart.md">← 03 · Verificare la console UART</a></td>
+    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="05-modifiche-serra.md">05 · Configurare la serra per l&#x27;uso locale →</a></td>
+  </tr>
+</table>

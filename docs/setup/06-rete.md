@@ -98,6 +98,9 @@ A questo punto:
 > [!TIP]
 > **Verifica prima di proseguire:** Conosci gli indirizzi della serra e del Raspberry e hai verificato il collegamento UART. Il broker MQTT sarà predisposto nel passo 08.
 
-| Passo precedente | Passo successivo |
-| :--- | ---: |
-| [← 05 · Configurare la serra per l'uso locale](05-modifiche-serra.md) | [07 · Installare e provare il controller CLI →](07-controller-cli.md) |
+<table width="100%" class="step-nav">
+  <tr>
+    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="05-modifiche-serra.md">← 05 · Configurare la serra per l&#x27;uso locale</a></td>
+    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="07-controller-cli.md">07 · Installare e provare il controller CLI →</a></td>
+  </tr>
+</table>

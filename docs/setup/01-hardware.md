@@ -144,6 +144,9 @@ Note di compatibilità:
 > [!TIP]
 > **Verifica prima di proseguire:** Hai identificato TX, RX e GND e usi un adattatore TTL a 3,3 V senza collegare VCC.
 
-| Passo precedente | Passo successivo |
-| :--- | ---: |
-| [← 00 · Panoramica e obiettivi](00-panoramica.md) | [02 · Preparare il Raspberry Pi →](02-raspberry.md) |
+<table width="100%" class="step-nav">
+  <tr>
+    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="00-panoramica.md">← 00 · Panoramica e obiettivi</a></td>
+    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="02-raspberry.md">02 · Preparare il Raspberry Pi →</a></td>
+  </tr>
+</table>
