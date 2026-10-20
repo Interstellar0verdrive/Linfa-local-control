@@ -70,8 +70,10 @@ Una volta loggati, eseguire solo comandi **non distruttivi**:
 
 ```bash
 uname -a
-# Deve restituire qualcosa tipo:
-# Linux buildroot 3.18.29 #1 Thu May 16 10:06:29 UTC 2019 mips GNU/Linux
+```
+
+```text {.expected-output}
+Linux buildroot 3.18.29 #1 Thu May 16 10:06:29 UTC 2019 mips GNU/Linux
 ```
 
 Verifica:
@@ -81,8 +83,10 @@ Verifica:
 
 ```bash
 uptime
-# Deve restituire qualcosa tipo:
-# 09:06:53 up  1:24,  0 users,  load average: 0.03, 0.02, 0.05
+```
+
+```text {.expected-output}
+09:06:53 up 1:24, 0 users, load average: 0.03, 0.02, 0.05
 ```
 
 Serve per:
@@ -92,9 +96,12 @@ Serve per:
 
 ```bash
 ls /
-# Deve restituire qualcosa tipo:
-# bin      etc      lib32    media    opt      root     sbin     tmp      var
-# dev      lib      linuxrc  mnt      proc     run      sys      usr
+```
+
+**Risposta attesa:** una lista di directory simile a questa; il contenuto preciso dipende dal firmware.
+
+```text {.expected-output}
+bin  dev  etc  lib  linuxrc  mnt  opt  proc  root  sbin  sys  tmp  usr  var
 ```
 
 Controllo rapido della struttura filesystem (rootfs minimale BusyBox).
@@ -113,10 +120,7 @@ Questa sezione serve solo a confermare che:
 
 Per uscire correttamente:
 
-```
-CTRL + A
-CTRL + X
-```
+Premi **CTRL + A**, poi **CTRL + X**.
 
 Se la console non risponde:
 

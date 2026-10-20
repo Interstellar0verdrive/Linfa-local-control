@@ -49,16 +49,19 @@ Non necessariamente il traffico *diretto* della serra, se la serra *non* usa il 
 1. Collegarsi alla rete temporanea creata dalla serra con il Mac
 2. Dal Terminale del Mac:
 
-```bash
-# se non è installato:
-brew install mitmproxy
-# Il pacchetto mitmproxy include: mitmproxy, mitmdump, mitmweb
+Se non è già installato, installa mitmproxy:
 
-#avviare mitmdump
-mitmdump -p 8080 -w ~/Desktop/serra_ALL.mitm
-# Nota: NON** deve aprirsi nessuna UI, il terminale resta apparentemente “fermo”.
-# NON premere nulla: s**e il prompt sembra bloccato non è un problema, è normale.
+```bash
+brew install mitmproxy
 ```
+
+Il pacchetto include `mitmproxy`, `mitmdump` e `mitmweb`. Avvia la cattura:
+
+```bash
+mitmdump -p 8080 -w ~/Desktop/serra_ALL.mitm
+```
+
+Non si apre una finestra grafica: il terminale resta occupato mentre registra. Lascialo aperto fino alla fine della prova.
 
 1. Impostare il proxy di macOS su localhost
 **Impostazioni → Rete → Wi-Fi → Dettagli → Proxy**
@@ -83,20 +86,15 @@ Se esiste un file > **0 byte** → PROCEDURA OK
 
 ```bash
 mitmproxy -r ~/Desktop/serra_ALL.mitm
-
-# FILTRI UTILI (Dentro mitmproxy)
-# Solo IP locali:
-	f
-~dst 192.168.
-
-# Solo POST:
-f
-~m POST
-
-# Entrambi i filtri combinati:
-f
-~m POST & ~dst 192.168.
 ```
+
+**Dentro mitmproxy**, premi `f` e inserisci uno di questi filtri nell'interfaccia (non sono comandi della shell):
+
+| Cosa mostrare | Filtro |
+| --- | --- |
+| Destinazioni locali | `~dst 192.168.` |
+| Richieste POST | `~m POST` |
+| POST verso destinazioni locali | `~m POST & ~dst 192.168.` |
 
 1. Ora dobbiamo trasformare il file mitm in un fine HAR
 Probabilmente sarà un HAR “minimal” (manca timing corretto, cookies, queryString, ecc.). Ma bene per analisi funzionale anche se non è un HAR “completo”.
@@ -108,7 +106,7 @@ Probabilmente sarà un HAR “minimal” (manca timing corretto, cookies, queryS
 
         Incollare esattamente questo codice e salvare (CTRL + O → INVIO → CTRL + X):
 
-        ```bash
+        ```python {.source-code}
         import json
         from mitmproxy import ctx, http, options, version
         from mitmproxy.addons import core

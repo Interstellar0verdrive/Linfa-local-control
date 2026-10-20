@@ -27,8 +27,9 @@ Accesso SSH (quando la rete NON è ancora disabilitata):
 
 ```bash
 ssh root@<LOCAL_IP>
-# Password: <DEVICE_PASSWORD>
 ```
+
+Inserisci la password root della serra quando richiesta.
 
 > [!WARNING] Attenzione
 > L'accesso SSH alla serra via Wi-Fi serve solo per configurazione e verifica. Nel funzionamento normale il Raspberry spegne la rete della serra: prima di attivare il timer del passo 07, assicurati che la UART funzioni.
@@ -55,15 +56,13 @@ Interfacce di rete:
     - IP statico (assegnato dal router via MAC address): <LOCAL_IP>
     - MAC address: <DEVICE_MAC>
 
-Accesso SSH possibili:
+Puoi collegarti all'indirizzo del Raspberry sia via Ethernet sia via Wi-Fi:
 
 ```bash
-ssh pi@<LOCAL_IP>    # se ethernet
-ssh pi@<LOCAL_IP>    # se wifi
-ssh pi@serra.local      # se via mDNS
-
-# Password: <DEVICE_PASSWORD>
+ssh pi@<LOCAL_IP>
 ```
+
+Se il nome locale è configurato, puoi usare `ssh pi@serra.local`. Inserisci la password dell'utente del Raspberry quando richiesta.
 
 Il Raspberry **rimane sempre connesso** alla rete di casa ed è l’unico punto di controllo permanente.
 

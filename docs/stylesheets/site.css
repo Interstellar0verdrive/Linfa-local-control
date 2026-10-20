@@ -322,6 +322,10 @@ h2 { margin: 0; font-size: clamp(26px, 2.6vw, 34px); font-weight: 750; letter-sp
 .markdown-body pre code { color: inherit; font-size: inherit; }
 .markdown-body .highlight { overflow: hidden; margin: 28px 0; border: 1px solid var(--line); border-radius: 12px; background: var(--code-bg); }
 .markdown-body .highlight::before { content: 'TERMINALE · COPIA I COMANDI CON ATTENZIONE'; display: block; padding: 10px 17px; border-bottom: 1px solid rgba(255,255,255,.12); color: #a8c4b1; font-size: 10px; font-weight: 850; letter-spacing: .09em; }
+.markdown-body .highlight.expected-output::before { content: 'RISPOSTA ATTESA · ESEMPIO'; }
+.markdown-body .highlight.reference-example::before { content: 'RIFERIMENTO · NON ESEGUIRE NEL TERMINALE'; }
+.markdown-body .highlight.file-content::before { content: 'CONTENUTO DEL FILE · VERIFICA I VALORI'; }
+.markdown-body .highlight.source-code::before { content: 'CODICE DA INSERIRE NEL FILE'; }
 .markdown-body .highlight pre { border-radius: 0; }
 .markdown-body > pre { margin: 28px 0; border-radius: 12px; }
 .markdown-body table { display: table; width: 100%; margin: 28px 0; border-collapse: separate; border-spacing: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); font-size: 13px; }

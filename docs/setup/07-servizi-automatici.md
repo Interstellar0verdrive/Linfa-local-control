@@ -17,7 +17,7 @@ La serra deve essere già accesa e raggiungibile via UART quando il timer scatta
 sudo nano /etc/systemd/system/serra-netoff.service
 ```
 
-```bash
+```ini {.file-content}
 [Unit]
 Description=Serra: disable VoCore network (net off)
 After=network.target
@@ -35,7 +35,7 @@ ExecStart=/usr/local/bin/serra net off
 sudo nano /etc/systemd/system/serra-netoff.timer
 ```
 
-```bash
+```ini {.file-content}
 [Unit]
 Description=Serra: run net off once after boot (60s)
 
@@ -59,10 +59,9 @@ Verifica:
 
 ```bash
 systemctl list-timers --all | grep serra
-
-# Deve restituire qualcosa tipo:
-# -                                 - Sun 2026-01-25 10:14:51 CET 3h 55min ago serra-netoff.timer           serra-netoff.service
 ```
+
+**Risposta attesa:** una riga con `serra-netoff.timer` e `serra-netoff.service`. Essendo un timer che scatta una sola volta dopo il boot, la prossima esecuzione può apparire come `-` dopo che è già partito. Date, orari e spaziatura dipendono dal sistema.
 
 ---
 
@@ -77,7 +76,7 @@ Il timer ripete questa azione ogni 30 minuti
 sudo nano /etc/systemd/system/serra-state-sync.service
 ```
 
-```bash
+```ini {.file-content}
 [Unit]
 Description=Serra: MQTT state sync
 
@@ -97,7 +96,7 @@ ExecStart=/usr/local/bin/serra state sync
 sudo nano /etc/systemd/system/serra-state-sync.timer
 ```
 
-```bash
+```ini {.file-content}
 [Unit]
 Description=Serra: run state sync every 30 minutes
 
@@ -122,36 +121,41 @@ Verifica:
 
 ```bash
 systemctl list-timers --all | grep serra
-# Deve restituire qualcosa tipo:
-# Sun 2026-01-25 14:16:34 CET    5min Sun 2026-01-25 13:46:34 CET    24min ago serra-state-sync.timer       serra-state-sync.service
-# -                                 - Sun 2026-01-25 10:14:51 CET 3h 55min ago serra-netoff.timer           serra-netoff.service
-
 journalctl -u serra-state-sync.service -n 50 --no-pager
-# Deve restituire uno o più gruppi di righe come:
-# Jan 25 13:46:34 serra systemd[1]: Starting serra-state-sync.service - Serra: MQTT state sync...
-# Jan 25 13:46:35 serra serra[1850]: ✅ STATE SYNC OK
-# Jan 25 13:46:35 serra systemd[1]: serra-state-sync.service: Deactivated successfully.
-# Jan 25 13:46:35 serra systemd[1]: Finished serra-state-sync.service - Serra: MQTT state sync.
 ```
+
+**Risposta attesa:** nell'elenco compaiono `serra-state-sync.timer` associato a `serra-state-sync.service` e `serra-netoff.timer` associato a `serra-netoff.service`. Il log del servizio di sincronizzazione deve contenere `STATE SYNC OK` e una conclusione senza errori. Date e intervalli sono variabili.
 
 ### Comandi utili per verificare i timer e services
 
+Per verificare il timer che spegne la rete dopo il boot:
+
 ```bash
-# verificare timer A: One-shot: “net off” 60s dopo il boot:
 systemctl status serra-netoff.timer --no-pager
 systemctl list-timers --all | grep -i serra
+```
 
-# verifica e log timer B: Sync ogni 30 minuti: “serra state sync”:
+Per verificare il timer di sincronizzazione e gli ultimi log:
+
+```bash
 systemctl status serra-state-sync.timer --no-pager
 systemctl list-timers --all | grep -i serra
-# ultimi log del sync:
 sudo journalctl -u serra-state-sync.service -n 50 --no-pager
+```
 
-# vedere tutti i timer serra:
+Per elencare tutti i timer della serra:
+
+```bash
 systemctl list-timers --all | grep -i serra
+```
 
-# forzare manualmente i singoli service:
+Se serve eseguire manualmente i servizi **dopo aver acceso la serra**, avviali uno alla volta:
+
+```bash
 sudo systemctl start serra-netoff.service
+```
+
+```bash
 sudo systemctl start serra-state-sync.service
 ```
 

@@ -53,11 +53,9 @@ Verifica:
 
 ```bash
 ls -la /home/pi/serra_controller.py /home/pi/serra_mqtt_bridge.py
-
-# Deve rispondere qualcosa tipo:
-# -rwxrwxr-x 1 pi pi 53716 Jan 11 21:10 /home/pi/serra_controller.py
-# -rwxrwxr-x 1 pi pi 15113 Jan 10 16:29 /home/pi/serra_mqtt_bridge.py
 ```
+
+**Risposta attesa:** due righe, una per file, con il permesso di esecuzione (`x`). Dimensioni e date dipendono dai file copiati.
 
 ---
 
@@ -79,10 +77,13 @@ Verifica:
 ```bash
 readlink -f /usr/local/bin/serra
 which serra
+```
 
-# Deve rispondere:
-# /home/pi/serra_controller.py
-# /usr/local/bin/serra
+I due comandi stampano, nell'ordine:
+
+```text {.expected-output}
+/home/pi/serra_controller.py
+/usr/local/bin/serra
 ```
 
 ---
@@ -102,26 +103,41 @@ Per i servizi automatici, la stessa variabile sarà inserita nel file locale `/e
 
 ```bash
 serra --help
-# Mostra l'help del comando
 ```
+
+**Risposta attesa:** la guida dei comandi della CLI.
 
 Test di comunicazione UART (non distruttivo):
 
 ```bash
 serra state sync
-# Deve rispondere: STATE SYNC OK
 ```
 
-Eseguire alcuni comandi di test:
+**Risposta attesa:** `STATE SYNC OK`.
+
+Esegui questi comandi di prova **uno alla volta**, osservando il risultato dopo ciascuno.
+
+Accendi le luci con una dissolvenza di 2 secondi:
 
 ```bash
-# accendiamo le luci con un fade in di 2 secondi:
 serra lights on -f 2
-# spegniamo le luci con un fade out di 2 secondi:
+```
+
+Spegni le luci con una dissolvenza di 2 secondi:
+
+```bash
 serra lights off -f 2
-# accendiamo le ventole al 75% (velocità media):
+```
+
+Accendi le ventole:
+
+```bash
 serra fans on
-# spegniamo le ventole:
+```
+
+Spegni le ventole:
+
+```bash
 serra fans off
 ```
 
@@ -148,26 +164,9 @@ Verifica:
 ```bash
 ls -la /home/pi/.serra_state.json
 cat /home/pi/.serra_state.json | jq .
-
-# Deve rispondere qualcosa tipo:
-# -rw-r--r-- 1 pi pi 7442 Jan 25 13:16 /home/pi/.serra_state.json
-# {
-# "meta": {
-# "schema": 1,
-# "ts": 1769343395.0795484,
-# "ts_iso": "2026-01-25T12:16:35.079548Z",
-# "ts_local": "2026-01-25T13:16:35.079548+01:00"
-# },
-# "last_seen": {
-# "ts": 1769343395.0793698,
-# "ts_iso": "2026-01-25T12:16:35.079370Z",
-# "ts_local": "2026-01-25T13:16:35.079370+01:00"
-# },
-# "lights": {
-# "state": {
-# ...
-# ...
 ```
+
+**Risposta attesa:** il primo comando mostra il file esistente; il secondo mostra un oggetto JSON valido con sezioni come `meta`, `last_seen` e `lights`. Timestamp e stati riflettono la tua serra e cambiano a ogni esecuzione.
 
 > [!NOTE] Nota
 > Il file di stato è la fonte logica degli stati pubblicati su MQTT. Registra l'ultimo stato noto al controller; non è una misura hardware diretta.

@@ -30,14 +30,7 @@ Requisiti minimi:
 
 Il Raspberry deve avere credenziali valide per il broker in `/etc/serra-mqtt.env`. Home Assistant deve collegarsi **allo stesso broker**, ma può usare credenziali diverse. Se utilizzi l'app ufficiale Mosquitto Broker di Home Assistant, l'integrazione MQTT può configurare automaticamente il proprio accesso; crea comunque un account MQTT per il Raspberry nelle opzioni del broker.
 
-Esempio (usato nel setup):
-
-```bash
-host: <BROKER_IP>
-port: 1883
-user: <MQTT_USER>
-password: <MQTT_PASSWORD>
-```
+Nel seguito, `<BROKER_IP>`, `<MQTT_USER>` e `<MQTT_PASSWORD>` indicano l'indirizzo e le credenziali del tuo broker; la porta usata negli esempi è `1883`.
 
 ---
 
@@ -54,7 +47,7 @@ sudo nano /etc/serra-mqtt.env
 
 Contenuto (l'indirizzo e le credenziali MQTT sono quelli del broker; `SERRA_ROOT_PASSWORD` è invece la password della console della serra):
 
-```bash
+```text {.file-content}
 SERRA_MQTT_HOST=<BROKER_IP>
 SERRA_MQTT_PORT=1883
 SERRA_MQTT_USER=<MQTT_USER>
@@ -89,7 +82,7 @@ sudo nano /etc/systemd/system/serra-mqtt-bridge.service
 
 Contenuto:
 
-```bash
+```ini {.file-content}
 [Unit]
 Description=Serra MQTT Bridge
 After=network-online.target
@@ -119,19 +112,9 @@ Verifica:
 ```bash
 systemctl status serra-mqtt-bridge.service --no-pager
 journalctl -u serra-mqtt-bridge.service -n 100 --no-pager
-
-# Deve restituire qualcosa tipo:
-# ● serra-mqtt-bridge.service - Serra MQTT Bridge
-# Loaded: loaded (/etc/systemd/system/serra-mqtt-bridge.service; enabled; preset: enabled)
-# Active: active (running) since Sat 2026-01-24 22:07:57 CET; 15h ago
-# Invocation: 02b877426811403fb1f1736729a9bc28
-# Main PID: 1021 (python3)
-# Tasks: 1 (limit: 764)
-# CPU: 7.403s
-# CGroup: /system.slice/serra-mqtt-bridge.service
-# └─1021 /usr/bin/python3 /home/pi/serra_mqtt_bridge.py
-# # Jan 24 22:07:57 serra systemd[1]: Started serra-mqtt-bridge.service - Serra MQTT Bridge.
 ```
+
+**Risposta attesa:** `systemctl status` indica `Loaded: loaded` e `Active: active (running)`; il log mostra l'avvio del bridge senza errori. PID, date e altri dettagli cambiano a ogni installazione.
 
 ---
 
@@ -141,7 +124,7 @@ journalctl -u serra-mqtt-bridge.service -n 100 --no-pager
 
 Il bridge pubblica:
 
-```
+```text {.reference-example}
 serra/status/online
 serra/status/last_seen
 ```
@@ -150,21 +133,24 @@ Verifica:
 
 ```bash
 mosquitto_sub -h <BROKER_IP> -u <MQTT_USER> -P '<MQTT_PASSWORD>' -t "serra/status/#" -v
-
-# Deve rispondere qualcosa che comincia con:
-# serra/status/online {"ok": true, "msg": "bridge online", "cli": "serra"... ... ...
 ```
+
+**Risposta attesa:** una riga che comincia con `serra/status/online` seguita da un messaggio JSON con `"ok": true` e `"msg": "bridge online"`. Altri campi possono variare.
 
 Per uscire: `CTRL + C`
 
 ### Comando via MQTT
 
+Accendi le luci con una dissolvenza di 3 secondi:
+
 ```bash
-# Proviamo ad accendere le luci con un fade in di 3 secondi:
 mosquitto_pub -h <BROKER_IP> -u <MQTT_USER> -P '<MQTT_PASSWORD>' \
   -t serra/cmd -m "lights on -f 3"
+```
 
-# Poi per spegnere:
+Poi spegnile:
+
+```bash
 mosquitto_pub -h <BROKER_IP> -u <MQTT_USER> -P '<MQTT_PASSWORD>' \
   -t serra/cmd -m "lights off"
 ```
@@ -173,9 +159,9 @@ Verifica che lo stato venga aggiornato su `serra/state/...`:
 
 ```bash
 mosquitto_sub -h <BROKER_IP> -u <MQTT_USER> -P '<MQTT_PASSWORD>' -t "serra/status/last" -v
-# Deve rispondere con qualcosa che indichi l'ultimo comando dato (nel nostro caso lights off):
-# serra/status/last {"ok": true, "rc": 0, "cmd": ["lights", "off"], "stdout": "✅ LIGHTS OFF (fade ~0.0s)", "stderr": "", "topic": "serra/cmd", "ts": 1769346265.2262807, "ts_iso": "2026-01-25T13:04:25.226281Z", "ts_local": "2026-01-25T14:04:25.226281+01:00"}
 ```
+
+**Risposta attesa:** il topic `serra/status/last` seguito da un JSON con `"ok": true`, `"rc": 0` e `"cmd": ["lights", "off"]` se l'ultimo comando è stato quello di spegnimento. I timestamp e gli altri campi cambiano a ogni esecuzione.
 
 Per uscire: `CTRL + C`
 

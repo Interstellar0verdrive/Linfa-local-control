@@ -39,13 +39,13 @@ Per i nomi aggiornati dei menu e la configurazione del broker, consulta la [docu
 
 **Topic base:**
 
-```
+```text {.reference-example}
 serra/
 ```
 
 ### Stato (publish dal Raspberry → HA)
 
-```
+```text {.reference-example}
 serra/status/online
 serra/status/last_seen
 serra/status/last
@@ -68,20 +68,20 @@ Tutti questi topic sono **retained**.
 
 ### Comandi (publish da HA → Raspberry)
 
-```
+```text {.reference-example}
 serra/cmd
 serra/cmd/<id>
 ```
 
 Payload tipico:
 
-```
+```text {.reference-example}
 lights on -f 3
 ```
 
 oppure con ID (per ack):
 
-```
+```text {.reference-example}
 topic: serra/cmd/abc123
 payload: lights off
 ```

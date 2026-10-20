@@ -90,17 +90,20 @@ Verifica versione:
 
 ```bash
 python3 --version
-# Deve restituire un numero di versione Python 3.x
 ```
+
+**Risposta attesa:** un numero di versione Python 3.x.
 
 Verifica che i moduli necessari siano importabili **prima** di caricare gli script:
 
 ```bash
 python3 -c "import paho.mqtt.client as c; print('paho OK')"
 python3 -c "import serial; print('pyserial OK')"
-# Deve restituire:
-# paho OK
-# pyserial OK
+```
+
+```text {.expected-output}
+paho OK
+pyserial OK
 ```
 
 Verifica presenza strumenti (se installati):
@@ -119,13 +122,9 @@ Con adattatore collegato:
 
 ```bash
 ls -l /dev/ttyUSB* /dev/ttyACM* 2>/dev/null || true
-
-# Deve restituire qualcosa tipo:
-# ls: cannot access '/dev/ttyACM*': No such file or directory
-# crw-rw---- 1 root dialout 188, 0 Jan 24 16:17  /dev/ttyUSB0
 ```
 
-Tipicamente: `/dev/ttyUSB0`.
+**Risposta attesa:** almeno un dispositivo seriale, tipicamente `/dev/ttyUSB0`, appartenente al gruppo `dialout`. Il percorso può variare. Poiché il comando sopprime gli errori, non vedrai il messaggio “No such file or directory” per i pattern che non corrispondono.
 
 ### Verifica gruppo dialout
 
@@ -135,19 +134,17 @@ L’utente che eseguirà i comandi (tipicamente pi) deve poter aprire la seriale
 groups
 getent group dialout || true
 ls -l /dev/ttyUSB0 2>/dev/null || true
-
-# Deve restituire qualcosa tipo:
-# pi adm dialout cdrom sudo audio video plugdev games users netdev gpio i2c spi render input
-# dialout:x:20:pi
-# crw-rw---- 1 root dialout 188, 0 Jan 25 10:46 /dev/ttyUSB0
 ```
+
+**Risposta attesa:** `groups` include `dialout`, `getent group dialout` mostra il gruppo e `ls -l` mostra la porta seriale. Nomi, date e numeri variano da sistema a sistema.
 
 Se l'utente `pi` **non** è in `dialout`, aggiungilo (sostituisci `pi` se usi un altro utente):
 
 ```bash
 sudo usermod -aG dialout pi
-# poi disconnetti e riconnettiti via SSH (logout/login)
 ```
+
+Poi disconnettiti e riconnettiti via SSH perché la nuova appartenenza al gruppo abbia effetto.
 
 ---
 
@@ -171,13 +168,15 @@ Suggerimento pratico:
 
 Se il broker MQTT esiste già (es. Mosquitto su `<BROKER_IP>`:1883), puoi fare un test. **Apri due terminali sul Raspberry:** nel primo avvia il subscriber; nel secondo pubblica il messaggio. Avviare il subscriber dopo la pubblicazione non mostrerebbe il messaggio, perché il test non usa un topic retained.
 
+**Primo terminale:** resta in attesa di un messaggio.
+
 ```bash
-# Primo terminale: resta in attesa di un messaggio
 mosquitto_sub -h <BROKER_IP> -p 1883 -u <MQTT_USER> -P '<MQTT_PASSWORD>' -t serra/test -C 1
 ```
 
+**Secondo terminale:** invia il messaggio di prova.
+
 ```bash
-# Secondo terminale: invia il messaggio di prova
 mosquitto_pub -h <BROKER_IP> -p 1883 -u <MQTT_USER> -P '<MQTT_PASSWORD>' -t serra/test -m "hello"
 ```
 

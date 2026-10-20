@@ -7,7 +7,7 @@ Questa pagina conserva le modifiche di configurazione provate durante lo svilupp
 
 In origine la serra ha uno **user-token** e un **UUID** come questi:
 
-```bash
+```text {.reference-example}
 user-token: <ORIGINAL_DEVICE_TOKEN>
 UUID della serra: <DEVICE_UUID>
 ```
@@ -65,8 +65,9 @@ Ci si può connettere alla serra così:
 
 ```bash
 ssh root@<LOCAL_IP>
-# Usare la password: <DEVICE_PASSWORD>
 ```
+
+Inserisci la password root della serra quando richiesta.
 
 > [!WARNING] Attenzione
 > La procedura cambia anche lo `user-token` della serra, sostituendolo con `offline-token`. Conserva il token originale in modo sicuro se vuoi poter ripristinare la configurazione precedente.
@@ -89,37 +90,33 @@ Ricorda: Al punto precedente abbiamo già cambiato il token, impostandolo su `of
 
 ```bash
 hexdump -C /opt/data/token
-
-# Deve restituire qualcosa tipo:
-# 6f 66 66 6c 69 6e 65 2d  74 6f 6b 65 6e           |offline-token|
-# 0000000d
 ```
+
+**Risposta attesa:** nella colonna testuale dell'output compare `offline-token` se è questo il valore salvato. Offset e spaziatura del dump dipendono dal comando.
 
 Il token originale della serra era:
 
-```bash
+```text {.reference-example}
 user-token: <ORIGINAL_DEVICE_TOKEN>
 UUID della serra: <DEVICE_UUID>
 ```
 
-Per sovrascrivere il token con quello finto, si può usare questo codice:
+Per sovrascrivere il token con quello finto, imposta prima il valore da usare:
 
 ```bash
-# Sostituisci con il token finto:
 TOKEN="offline-token"
+```
 
-# scrivi il token:
+Scrivilo nel file e verifica il contenuto:
+
+```bash
 printf "%s" "$TOKEN" > /opt/data/token
 chmod 600 /opt/data/token
 sync
-
-# verifica hexdump:
 hexdump -C /opt/data/token
-
-# Deve restituire qualcosa tipo:
-# 6f 66 66 6c 69 6e 65 2d  74 6f 6b 65 6e           |offline-token|
-# 0000000d
 ```
+
+**Risposta attesa:** `hexdump` mostra `offline-token` nella colonna testuale.
 
 **Nota sui nomi:** `user-token` nella URL e `usr-token` nei CGI sono parametri diversi. Per `/opt/data/token` conta il valore del token, non il nome del parametro.
 
@@ -135,34 +132,32 @@ sync
 
 Rendere /var/update non scrivibile (così anche se la serra se provasse a scaricare qualcosa, fallisce).
 
-Da SSH:
+Da SSH, crea la directory se manca:
 
 ```bash
-# crea se manca:
 mkdir -p /var/update
+```
 
-# togli permessi di scrittura:
+Rimuovi i permessi di scrittura:
+
+```bash
 chmod 555 /var/update
+```
 
-# opzionale: crea file “sentinella” non scrivibile
-# (se qualche processo prova a sovrascrivere, fallisce)
+Facoltativamente crea i file “sentinella” e rendili non scrivibili:
+
+```bash
 touch /var/update/rccupdate.tar.gz /var/update/rccupdate.tar.gz.md5 2>/dev/null
 chmod 444 /var/update/rccupdate.tar.gz /var/update/rccupdate.tar.gz.md5 2>/dev/null
-
-# Controlla che abbia funzionato:
-ls -la /var/update
-
-# Deve restituire qualcosa tipo:
-# total 0
-# dr-xr-xr-x    2 root     root           160 May 17  2023 .
-# drwxr-xr-x    7 root     root           864 May 17  2023 ..
-
-# Questo indica che /var/update ha permessi effettivi 555 (r-xr-xr-x)
-# dr-xr-xr-x = directory (d) con:
-	  #	owner: r-x (5)
-	  #	group: r-x (5)
-	  #	others: r-x (5)
 ```
+
+Controlla i permessi:
+
+```bash
+ls -la /var/update
+```
+
+**Risposta attesa:** la riga della directory `.` inizia con `dr-xr-xr-x`: `d` indica una directory e i tre gruppi `r-x` corrispondono ai permessi `555` (proprietario, gruppo e altri). Date e dimensioni variano.
 
 Per ripristinare allo stato originale: `chmod 755 /var/update`
 

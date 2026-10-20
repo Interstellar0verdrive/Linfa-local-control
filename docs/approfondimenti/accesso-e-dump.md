@@ -11,40 +11,44 @@ Queste operazioni servono per l'esplorazione tecnica. Il percorso principale usa
 
     ```bash
     ssh root@<LOCAL_IP>
-    # Non dovrebbe servire password
     ```
+
+    Nella rete temporanea iniziale l'accesso potrebbe non chiedere una password.
 
 2. Oppure dal Terminale del Mac collegarsi al Raspberry (collegato via UART) via SSH:
 
+    Usa l'indirizzo del Raspberry, sia che sia collegato via Ethernet sia che usi Wi-Fi:
+
     ```bash
     ssh pi@<LOCAL_IP>
-    # Oppure (se wifi):
-    ssh pi@<LOCAL_IP>
-    # Oppure:
-    ssh pi@serra.local
-
-    # Usare la password impostata - nel mio caso: <DEVICE_PASSWORD>
     ```
+
+    Se il nome locale è configurato e si risolve correttamente, puoi usare `ssh pi@serra.local`. Inserisci la password del **Raspberry** quando richiesta; non è necessariamente la password root della serra.
 
 3. Verificare che l’FT232 sia visto dal sistema:
 
     ```bash
     ls -l /dev/ttyUSB*
-    # Dovrebbe restituire qualcosa tipo:
-    # /dev/ttyUSB0
     ```
+
+    **Risposta attesa:** almeno una porta, per esempio `/dev/ttyUSB0`.
 
 4. Installare minicom nel Raspberry: `sudo apt install -y minicom`
 5. Avviare minicom:
 
     ```bash
     sudo minicom -D /dev/ttyUSB0 -b 115200
-    # Per uscire: CTRL + A  →  X
+    ```
 
-    # Se voglio salvare in un log tutto quello che vede:
+    Per uscire, premi **CTRL + A**, poi **X**. Se vuoi registrare la sessione in un file, avvia invece:
+
+    ```bash
     sudo minicom -D /dev/ttyUSB0 -b 115200 -C /home/pi/serra_uart.log
+    ```
 
-    # Poi per vedere il log:
+    Per leggere il log salvato:
+
+    ```bash
     tail -n 200 /home/pi/serra_uart.log
     ```
 
@@ -54,10 +58,11 @@ Queste operazioni servono per l'esplorazione tecnica. Il percorso principale usa
 
     ```bash
     scp pi@serra:/home/pi/serra_uart.log ~/Desktop/serra_uart.log
+    ```
 
-    # Se l’hostname "serra" non risolve, basta usare l’IP del Raspberry, quindi se è connesso via wifi:
-    scp pi@<LOCAL_IP>:/home/pi/serra_uart.log ~/Desktop/serra_uart.log
-    #o se è connesso via ethernet:
+    Se `serra` non si risolve, usa l'indirizzo del Raspberry, indipendentemente dal collegamento Ethernet o Wi-Fi:
+
+    ```bash
     scp pi@<LOCAL_IP>:/home/pi/serra_uart.log ~/Desktop/serra_uart.log
     ```
 
@@ -75,18 +80,18 @@ Sulla serra (shell # via UART) dal **Mac**, devi essere collegato con: `ssh root
 
     ```bash
     ls -la /usr/lib/node_modules/@robonica
-    # Output atteso tipo:
-    # drwxr-xr-x  ... robocontrol
     ```
+
+    **Risposta attesa:** una directory chiamata `robocontrol`.
 
 2. Entrare nella directory:
 
     ```bash
     cd /usr/lib/node_modules/@robonica/robocontrol || echo "CD FAILED"
     pwd
-    # pwd **DEVE** stampare:
-    # /usr/lib/node_modules/@robonica/robocontrol
     ```
+
+    **Risposta attesa:** `pwd` stampa `/usr/lib/node_modules/@robonica/robocontrol`. Se compare `CD FAILED`, fermati.
 
 3. Verifichiamo che tar esista:
 
@@ -96,46 +101,55 @@ Sulla serra (shell # via UART) dal **Mac**, devi essere collegato con: `ssh root
 
 4. Creare il TAR e il GZIP:
 
+    Crea l'archivio TAR:
+
     ```bash
-    # Prima crea il tar:
     cd /usr/lib/node_modules/@robonica
     tar -cf /tmp/robocontrol.tar robocontrol
-
-    # Poi comprimi con gzip:
-    gzip /tmp/robocontrol.tar
-    # Questo crea /tmp/robocontrol.tar.gz
     ```
+
+    Poi comprimilo con gzip:
+
+    ```bash
+    gzip /tmp/robocontrol.tar
+    ```
+
+    Il risultato è `/tmp/robocontrol.tar.gz`.
 
 5. Verificare **che il file esista:**
 
     ```bash
     ls -lh /tmp/robocontrol.tar.gz
-    # Output atteso tipo:
-    # -rw-r--r-- 1 root root 1.1M /tmp/robocontrol.tar.gz
     ```
+
+    **Risposta attesa:** una riga che mostra il file `/tmp/robocontrol.tar.gz`; la dimensione dipende dal contenuto.
 
 6. Scaricare il file sul mac:
 
     ```bash
     scp root@<LOCAL_IP>:/tmp/robocontrol.tar.gz ~/Desktop/
-    # Usare la password: <DEVICE_PASSWORD>
     ```
+
+    Inserisci la password root della serra quando richiesta.
 
     Se scp fallisce (probabile, di solito in questo tipo di build NON è presente sftp-server) usare questo comando DAL MAC:
 
+    **Sul Mac**, non nella shell della serra:
+
     ```bash
-    # Dal Mac (non dalla serra!)
     ssh root@<LOCAL_IP> "cat /tmp/robocontrol.tar.gz" > ~/Desktop/robocontrol.tar.gz
-    # Usare la password: <DEVICE_PASSWORD>
     ```
+
+    Inserisci la password root della serra quando richiesta.
 
 7. Sul mac, per estrarre:
 
     ```bash
     cd ~/Desktop
     tar -xzf robocontrol.tar.gz
-    # Si ottiene la cartella robocontrol/
     ```
+
+    **Risposta attesa:** una cartella `robocontrol/` sulla Scrivania.
 
 
 ### Cosa si deduce dal dump:
