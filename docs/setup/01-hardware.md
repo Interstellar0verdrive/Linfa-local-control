@@ -1,5 +1,8 @@
 # 01 · Hardware e collegamenti
 
+> [!CAUTION] Prima di toccare la scheda
+> **Stacca la spina della serra dalla presa e scollega l'adattatore USB → TTL dal Raspberry/computer.** Fallo prima di aprire la parte superiore, identificare o collegare i pin, saldare e forare. Tieni la scheda e i collegamenti lontani da acqua, serbatoi, tubi e pompe. [Leggi tutte le precauzioni](00-panoramica.md#prima-di-intervenire-sicurezza-elettrica-e-acqua) prima di iniziare.
+
 ## La serra Linfa Weezy
 
 La serra è basata su un **VoCore2**, un piccolo modulo con CPU MIPS e Linux personalizzato (kernel 3.18 e BusyBox). È il “cervello” della serra: si trova **nella parte superiore, dove sono le luci**, e gestisce direttamente il pannello LED, le ventole, la pompa principale, le tre pompe dei nutrienti, l’anello LED RGB e la rete Wi-Fi integrata.
@@ -77,7 +80,7 @@ Sono esempi di compatibilità **elettrica** dei segnali, non una garanzia che i 
 
 ## Cablaggio UART
 
-Collega la massa in comune e **incrocia TX con RX**. Verifica sempre i pin sulla tua scheda prima di collegare l’adattatore.
+**Esegui e modifica questi collegamenti solo con la serra scollegata dalla presa e l'adattatore USB → TTL scollegato dal Raspberry/computer.** Collega la massa in comune e **incrocia TX con RX**. Verifica sempre i pin sulla tua scheda prima di collegare l’adattatore.
 
 <div class="wiring-card" aria-label="Collegamenti tra adattatore USB TTL e serra">
   <div class="wiring-head"><span>ADATTATORE USB → TTL</span><span>SERRA · VOCORE2</span></div>
@@ -93,7 +96,7 @@ Collega la massa in comune e **incrocia TX con RX**. Verifica sempre i pin sulla
 
 Nel prototipo documentato qui, i tre collegamenti seriali sono stati **saldati nella parte superiore della serra**. I fili del collegamento con l'adattatore USB → TTL escono dalla scocca attraverso **un foro**. I cavetti Dupont sono comodi per identificare i segnali e fare una prova, ma per un uso continuativo i collegamenti devono restare fermi, isolati e protetti da trazione.
 
-Prima di saldare o forare, scollega l'alimentazione della serra e verifica la posizione dei componenti all'interno della scocca. Non scegliere il punto del foro basandoti soltanto sulle foto: la disposizione interna può variare. **Prima di richiudere la parte superiore**, controlla che ciascun collegamento sia ben saldo e isolato, che non ci siano cortocircuiti tra TX, RX e GND e che il bordo del foro non possa tagliare il cavo. **VCC resta sempre scollegato.**
+**Prima di saldare o forare, stacca la spina della serra e scollega l'adattatore USB → TTL dal Raspberry/computer.** Tieni la parte superiore su una superficie asciutta, lontana da serbatoi, tubi, pompe e possibili gocce. Verifica la posizione dei componenti all'interno della scocca; non scegliere il punto del foro basandoti soltanto sulle foto, perché la disposizione interna può variare. **Prima di richiudere la parte superiore**, controlla che ciascun collegamento sia ben saldo e isolato, che non ci siano cortocircuiti tra TX, RX e GND e che il bordo del foro non possa tagliare il cavo. **VCC resta sempre scollegato.**
 
 La foto d'insieme mostra la scheda nella parte superiore della serra: **la freccia gialla indica la zona dei pin UART**. Le due foto successive mostrano il dettaglio dei pin con i cavetti collegati e la schedina adattatrice usata nelle prove. L'ultima foto mostra il passaggio dei fili attraverso la scocca. Non è disponibile una foto ravvicinata delle saldature: verifica i punti TX, RX e GND sulla tua scheda prima di procedere.
 
@@ -130,7 +133,7 @@ La foto d'insieme mostra la scheda nella parte superiore della serra: **la frecc
 
 ## Verifica la porta seriale
 
-Una volta collegato l’adattatore al Raspberry, il dispositivo compare di solito come `/dev/ttyUSB0`, `/dev/ttyUSB1` o, con alcuni adattatori, `/dev/ttyACM0`.
+**Solo dopo aver terminato il montaggio, isolato i fili, verificato che tutto sia asciutto e richiuso la scocca**, puoi ricollegare l'adattatore al Raspberry e alimentare la serra per la prova. Una volta collegato l’adattatore al Raspberry, il dispositivo compare di solito come `/dev/ttyUSB0`, `/dev/ttyUSB1` o, con alcuni adattatori, `/dev/ttyACM0`.
 
 Verifica dal Raspberry:
 

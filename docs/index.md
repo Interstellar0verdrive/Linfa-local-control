@@ -3,6 +3,9 @@ Questa guida accompagna la preparazione di una serra Robonica Linfa per il contr
 > [!IMPORTANT] Compatibilità e responsabilità
 > La procedura è stata provata su **Linfa Weezy**. La compatibilità con la Linfa standard è da verificare. Il progetto è indipendente da Robonica S.r.l.; [leggi il disclaimer completo](https://github.com/Interstellar0verdrive/Linfa-local-control#linfa-local-control) prima di aprire il dispositivo.
 
+> [!CAUTION] Prima di aprire la serra
+> **Stacca la spina della serra e scollega l'adattatore USB → TTL dal Raspberry/computer** prima di toccare la scheda, collegare o scollegare fili, saldare o forare. Tieni i componenti elettrici lontani da acqua, serbatoi, tubi e pompe. La guida presuppone esperienza di base con collegamenti elettrici e saldature; se non sai verificare che l'intervento sia sicuro, fermati e chiedi aiuto a una persona qualificata. Leggi le [precauzioni complete nel passo 00](setup/00-panoramica.md#prima-di-intervenire-sicurezza-elettrica-e-acqua).
+
 ## Percorso essenziale: dalla serra a Home Assistant
 
 Il software del controller e del bridge è già nella repository: non devi ripetere l'indagine sul traffico cloud né estrarre il contenuto del VoCore. Devi invece preparare il collegamento fisico, il Raspberry, l'accesso seriale, MQTT e Home Assistant. La [lista dei materiali](setup/00-panoramica.md#cosa-serve-prima-di-iniziare) è nel passo 00.

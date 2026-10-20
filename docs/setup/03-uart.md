@@ -4,6 +4,8 @@
 
 Prima di eseguire **qualsiasi comando di controllo**, script o policy, è fondamentale verificare che il collegamento UART tra Raspberry e serra funzioni correttamente.
 
+Questa è una **prova con alimentazione**: avviala soltanto dopo aver completato e isolato il cablaggio, richiuso la parte superiore e verificato che elettronica, cavi e alimentatori siano asciutti e lontani da acqua, serbatoi, tubi e pompe. Se devi correggere un collegamento, **scollega prima la spina della serra e l'adattatore USB → TTL dal Raspberry/computer**; non spostare i fili mentre il sistema è alimentato.
+
 Questa verifica:
 
 - non modifica nulla sulla serra

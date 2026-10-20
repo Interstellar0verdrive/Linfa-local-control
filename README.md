@@ -7,6 +7,11 @@ Controllo locale sperimentale per serre **Robonica Linfa** tramite Raspberry Pi,
 >
 > Le procedure richiedono l'apertura del dispositivo, il collegamento a una console seriale e modifiche alla sua configurazione. Possono causare malfunzionamenti e **potrebbero far decadere la garanzia commerciale**. Verifica le condizioni applicabili prima di intervenire. I diritti previsti dalla garanzia legale sono distinti dalla garanzia commerciale.
 
+> [!CAUTION]
+> **Sicurezza elettrica e acqua.** Prima di aprire la serra, toccare o collegare i pin, saldare o forare, **scollega la spina della serra dalla presa e l'adattatore USB → TTL dal Raspberry/computer**. Lavora su una superficie asciutta; tieni schede, fili, alimentatori e giunzioni lontani da acqua, serbatoi, tubi e pompe, soprattutto quando la parte superiore è smontata. Ridai alimentazione solo dopo aver isolato i collegamenti, verificato che tutto sia asciutto e richiuso la scocca. Non alimentare componenti bagnati o danneggiati.
+>
+> Questa guida presuppone che tu sappia identificare i collegamenti elettrici, saldare e isolare fili senza creare cortocircuiti e riconoscere quando un intervento non è sicuro. Se non hai queste competenze o hai dubbi, fermati e rivolgiti a una persona qualificata. **Non aprire né modificare l'alimentatore o i collegamenti alla rete elettrica.**
+
 ## Stato del progetto
 
 - **Disponibile ora:** guida di preparazione hardware, controller CLI per Raspberry Pi e bridge MQTT.

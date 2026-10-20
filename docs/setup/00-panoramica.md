@@ -70,6 +70,17 @@ Obiettivo pratico del progetto:
 
 ---
 
+## Prima di intervenire: sicurezza elettrica e acqua
+
+> [!CAUTION] Scollega la serra e l'adattatore seriale
+> Prima di aprire la serra, cercare i pin sulla scheda, collegare o scollegare i fili, saldare o forare, **scollega la spina della serra dalla presa e l'adattatore USB → TTL dal Raspberry/computer**. Spegnere la serra senza staccare la spina non basta. Non aprire né modificare l'alimentatore o i collegamenti alla rete elettrica.
+
+Lavora con la parte superiore su una **superficie stabile e asciutta**. Tieni scheda, fili, saldatore, alimentatori e giunzioni lontani da acqua, serbatoi, tubi e pompe; quando la serra è smontata, evita che una perdita o uno spostamento dei tubi possa bagnare l'elettronica. Prima di riaccendere, verifica che i collegamenti siano saldi e isolati, che non ci siano fili scoperti o cortocircuiti, che tutto sia asciutto e che la scocca sia richiusa. Se trovi acqua o danni su un componente elettrico, non alimentarlo: fallo controllare da una persona qualificata.
+
+Questa guida **presuppone esperienza di base con elettronica e saldatura**: devi saper riconoscere TX, RX e GND, verificare l'assenza di alimentazione e isolare i fili senza danneggiare la scheda. Se non sai farlo in sicurezza o hai dubbi sulla tua serra, **fermati e chiedi aiuto a una persona qualificata**. Per indicazioni generali, vedi i [consigli di sicurezza per i lavori elettrici](https://www.esfi.org/do-it-yourself-diy-electrical-safety/) della Electrical Safety Foundation International.
+
+---
+
 ## Cosa serve prima di iniziare
 
 | Componente | Cosa verificare |
