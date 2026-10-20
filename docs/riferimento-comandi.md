@@ -2,16 +2,36 @@
 
 **Percorso guidato:** [Indice dei capitoli](index.md) · [Installazione controller](setup/06-controller-cli.md) · [Collegamento Home Assistant](setup/09-home-assistant.md)
 
-Questa pagina riordina l'[help della CLI](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/serra_help.txt) e mostra, per ogni azione, il comando equivalente da inviare tramite l'integrazione **MQTT di Home Assistant**. I comandi funzionano dopo aver completato il percorso guidato. L'app completa per Home Assistant è ancora in test e non è inclusa nella repository: i payload qui sotto si inviano dalla funzione **Pubblica un pacchetto** dell'integrazione MQTT oppure da un'automazione MQTT.
+Questa pagina raccoglie i comandi **per completezza della documentazione** e per chi vuole fare prove manuali. Riordina l'[help della CLI](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/serra_help.txt) e mostra, per ogni azione, il payload MQTT equivalente. **Per usare normalmente la serra da Home Assistant non sarà necessario imparare questi comandi:** l'app dedicata, pronta e in fase di test, li invierà e gestirà dall'interfaccia. L'app non è ancora inclusa nella repository; i comandi manuali funzionano dopo aver completato il percorso guidato.
+
+Sul Raspberry, dopo aver installato il controller, puoi leggere l'help completo con:
+
+```bash
+serra --help
+```
+
+## Dove fare le prove MQTT
+
+Puoi pubblicare i comandi dall'[integrazione MQTT di Home Assistant](setup/09-home-assistant.md#alternativa-usare-gli-strumenti-mqtt-integrati), ma per esplorare i topic e osservare le risposte **MQTT Explorer** è più comodo:
+
+- **Dentro Home Assistant OS:** installa l'app comunitaria MQTT Explorer dal [repository di GollumDom](https://github.com/GollumDom/addon-repository), poi collegala al broker usato dal Raspberry. È uno strumento facoltativo e indipendente da questo progetto.
+- **Da Windows, macOS o Linux:** usa [MQTT Explorer per desktop](https://mqtt-explorer.com/). Il computer deve raggiungere il broker sulla rete e autenticarsi con credenziali MQTT valide; non deve aprire Home Assistant. Se il broker è l'app Mosquitto di Home Assistant, dal computer usa l'indirizzo di rete di Home Assistant, non il nome interno `core-mosquitto.local.hass.io` visibile nello screenshot.
+
+In MQTT Explorer seleziona **raw** per un payload testuale come `lights on`, pubblica su `serra/cmd` con **retain disattivato** e osserva `serra/status/last` e `serra/state/*`. L'immagine mostra una sessione reale: nel pannello di pubblicazione è rimasta selezionata la modalità **JSON**, che va cambiata in **raw** prima di inviare i comandi testuali di questa pagina.
+
+<figure class="ha-preview" markdown="1">
+  [![MQTT Explorer mostra i topic serra/status e serra/state e il pannello Publish per serra/cmd; nella schermata JSON è selezionato, ma per comandi testuali occorre scegliere raw](assets/mqtt-explorer.png)](assets/mqtt-explorer.png)
+  <figcaption>MQTT Explorer: topic di stato a sinistra e pubblicazione su <code>serra/cmd</code> a destra. Per <code>lights on</code> seleziona <strong>raw</strong>, non JSON; lascia <strong>retain</strong> disattivato. Apri l'immagine per ingrandirla.</figcaption>
+</figure>
 
 ## Come leggere le tabelle
 
-Sul Raspberry esegui l'intera riga che inizia con `serra`. In Home Assistant pubblica **solo il payload**, senza il prefisso `serra`, sul topic `serra/cmd`. Se hai modificato `SERRA_MQTT_TOPIC`, sostituisci `serra` con il tuo topic base. **Retain deve essere disattivato per tutti i comandi**, così un messaggio non viene ripetuto quando il bridge si riconnette.
+Sul Raspberry esegui l'intera riga che inizia con `serra`. Da Home Assistant o MQTT Explorer pubblica **solo il payload**, senza il prefisso `serra`, sul topic `serra/cmd`. Se hai modificato `SERRA_MQTT_TOPIC`, sostituisci `serra` con il tuo topic base. **Retain deve essere disattivato per tutti i comandi**, così un messaggio non viene ripetuto quando il bridge si riconnette.
 
 | Dove | Topic | Testo da inviare |
 | --- | --- | --- |
 | Raspberry | — | `serra lights on -i 80 -f 15` |
-| Home Assistant · MQTT | `serra/cmd` | `lights on -i 80 -f 15` |
+| Client MQTT · Home Assistant o MQTT Explorer | `serra/cmd` | `lights on -i 80 -f 15` |
 
 Nelle tabelle, le parti tra `<…>` sono valori da sostituire. Le opzioni tra parentesi quadre sono facoltative. Le opzioni lunghe (`--intensity`) e brevi (`-i`) sono equivalenti.
 
@@ -33,7 +53,14 @@ Nelle tabelle, le parti tra `<…>` sono valori da sostituire. Le opzioni tra pa
 | `R` | Prima metà dei rossi |
 | `D` | Seconda metà dei rossi |
 
-Per esempio, `lights set G -i 0` spegne solo il canale verde.
+Esempi (ogni payload va pubblicato su `serra/cmd`, con **raw** e senza retain):
+
+| Risultato | Sul Raspberry | Payload MQTT |
+| --- | --- | --- |
+| Accendi tutto all’80% con dissolvenza di circa 15 secondi | `serra lights on --intensity 80 --fade 15` | `lights on --intensity 80 --fade 15` |
+| Porta i soli LED verdi al 40% in circa 5 secondi | `serra lights set G -i 40 -f 5` | `lights set G -i 40 -f 5` |
+| Spegni il solo canale verde | `serra lights set G -i 0` | `lights set G -i 0` |
+| Spegni tutti i LED con dissolvenza | `serra lights off -f 10` | `lights off -f 10` |
 
 ## Ventole
 
@@ -44,6 +71,13 @@ Per esempio, `lights set G -i 0` spegne solo il canale verde.
 | Impostarne una o tutte | `serra fans set <1/2/F/all> [-i livello]` | `fans set <1/2/F/all> [-i livello]` |
 
 `1` e `2` identificano le prime due ventole; `F` è quella frontale. I livelli per `-i, --intensity` sono `off` (0%), `low` (circa 50%), `medium` (circa 75%, predefinito) e `high` (100%). Quando chiedi `low` o `medium`, il controller esegue prima un breve avvio al 100%: sotto circa il 40% una ventola ferma potrebbe non partire.
+
+| Risultato | Sul Raspberry | Payload MQTT |
+| --- | --- | --- |
+| Accendi tutte le ventole al livello predefinito | `serra fans on` | `fans on` |
+| Porta la ventola 1 al massimo | `serra fans set 1 -i high` | `fans set 1 -i high` |
+| Imposta la ventola frontale su low | `serra fans set F --intensity low` | `fans set F --intensity low` |
+| Spegni la sola ventola 2 | `serra fans set 2 -i off` | `fans set 2 -i off` |
 
 ## Pompe
 
@@ -63,6 +97,15 @@ Per le pompe nutrienti `-s, --seconds` è la durata di una singola erogazione (p
 | `1` | Centro, vasetto azzurro |
 | `2` | Sinistra, vasetto rosso |
 
+Esempi: **verifica prima l’ID della pompa** e comincia con durate brevi, perché questi comandi azionano davvero le pompe.
+
+| Risultato | Sul Raspberry | Payload MQTT |
+| --- | --- | --- |
+| Aziona la pompa principale per 3 secondi | `serra pump main on -s 3` | `pump main on -s 3` |
+| Ferma subito la pompa principale | `serra pump main off` | `pump main off` |
+| Aziona una volta la pompa nutrienti 0 per mezzo secondo | `serra pump nutrient 0 -s 0.5` | `pump nutrient 0 -s 0.5` |
+| Aziona due volte la pompa nutrienti 1, un secondo per volta, con 3 secondi di pausa | `serra pump nutrient 1 -s 1 -t 2 -i 3` | `pump nutrient 1 -s 1 -t 2 -i 3` |
+
 ## LED ring
 
 | Azione | Raspberry | Payload Home Assistant |
@@ -72,6 +115,12 @@ Per le pompe nutrienti `-s, --seconds` è la durata di una singola erogazione (p
 | Lampeggiare | `serra ring blink [-c colore] [-t volte] [-f secondi] [-d durata] [-i pausa]` | `ring blink [-c colore] [-t volte] [-f secondi] [-d durata] [-i pausa]` |
 
 `-c, --color` accetta `white`, `red`, `green`, `yellow`, `orange`, `blue`, `purple`, `off` oppure un codice esadecimale RGB di sei cifre, per esempio `F90023`. Il predefinito è `white`. `-f, --fade` è la dissolvenza approssimata in secondi (predefinito `0`). Per `blink`, `-t, --times` indica i lampeggi (predefinito `5`, massimo `100`), `-d, --duration` la durata accesa (predefinito `1` secondo, massimo `60`) e `-i, --interval` la pausa spenta (predefinito `1` secondo, massimo `10`). La sequenza `blink` resta in esecuzione fino al termine dei cicli.
+
+| Risultato | Sul Raspberry | Payload MQTT |
+| --- | --- | --- |
+| Accendi il ring verde con dissolvenza | `serra ring on -c green -f 5` | `ring on -c green -f 5` |
+| Lampeggia 3 volte con un colore RGB, 2 secondi acceso e 1 spento | `serra ring blink -c F90023 -t 3 -d 2 -i 1` | `ring blink -c F90023 -t 3 -d 2 -i 1` |
+| Spegni il ring in circa 3 secondi | `serra ring off --fade 3` | `ring off --fade 3` |
 
 ## Checkup, rete e stato
 
@@ -88,6 +137,15 @@ Il **checkup è intrusivo**: sovrascrive le impostazioni correnti e termina con 
 
 `state sync` aggiorna i timer e ripubblica su `serra/state/*` gli **stati logici attesi**. Non interroga i sensori della serra per confermare lo stato fisico delle ventole, delle luci o delle pompe.
 
+| Risultato | Sul Raspberry | Payload MQTT |
+| --- | --- | --- |
+| Prova luci, ventole e ring, escludendo entrambe le famiglie di pompe | `serra checkup -pm off -pn off` | `checkup -pm off -pn off` |
+| Disattiva la rete della serra e il suo NTP | `serra net off` | `net off` |
+| Riattiva la rete della serra ma lascia NTP disattivato | `serra net on --ntp off` | `net on --ntp off` |
+| Ripubblica gli stati logici | `serra state sync` | `state sync` |
+
+Anche il checkup senza pompe cambia temporaneamente luci, ventole e ring e li lascia spenti alla fine: usalo solo quando puoi osservare la serra.
+
 ## Topic MQTT, esito e conferma
 
 | Topic | Uso |
@@ -101,7 +159,15 @@ Il **checkup è intrusivo**: sovrascrive le impostazioni correnti e termina con 
 | `serra/status/last_seen` | Ultima attività nota pubblicata dal bridge o dal controller. |
 | `serra/state/*` | Ultimi stati logici pubblicati dal controller, retained. |
 
-Gli ID e gli ack sono facoltativi. Per un comando semplice in Home Assistant bastano topic `serra/cmd`, payload `lights on` e **retain disattivato**. Per vedere i risultati, usa **Ascolta un topic** su `serra/#`, come spiegato nel [capitolo 09](setup/09-home-assistant.md#prova-senza-installare-altri-strumenti).
+Gli ID e gli ack sono facoltativi. Per un comando semplice bastano topic `serra/cmd`, payload `lights on` e **retain disattivato**. Per vedere i risultati, osserva `serra/#` con MQTT Explorer oppure usa **Ascolta un topic** nell'[integrazione MQTT di Home Assistant](setup/09-home-assistant.md#alternativa-usare-gli-strumenti-mqtt-integrati).
+
+| Tipo di prova | Topic di pubblicazione | Payload | Risposta da osservare |
+| --- | --- | --- | --- |
+| Testo semplice | `serra/cmd` | `fans set F -i low` | `serra/status/last` e `serra/state/fans/fan-F` |
+| Testo con conferma dedicata | `serra/cmd/prova-ventola-01` | `fans off` | `serra/ack/prova-ventola-01` |
+| JSON con conferma dedicata | `serra/cmd/json/prova-luci-01` | `{"cmdline":"lights on -i 60"}` | `serra/ack/prova-luci-01` |
+
+Nel primo e secondo esempio seleziona **raw**; nel terzo seleziona **JSON**. L'ID della conferma deve essere diverso per ogni invio. Tutti i comandi vanno pubblicati con **retain disattivato**.
 
 > [!NOTE] Fonte dei comandi
 > La sintassi viene dal [parser del controller](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/serra_controller.py) e dall'[help testuale](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/serra_help.txt); i formati dei topic vengono dal [bridge MQTT](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/serra_mqtt_bridge.py). Se aggiorni gli script, verifica anche questa pagina.

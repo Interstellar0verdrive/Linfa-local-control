@@ -2,7 +2,7 @@
 
 **Percorso guidato:** [Indice dei capitoli](../index.md)
 
-In questo passo copi gli script sul Raspberry e verifichi il **controller CLI** tramite UART. Il bridge MQTT e i servizi automatici saranno configurati nei passi 06 e 07.
+In questo passo copi gli script sul Raspberry e verifichi il **controller CLI** tramite UART. Il bridge MQTT e i servizi automatici saranno configurati nei passi 07 e 08.
 
 **Assunzioni in ingresso (stato iniziale):**
 

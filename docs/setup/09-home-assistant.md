@@ -79,27 +79,45 @@ Tutti questi topic sono **retained**.
 
 ### Comandi (publish da HA → Raspberry)
 
-La [tabella completa dei comandi](../riferimento-comandi.md) affianca le istruzioni da eseguire sul Raspberry ai payload da pubblicare da Home Assistant.
+> [!TIP] Vuoi provare altri comandi?
+> Nel [riferimento comandi](../riferimento-comandi.md) trovi l'elenco completo, esempi con parametri diversi e la sintassi da usare sul Raspberry o in un client MQTT. Per usare la futura app Linfa in Home Assistant non dovrai digitare questi comandi.
 
 ```text {.reference-example}
 serra/cmd
 serra/cmd/<id>
 ```
 
-Payload tipico:
+Payload tipico per una prima prova con le ventole:
 
 ```text {.reference-example}
-lights on -f 3
+fans on
 ```
 
 oppure con ID (per ack):
 
 ```text {.reference-example}
 topic: serra/cmd/abc123
-payload: lights off
+payload: fans off
 ```
 
-### Prova senza installare altri strumenti
+### Prova con MQTT Explorer
+
+Per vedere i topic organizzati e pubblicare comandi di prova, consigliamo **MQTT Explorer**. Se usi **Home Assistant OS**, puoi installare l'[app comunitaria MQTT Explorer](https://github.com/GollumDom/addon-repository): vai in **Impostazioni → App → Installa app**, aggiungi il repository dal menu **⋮ → Repository**, poi installa e avvia MQTT Explorer. È uno strumento facoltativo, separato dall'integrazione MQTT e dall'app Linfa in preparazione.
+
+Puoi usare anche [MQTT Explorer per Windows, macOS o Linux](https://mqtt-explorer.com/) su un computer della stessa rete: collegalo allo **stesso broker** con credenziali MQTT valide. Il computer non deve entrare in Home Assistant; deve poter raggiungere il broker. Se usi l'app Mosquitto di Home Assistant, indica l'indirizzo di rete di Home Assistant, non il nome interno `core-mosquitto.local.hass.io`.
+
+Nella sezione **Publish** di MQTT Explorer imposta:
+
+| Campo | Valore di prova |
+| --- | --- |
+| Topic | `serra/cmd` |
+| Formato payload | **raw** (testo semplice) |
+| Payload | `fans on` |
+| Retain | **Disattivato** |
+
+Pubblica e verifica che le ventole si avviino e che compaiano messaggi su `serra/status/last` e `serra/state/fans/*`. Poi pubblica `fans off` sullo stesso topic, sempre senza retain. La [schermata e gli esempi](../riferimento-comandi.md#dove-fare-le-prove-mqtt) mostrano dove leggere i messaggi e come evitare di inviare un comando testuale in modalità JSON.
+
+### Alternativa: usare gli strumenti MQTT integrati
 
 Nell'integrazione MQTT di Home Assistant, apri **Impostazioni → Dispositivi e servizi → MQTT → Configura**. Nella sezione **Ascolta un topic**, inserisci `serra/#` e avvia l'ascolto. Dovresti vedere i topic di stato pubblicati dal Raspberry; se non arrivano subito, puoi eseguire `serra state sync` sul Raspberry per pubblicarli di nuovo.
 
@@ -108,10 +126,10 @@ Nella sezione **Pubblica un pacchetto** inserisci:
 | Campo | Valore di prova |
 | --- | --- |
 | Topic | `serra/cmd` |
-| Payload | `lights on` |
+| Payload | `fans on` |
 | Retain | **Disattivato**: un comando non deve essere ripetuto dal broker a una futura riconnessione. |
 
-Pubblica il comando e verifica che la luce si accenda e che compaiano messaggi su `serra/status/last` e `serra/state/lights`. Poi invia `lights off` allo stesso topic, sempre senza retain. La procedura di ascolto e pubblicazione è descritta anche nella [guida ufficiale MQTT](https://www.home-assistant.io/integrations/mqtt/#testing-your-setup).
+Pubblica il comando e verifica che le ventole si avviino e che compaiano messaggi su `serra/status/last` e `serra/state/fans/*`. Poi invia `fans off` allo stesso topic, sempre senza retain. La procedura di ascolto e pubblicazione è descritta anche nella [guida ufficiale MQTT](https://www.home-assistant.io/integrations/mqtt/#testing-your-setup).
 
 > [!NOTE] Stato dell'integrazione
 > Questa prova conferma che Home Assistant può leggere i topic e inviare comandi attraverso MQTT. **Non crea ancora entità, pulsanti o una dashboard dedicata.** L'app completa per Home Assistant è pronta e in fase di test, ma non è ancora stata pubblicata qui.
