@@ -113,9 +113,13 @@ h1 em { color: var(--accent); font-style: normal; }
 .hero-meta { display: flex; flex-wrap: wrap; gap: 8px; }
 .meta-chip { display: inline-flex; align-items: center; gap: 7px; padding: 5px 10px; border: 1px solid var(--accent-strong); border-radius: 30px; background: var(--accent-soft); color: var(--accent-dark); font-size: 11px; font-weight: 700; }
 .meta-chip.muted { border-color: var(--line); background: var(--surface); color: var(--muted); }
-.quick-jump { display: flex; flex-wrap: wrap; gap: 8px; margin: 31px 0 0; }
-.quick-jump a { padding: 7px 11px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--muted); font-size: 11px; font-weight: 700; text-decoration: none; }
-.quick-jump a:hover { border-color: var(--accent); color: var(--accent-dark); }
+.quick-jump { display: none; margin: 31px 0 0; padding: 18px 22px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.quick-jump-title { color: var(--accent); font-size: 10px; font-weight: 850; letter-spacing: .15em; }
+.quick-jump ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 23px; margin: 10px 0 0; padding: 0; list-style: none; }
+.quick-jump li { min-width: 0; }
+.quick-jump a { display: block; padding: 6px 0; color: var(--muted); font-size: 12px; font-weight: 650; line-height: 1.4; text-decoration: none; }
+.quick-jump a::before { content: '↳'; margin-right: 8px; color: var(--accent); }
+.quick-jump a:hover { color: var(--accent-dark); }
 .overview { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin: 52px 0 83px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); box-shadow: var(--shadow); }
 .overview-item { display: flex; flex-direction: column; gap: 5px; min-width: 0; padding: 24px 22px; }
 .overview-item + .overview-item { border-left: 1px solid var(--line); }
@@ -214,6 +218,7 @@ h2 { margin: 0; font-size: clamp(26px, 2.6vw, 34px); font-weight: 750; letter-sp
 @media (max-width: 1240px) {
   .content-layout { grid-template-columns: minmax(0, 760px); max-width: 900px; }
   .page-toc { display: none; }
+  .quick-jump { display: block; }
 }
 @media (max-width: 900px) {
   .site-shell { display: block; }
@@ -274,8 +279,9 @@ h2 { margin: 0; font-size: clamp(26px, 2.6vw, 34px); font-weight: 750; letter-sp
 .topbar-github:hover { border-color: var(--accent); color: var(--accent); }
 .github-label-mobile { display: none; }
 .topbar-actions { gap: 10px; }
-.theme-control { display: block; }
-.theme-control select { min-height: 35px; padding: 0 26px 0 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); color: var(--ink); font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; }
+.theme-control { position: relative; display: block; }
+.theme-control::after { content: ''; position: absolute; top: 50%; right: 15px; width: 7px; height: 7px; border-right: 1.8px solid var(--muted); border-bottom: 1.8px solid var(--muted); transform: translateY(-68%) rotate(45deg); pointer-events: none; }
+.theme-control select { min-height: 35px; padding: 0 37px 0 12px; appearance: none; -webkit-appearance: none; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); color: var(--ink); font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; }
 .theme-control select:hover { border-color: var(--accent); }
 .sidebar-extra.is-active { background: var(--accent-soft); color: var(--accent-dark); }
 .sidebar-group-label { margin-bottom: 9px; }
@@ -361,12 +367,28 @@ h2 { margin: 0; font-size: clamp(26px, 2.6vw, 34px); font-weight: 750; letter-sp
 .markdown-body .highlight::before { padding-right: 78px; }
 .markdown-body .copy-code { position: absolute; top: 7px; right: 9px; padding: 3px 9px; border: 1px solid rgba(255,255,255,.24); border-radius: 5px; background: transparent; color: var(--code-ink); font-size: 11px; cursor: pointer; }
 .markdown-body .copy-code:hover { background: rgba(255,255,255,.1); }
+.system-diagram { margin: 31px 0 39px; padding: 18px 18px 15px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); box-shadow: var(--shadow); }
+.system-diagram svg { display: block; width: min(100%, 440px); height: auto; margin: 0 auto; }
+.system-diagram .flow-card { fill: var(--surface); stroke: var(--line-strong); stroke-width: 1.5; }
+.system-diagram .flow-card-controller { fill: var(--accent-soft); stroke: var(--accent-strong); }
+.system-diagram .flow-number { fill: var(--accent-soft); stroke: var(--accent-strong); stroke-width: 1.3; }
+.system-diagram .flow-number-text { fill: var(--accent-dark); font-size: 11px; font-weight: 850; }
+.system-diagram .flow-title { fill: var(--ink); font-size: 17px; font-weight: 750; letter-spacing: -.02em; }
+.system-diagram .flow-caption { fill: var(--muted); font-size: 12px; }
+.system-diagram .flow-link { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.system-diagram .flow-link-label { fill: var(--accent-dark); font-size: 10px; font-weight: 850; letter-spacing: .045em; }
+.system-diagram figcaption { color: var(--quiet); font-size: 11px; text-align: center; line-height: 1.5; }
 @media (max-width: 650px) {
   .topbar-github { gap: 4px; padding: 0 8px; font-size: 10px; }
   .github-label-desktop { display: none; }
   .github-label-mobile { display: inline; }
   .topbar-path a, .topbar-path .path-separator { display: none; }
-  .theme-control select { width: 79px; padding: 0 3px; font-size: 10px; }
+  .theme-control select { width: 95px; padding: 0 27px 0 8px; font-size: 10px; }
+  .theme-control::after { right: 10px; width: 6px; height: 6px; }
+  .quick-jump { padding: 16px 18px; }
+  .quick-jump ul { grid-template-columns: 1fr; gap: 0; }
+  .system-diagram { padding: 9px 5px 14px; }
+  .system-diagram figcaption { padding: 0 9px; font-size: 10px; }
   .markdown-body { margin-top: 43px; font-size: 14px; }
   .markdown-body h2 { margin-top: 60px; padding-left: 61px; font-size: 25px; }
   .markdown-body h2::before { width: 44px; height: 30px; font-size: 10px; }

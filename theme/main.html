@@ -18,8 +18,8 @@
       document.documentElement.dataset.theme = preference === 'auto' ? (media.matches ? 'dark' : 'light') : preference;
     })();
   </script>
-  <link rel="stylesheet" href="{{ 'stylesheets/site.css'|url }}?v=2">
-  <script src="{{ 'javascripts/site.js'|url }}" defer></script>
+  <link rel="stylesheet" href="{{ 'stylesheets/site.css'|url }}?v={{ config.extra.asset_version }}">
+  <script src="{{ 'javascripts/site.js'|url }}?v={{ config.extra.asset_version }}" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#contenuto">Vai al contenuto</a>
@@ -73,7 +73,10 @@
           {% if is_home or (step and step.number == '01') %}<div class="hero-meta"><span class="meta-chip">◉ &nbsp;Verificato su Linfa Weezy</span><span class="meta-chip muted">Linfa standard da verificare</span></div>{% endif %}
 
           {% if toc_items and not is_home %}
-          <nav class="quick-jump" aria-label="Vai a una sezione">{% for item in toc_items[:5] %}<a href="#{{ item.id }}">{{ item.title }}</a>{% endfor %}</nav>
+          <nav class="quick-jump" aria-label="In questa pagina">
+            <span class="quick-jump-title">IN QUESTA PAGINA</span>
+            <ul>{% for item in toc_items %}<li><a href="#{{ item.id }}">{{ item.title }}</a></li>{% endfor %}</ul>
+          </nav>
           {% endif %}
 
           {% if step and step.number == '01' %}

@@ -1,6 +1,8 @@
 """Shared navigation and page introductions for the published guide."""
 
+import hashlib
 import re
+from pathlib import Path
 
 
 STEPS = [
@@ -21,6 +23,16 @@ EXTRAS = {
     "approfondimenti/traffico-cloud.md": ("Analisi del traffico cloud", "Come è stato osservato il dialogo originale tra la serra e il servizio remoto."),
     "approfondimenti/accesso-e-dump.md": ("Accesso e dump del modulo", "Appunti tecnici sull’accesso al VoCore e sulla copia del suo contenuto."),
 }
+
+
+def on_config(config):
+    """Refresh browser-cached assets whenever the shared CSS or JS changes."""
+    root = Path(__file__).resolve().parent
+    digest = hashlib.sha256()
+    for relative_path in ("docs/stylesheets/site.css", "docs/javascripts/site.js"):
+        digest.update((root / relative_path).read_bytes())
+    config["extra"]["asset_version"] = digest.hexdigest()[:10]
+    return config
 
 
 def on_page_markdown(markdown, page, config, files):

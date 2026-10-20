@@ -6,6 +6,47 @@
 
 Questa documentazione descrive un setup per **controllare in locale** la serra Linfa Weezy (Robonica) **senza dipendere dal cloud**.
 
+<figure class="system-diagram">
+  <svg viewBox="0 0 420 515" role="img" aria-labelledby="system-diagram-title system-diagram-description" xmlns="http://www.w3.org/2000/svg">
+    <title id="system-diagram-title">Schema del controllo locale della serra</title>
+    <desc id="system-diagram-description">Home Assistant comunica via MQTT con il broker. Il Raspberry Pi riceve i messaggi MQTT e controlla la serra Linfa tramite collegamento USB UART a 3,3 volt. I comandi scendono verso la serra e gli stati risalgono verso Home Assistant.</desc>
+
+    <rect class="flow-card" x="20" y="18" width="380" height="88" rx="14" />
+    <circle class="flow-number" cx="55" cy="62" r="18" />
+    <text class="flow-number-text" x="55" y="66" text-anchor="middle">01</text>
+    <text class="flow-title" x="87" y="58">Home Assistant</text>
+    <text class="flow-caption" x="87" y="82">Dashboard e automazioni</text>
+
+    <path class="flow-link" d="M210 113v28m-5-23 5-6 5 6m-10 18 5 6 5-6" />
+    <text class="flow-link-label" x="229" y="132">MQTT</text>
+
+    <rect class="flow-card" x="20" y="148" width="380" height="88" rx="14" />
+    <circle class="flow-number" cx="55" cy="192" r="18" />
+    <text class="flow-number-text" x="55" y="196" text-anchor="middle">02</text>
+    <text class="flow-title" x="87" y="188">Broker MQTT</text>
+    <text class="flow-caption" x="87" y="212">Scambia topic di comando e stato</text>
+
+    <path class="flow-link" d="M210 243v28m-5-23 5-6 5 6m-10 18 5 6 5-6" />
+    <text class="flow-link-label" x="229" y="262">MQTT</text>
+
+    <rect class="flow-card flow-card-controller" x="20" y="278" width="380" height="88" rx="14" />
+    <circle class="flow-number" cx="55" cy="322" r="18" />
+    <text class="flow-number-text" x="55" y="326" text-anchor="middle">03</text>
+    <text class="flow-title" x="87" y="318">Raspberry Pi</text>
+    <text class="flow-caption" x="87" y="342">Controller CLI e bridge MQTT</text>
+
+    <path class="flow-link" d="M210 373v28m-5-23 5-6 5 6m-10 18 5 6 5-6" />
+    <text class="flow-link-label" x="229" y="392">USB → UART · 3,3 V</text>
+
+    <rect class="flow-card" x="20" y="408" width="380" height="88" rx="14" />
+    <circle class="flow-number" cx="55" cy="452" r="18" />
+    <text class="flow-number-text" x="55" y="456" text-anchor="middle">04</text>
+    <text class="flow-title" x="87" y="448">Serra Linfa · VoCore2</text>
+    <text class="flow-caption" x="87" y="472">Luci, ventole, pompe e LED</text>
+  </svg>
+  <figcaption>Comandi verso la serra ↓ &nbsp;·&nbsp; Stati verso Home Assistant ↑</figcaption>
+</figure>
+
 In sintesi:
 
 - La serra è basata su un **VoCore2 (Linux/BusyBox)** che gestisce fisicamente luci, ventole, pompe e LED ring.
