@@ -30,7 +30,7 @@ nav:
       - '02 · Preparare il Raspberry Pi': setup/02-raspberry.md
       - '03 · Verificare la console UART': setup/03-uart.md
       - '04 · Impostare la password root': setup/04-password-root.md
-      - '05 · Installare e provare il controller CLI': setup/05-controller-cli.md
+      - '05 · Installare il controller CLI': setup/05-controller-cli.md
       - '06 · Configurare il bridge MQTT': setup/06-bridge-mqtt.md
       - '07 · Attivare i servizi automatici': setup/07-servizi-automatici.md
       - '08 · Collegare Home Assistant': setup/08-home-assistant.md

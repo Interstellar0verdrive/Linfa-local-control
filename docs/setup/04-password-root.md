@@ -46,6 +46,6 @@ Chiudi la sessione della serra e ripeti il login dalla console UART per verifica
 <table width="100%" class="step-nav">
   <tr>
     <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="03-uart.md">← 03 · Verificare la console UART</a></td>
-    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="05-controller-cli.md">05 · Installare e provare il controller CLI →</a></td>
+    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="05-controller-cli.md">05 · Installare il controller CLI →</a></td>
   </tr>
 </table>

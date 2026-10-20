@@ -1,4 +1,4 @@
-# 05 · Installare e provare il controller CLI
+# 05 · Installare il controller CLI
 
 **Percorso guidato:** [Indice dei capitoli](../index.md)
 

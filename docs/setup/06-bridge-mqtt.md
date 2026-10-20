@@ -188,7 +188,7 @@ Per uscire: `CTRL + C`
 
 <table width="100%" class="step-nav">
   <tr>
-    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="05-controller-cli.md">← 05 · Installare e provare il controller CLI</a></td>
+    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="05-controller-cli.md">← 05 · Installare il controller CLI</a></td>
     <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="07-servizi-automatici.md">07 · Attivare i servizi automatici →</a></td>
   </tr>
 </table>

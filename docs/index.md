@@ -25,7 +25,7 @@ Il software del controller e del bridge è già nella repository: non devi ripet
   Apri la console della serra ed esegui i primi comandi di controllo.
 - **04** [Impostare la password root](setup/04-password-root.md)
   Proteggi l'accesso seriale e verifica la password richiesta dal controller.
-- **05** [Installare e provare il controller CLI](setup/05-controller-cli.md)
+- **05** [Installare il controller CLI](setup/05-controller-cli.md)
   Installa il controller seriale e prova comandi e sincronizzazione.
 - **06** [Configurare il bridge MQTT](setup/06-bridge-mqtt.md)
   Collega Raspberry e broker, poi verifica stati e comandi MQTT.
