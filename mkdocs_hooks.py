@@ -52,6 +52,13 @@ REDIRECTS = {
 ANCHOR_RE = re.compile(r'(<a\b[^>]*>)(.*?)(</a>)', re.IGNORECASE | re.DOTALL)
 HREF_RE = re.compile(r'\bhref\s*=\s*(["\'])(.*?)\1', re.IGNORECASE | re.DOTALL)
 LINK_ATTR_RE = re.compile(r'\s+(?:target|rel)\s*=\s*(["\']).*?\1', re.IGNORECASE | re.DOTALL)
+DIAGRAM_IMAGES = {
+    "diagramma-cablaggio-uart.svg",
+    "diagramma-percorso-seriale.svg",
+    "diagramma-flusso-mqtt.svg",
+}
+IMAGE_RE = re.compile(r'<img\b[^>]*>', re.IGNORECASE)
+SRC_RE = re.compile(r'\bsrc="([^"]+)"', re.IGNORECASE)
 
 
 def on_config(config):
@@ -79,7 +86,7 @@ def on_page_markdown(markdown, page, config, files):
 
 
 def on_page_content(content, page, config, files):
-    """Mark links outside this documentation site after Markdown has rendered them."""
+    """Mark external links and inline diagrams so site themes can color them."""
     site = urlsplit(config["site_url"])
 
     def mark_external(match):
@@ -97,7 +104,21 @@ def on_page_content(content, page, config, files):
         opening = opening[:-1] + ' target="_blank" rel="noopener noreferrer">'
         return opening + label + '<span class="visually-hidden"> (si apre in una nuova scheda)</span>' + closing
 
-    return ANCHOR_RE.sub(mark_external, content)
+    content = ANCHOR_RE.sub(mark_external, content)
+
+    def inline_diagram(match):
+        image = match.group(0)
+        source = SRC_RE.search(image)
+        if not source:
+            return image
+        path = urlsplit(html.unescape(source.group(1))).path
+        name = Path(path).name
+        if name not in DIAGRAM_IMAGES or "/assets/" not in path:
+            return image
+        svg = (Path(__file__).resolve().parent / "docs" / "assets" / name).read_text(encoding="utf-8")
+        return svg
+
+    return IMAGE_RE.sub(inline_diagram, content)
 
 
 def on_page_context(context, page, config, nav):

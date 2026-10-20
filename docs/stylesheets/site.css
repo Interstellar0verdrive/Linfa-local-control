@@ -17,8 +17,14 @@
   --warning-border: #ecb58c;
   --warning-ink: #8d4927;
   --tip-bg: #e8f4ea;
-  --code-bg: #1b2c24;
-  --code-ink: #eaf5ed;
+  --code-bg: #f1f6f0;
+  --code-head: #e5f0e5;
+  --code-border: #cbdcca;
+  --code-ink: #20382a;
+  --code-caption: #3d6e4a;
+  --code-string: #92531f;
+  --code-keyword: #315b9c;
+  --code-comment: #64786b;
   --shadow: 0 12px 38px rgba(24, 54, 33, .07);
 }
 
@@ -42,7 +48,13 @@
   --warning-ink: #f4bf9c;
   --tip-bg: #203d2a;
   --code-bg: #0d1510;
+  --code-head: #14231a;
+  --code-border: #344b39;
   --code-ink: #e5f5e9;
+  --code-caption: #a8c4b1;
+  --code-string: #ecc58d;
+  --code-keyword: #abc8f3;
+  --code-comment: #9db5a3;
   --shadow: 0 14px 40px rgba(0, 0, 0, .16);
 }
 
@@ -195,11 +207,11 @@ h2 { margin: 0; font-size: clamp(26px, 2.6vw, 34px); font-weight: 750; letter-sp
 .installation-photo { width: min(100%, 500px); margin: 28px auto 38px; }
 .installation-photo img { display: block; width: 100%; margin: 0; }
 .installation-photo figcaption { margin-top: 9px; color: var(--quiet); font-size: 11px; line-height: 1.5; text-align: center; }
-.code-card { overflow: hidden; margin: 23px 0 13px; border-radius: 12px; background: var(--code-bg); color: var(--code-ink); }
-.code-head { display: flex; align-items: center; justify-content: space-between; padding: 11px 16px 9px; border-bottom: 1px solid rgba(255,255,255,.1); color: #a8c4b1; font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+.code-card { overflow: hidden; margin: 23px 0 13px; border: 1px solid var(--code-border); border-radius: 12px; background: var(--code-bg); color: var(--code-ink); }
+.code-head { display: flex; align-items: center; justify-content: space-between; padding: 11px 16px 9px; border-bottom: 1px solid var(--code-border); background: var(--code-head); color: var(--code-caption); font-size: 10px; font-weight: 800; letter-spacing: .12em; }
 .terminal-dot { display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 50%; background: #8bd39b; vertical-align: 1px; }
-.code-head button { padding: 3px 9px; border: 1px solid rgba(255,255,255,.2); border-radius: 5px; background: transparent; color: var(--code-ink); font-size: 11px; letter-spacing: 0; cursor: pointer; }
-.code-head button:hover { background: rgba(255,255,255,.1); }
+.code-head button { padding: 3px 9px; border: 1px solid var(--code-border); border-radius: 5px; background: transparent; color: var(--code-ink); font-size: 11px; letter-spacing: 0; cursor: pointer; }
+.code-head button:hover { background: var(--accent-soft); }
 .code-card pre { overflow-x: auto; margin: 0; padding: 21px 19px; font-size: 13px; line-height: 1.5; }
 .result-note { padding-left: 12px; border-left: 2px solid var(--line-strong); font-size: 12px !important; }
 .compatibility { margin: 30px 0; padding: 0 17px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
@@ -319,13 +331,16 @@ h2 { margin: 0; font-size: clamp(26px, 2.6vw, 34px); font-weight: 750; letter-sp
 .markdown-body code:not(pre code) { padding: .12em .35em; border: 1px solid var(--line); border-radius: 5px; background: var(--accent-soft); color: var(--ink); font-size: .89em; overflow-wrap: anywhere; }
 .markdown-body pre { overflow: auto; max-width: 100%; margin: 0; padding: 23px 20px; border-radius: 0 0 11px 11px; background: var(--code-bg); color: var(--code-ink); font-size: 12px; line-height: 1.65; tab-size: 2; }
 .markdown-body pre code { color: inherit; font-size: inherit; }
-.markdown-body .highlight { overflow: hidden; margin: 28px 0; border: 1px solid var(--line); border-radius: 12px; background: var(--code-bg); }
-.markdown-body .highlight::before { content: 'TERMINALE · COPIA I COMANDI CON ATTENZIONE'; display: block; padding: 10px 17px; border-bottom: 1px solid rgba(255,255,255,.12); color: #a8c4b1; font-size: 10px; font-weight: 850; letter-spacing: .09em; }
+.markdown-body .highlight { overflow: hidden; margin: 28px 0; border: 1px solid var(--code-border); border-radius: 12px; background: var(--code-bg); }
+.markdown-body .highlight::before { content: 'TERMINALE · COPIA I COMANDI CON ATTENZIONE'; display: block; padding: 10px 17px; border-bottom: 1px solid var(--code-border); background: var(--code-head); color: var(--code-caption); font-size: 10px; font-weight: 850; letter-spacing: .09em; }
 .markdown-body .highlight.expected-output::before { content: 'RISPOSTA ATTESA · ESEMPIO'; }
 .markdown-body .highlight.reference-example::before { content: 'RIFERIMENTO · NON ESEGUIRE NEL TERMINALE'; }
 .markdown-body .highlight.file-content::before { content: 'CONTENUTO DEL FILE · VERIFICA I VALORI'; }
 .markdown-body .highlight.source-code::before { content: 'CODICE DA INSERIRE NEL FILE'; }
 .markdown-body .highlight pre { border-radius: 0; }
+.markdown-body .highlight .s, .markdown-body .highlight .s1, .markdown-body .highlight .s2, .markdown-body .highlight .se { color: var(--code-string); }
+.markdown-body .highlight .k, .markdown-body .highlight .nb, .markdown-body .highlight .na { color: var(--code-keyword); }
+.markdown-body .highlight .c, .markdown-body .highlight .c1, .markdown-body .highlight .cm { color: var(--code-comment); }
 .markdown-body > pre { margin: 28px 0; border-radius: 12px; }
 .markdown-body table { display: table; width: 100%; margin: 28px 0; border-collapse: separate; border-spacing: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); font-size: 13px; }
 .markdown-body table th { padding: 13px 16px; border-bottom: 1px solid var(--line); background: var(--accent-soft); color: var(--accent-dark); text-align: left; font-size: 11px; letter-spacing: .025em; }
@@ -380,8 +395,8 @@ h2 { margin: 0; font-size: clamp(26px, 2.6vw, 34px); font-weight: 750; letter-sp
 .markdown-body .spec-card > div p { display: flex; flex-direction: column; gap: 7px; margin: 0; }
 .markdown-body .highlight { position: relative; }
 .markdown-body .highlight::before { padding-right: 78px; }
-.markdown-body .copy-code { position: absolute; top: 7px; right: 9px; padding: 3px 9px; border: 1px solid rgba(255,255,255,.24); border-radius: 5px; background: transparent; color: var(--code-ink); font-size: 11px; cursor: pointer; }
-.markdown-body .copy-code:hover { background: rgba(255,255,255,.1); }
+.markdown-body .copy-code { position: absolute; top: 7px; right: 9px; padding: 3px 9px; border: 1px solid var(--code-border); border-radius: 5px; background: transparent; color: var(--code-ink); font-size: 11px; cursor: pointer; }
+.markdown-body .copy-code:hover { background: var(--accent-soft); }
 .system-diagram { margin: 31px 0 39px; padding: 18px 18px 15px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); box-shadow: var(--shadow); }
 .system-diagram svg { display: block; width: min(100%, 440px); height: auto; margin: 0 auto; }
 .system-diagram .flow-card { fill: var(--surface); stroke: var(--line-strong); stroke-width: 1.5; }
@@ -393,6 +408,50 @@ h2 { margin: 0; font-size: clamp(26px, 2.6vw, 34px); font-weight: 750; letter-sp
 .system-diagram .flow-link { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .system-diagram .flow-link-label { fill: var(--accent-dark); font-size: 11px; font-weight: 850; letter-spacing: .045em; }
 .system-diagram figcaption { color: var(--quiet); font-size: 11px; text-align: center; line-height: 1.5; }
+.markdown-body .technical-diagram { display: block; width: 100%; max-width: 800px; height: auto; margin: 0 auto; border-radius: 22px; }
+.markdown-body p:has(> .technical-diagram) { margin: 31px 0 8px; }
+.markdown-body p:has(> .technical-diagram) + p { margin: 0 0 30px; color: var(--quiet); font-size: 12px; line-height: 1.5; }
+/* The source SVGs keep their dark colors for GitHub; inline copies follow the site theme. */
+:root:not([data-theme="dark"]) .technical-diagram [stop-color="#15271b"] { stop-color: #f5faf4; }
+:root:not([data-theme="dark"]) .technical-diagram [stop-color="#203a28"] { stop-color: #e5f1e6; }
+:root:not([data-theme="dark"]) .technical-diagram [fill="#294431"],
+:root:not([data-theme="dark"]) .technical-diagram [fill="#2d4934"],
+:root:not([data-theme="dark"]) .technical-diagram [fill="#2c4732"],
+:root:not([data-theme="dark"]) .technical-diagram [fill="#294331"] { fill: #ffffff; }
+:root:not([data-theme="dark"]) .technical-diagram [fill="#253a2b"],
+:root:not([data-theme="dark"]) .technical-diagram [fill="#253d2c"],
+:root:not([data-theme="dark"]) .technical-diagram [fill="#263e2d"] { fill: #edf6ed; }
+:root:not([data-theme="dark"]) .technical-diagram [fill="#416e49"] { fill: #d2e9d4; }
+:root:not([data-theme="dark"]) .technical-diagram [fill="#4a3225"],
+:root:not([data-theme="dark"]) .technical-diagram [fill="#68402d"] { fill: #fff0e6; }
+:root:not([data-theme="dark"]) .technical-diagram [stroke="#4b7051"] { stroke: #abc7ae; }
+:root:not([data-theme="dark"]) .technical-diagram [stroke="#678c6b"],
+:root:not([data-theme="dark"]) .technical-diagram [stroke="#709b75"],
+:root:not([data-theme="dark"]) .technical-diagram [stroke="#6f9673"],
+:root:not([data-theme="dark"]) .technical-diagram [stroke="#719779"],
+:root:not([data-theme="dark"]) .technical-diagram [stroke="#668d6b"],
+:root:not([data-theme="dark"]) .technical-diagram [stroke="#658a6a"] { stroke: #a7c5ac; }
+:root:not([data-theme="dark"]) .technical-diagram [stroke="#426348"],
+:root:not([data-theme="dark"]) .technical-diagram [stroke="#789b7d"],
+:root:not([data-theme="dark"]) .technical-diagram [stroke="#729a79"] { stroke: #bed4c0; }
+:root:not([data-theme="dark"]) .technical-diagram [stroke="#a8dfa9"],
+:root:not([data-theme="dark"]) .technical-diagram [stroke="#a3baa5"] { stroke: #357c50; }
+:root:not([data-theme="dark"]) .technical-diagram [fill="#a3baa5"] { fill: #357c50; }
+:root:not([data-theme="dark"]) .technical-diagram [stroke="#bb7854"],
+:root:not([data-theme="dark"]) .technical-diagram [stroke="#d69670"] { stroke: #bd7047; }
+:root:not([data-theme="dark"]) .technical-diagram [fill="#ffdbbe"],
+:root:not([data-theme="dark"]) .technical-diagram [fill="#ffdbc0"] { fill: #904824; }
+:root:not([data-theme="dark"]) .technical-diagram .eyebrow,
+:root:not([data-theme="dark"]) .technical-diagram .label,
+:root:not([data-theme="dark"]) .technical-diagram .mono,
+:root:not([data-theme="dark"]) .technical-diagram .tag { fill: #276e45; }
+:root:not([data-theme="dark"]) .technical-diagram .head,
+:root:not([data-theme="dark"]) .technical-diagram .title,
+:root:not([data-theme="dark"]) .technical-diagram .pin { fill: #20382a; }
+:root:not([data-theme="dark"]) .technical-diagram .sub { fill: #526b59; }
+:root:not([data-theme="dark"]) .technical-diagram [fill="#eaf7e6"] { fill: #2b7048; }
+:root:not([data-theme="dark"]) .technical-diagram [fill="#bde3bc"],
+:root:not([data-theme="dark"]) .technical-diagram [fill="#a8dfa9"] { fill: #276e45; }
 @media (max-width: 650px) {
   .topbar-github { gap: 4px; padding: 0 8px; font-size: 10px; }
   .github-label-desktop { display: none; }
