@@ -1,8 +1,8 @@
-# 06 · Verificare la rete
+# Rete della serra durante il setup
 
-**Percorso guidato:** [Indice dei capitoli](../index.md)
+Questa pagina conserva la configurazione di rete usata durante le prove originali. **Non devi collegare la serra alla Wi-Fi domestica** per seguire il [percorso essenziale](../index.md): è il Raspberry a comunicare in rete con MQTT e Home Assistant, mentre la serra è controllata via UART.
 
-Questa sezione fotografa la situazione **una volta completata la configurazione di rete**, con il collegamento UART già verificato, ma prima di attivare il controllo automatico.
+Questa sezione fotografa la situazione **se scegli di configurare la Wi-Fi della serra**, con il collegamento UART già verificato, ma prima di attivare il controllo automatico.
 
 Serve come riferimento rapido per:
 
@@ -31,7 +31,7 @@ ssh root@<LOCAL_IP>
 ```
 
 > [!WARNING] Attenzione
-> L'accesso SSH alla serra via Wi-Fi serve solo per configurazione e verifica. Nel funzionamento normale il Raspberry spegne la rete della serra: prima di attivare il timer del passo 09, assicurati che la UART funzioni.
+> L'accesso SSH alla serra via Wi-Fi serve solo per configurazione e verifica. Nel funzionamento normale il Raspberry spegne la rete della serra: prima di attivare il timer del passo 07, assicurati che la UART funzioni.
 
 ---
 
@@ -81,7 +81,7 @@ Parametri (da trattare come segreti):
 
 ---
 
-## Stato finale prima del passo successivo
+## Stato di questo scenario facoltativo
 
 A questo punto:
 
@@ -93,14 +93,4 @@ A questo punto:
 
 ---
 
-## Continua il percorso
-
-> [!TIP] Controllo
-> **Verifica prima di proseguire:** Conosci gli indirizzi della serra e del Raspberry e hai verificato il collegamento UART. Il broker MQTT sarà predisposto nel passo 08.
-
-<table width="100%" class="step-nav">
-  <tr>
-    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="05-modifiche-serra.md">← 05 · Configurare la serra per l&#x27;uso locale</a></td>
-    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="07-controller-cli.md">07 · Installare e provare il controller CLI →</a></td>
-  </tr>
-</table>
+[Torna all’indice della guida](../index.md).

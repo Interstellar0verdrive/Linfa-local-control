@@ -70,18 +70,34 @@ Obiettivo pratico del progetto:
 
 ---
 
-## Vincoli di sicurezza (non modificare firmware/FS VoCore)
+## Cosa serve prima di iniziare
 
-Questo setup è progettato con un principio preciso: **non modificare in modo permanente la serra**.
+| Componente | Cosa verificare |
+| --- | --- |
+| **Serra Linfa** | La procedura è stata provata su Linfa Weezy; la Linfa standard non è ancora verificata. |
+| **Raspberry Pi** | Il prototipo usa un Pi 3B. Servono microSD da almeno 16 GB, alimentatore adatto al modello e connessione alla rete domestica. Un Pi Zero 2 W richiede anche un adattatore USB OTG per collegare la seriale. |
+| **Adattatore USB → UART/TTL** | I segnali TX e RX devono essere a **3,3 V**; servono anche GND e una connessione USB al Raspberry. Il pin di alimentazione VCC non si collega alla serra. Vedi [i criteri e gli esempi nel passo 01](01-hardware.md#ladattatore-usb-ttl). |
+| **Tre collegamenti isolati** | TX, RX e GND: cavetti Dupont per una prova su pin accessibili, oppure fili da fissare in modo stabile per l'installazione definitiva. |
+| **Cavo USB** | Serve se l'adattatore ha una presa USB; non serve un secondo cavo se l'adattatore è già un cavo USB → UART integrato. Scegli la lunghezza in base alla posizione del Raspberry. |
+| **Per il montaggio definitivo** | Attrezzi per aprire la serra, saldatore e materiale isolante se saldi i fili; protezione del bordo e fermacavo se fai passare i fili da un foro nella scocca. |
+| **Software e rete** | Raspberry Pi OS, un broker MQTT raggiungibile da Raspberry e Home Assistant, e l'integrazione MQTT di Home Assistant. Il controller e il bridge sono già nella repository. |
+
+La modifica fisica illustrata in questa guida è stata realizzata nella **parte superiore della serra, dove si trovano le luci e il VoCore**, con **fili saldati** e un **foro nella scocca per il passaggio dei fili del cavo seriale**. Il [passo 01](01-hardware.md#cablaggio-uart) descrive i collegamenti e mostra il foro. Non è disponibile una foto ravvicinata delle saldature: prima di richiudere verifica che i collegamenti siano saldi e isolati.
+
+Per ottenere lo stesso controllo locale **non devi ripetere l'analisi MITM, il dump del modulo o le prove delle API originali**: sono documentati negli approfondimenti. Anche la [modifica del token, della Wi-Fi e dei permessi degli aggiornamenti](../approfondimenti/configurazione-serra.md) è separata dal percorso essenziale, perché il controller comunica con la serra via UART.
+
+---
+
+## Vincoli di sicurezza e modifiche alla serra
+
+Il percorso essenziale **non sostituisce il firmware** né richiede il dump del filesystem. L'apertura della serra, il collegamento seriale e l'impostazione della password root sono comunque interventi reali sul dispositivo: valuta prima il rischio e conserva le informazioni necessarie per un eventuale ripristino.
 
 Vincoli/assunzioni:
 
-- Quasi nessun file di sistema del VoCore viene modificato “a mano” come pratica normale (niente patch persistenti, niente sostituzioni in overlay).
-Le uniche due modifiche persistenti alla serra sono:
-    - Cambio del token (con uno fittizio)
-    - Cambio dei permessi sulla cartella “update” per inibire updates che potrebbero rompere questo hack.
-- La serra deve poter tornare allo stato originale modificando i pochi files toccati, dopo un reboot senza il Raspberry collegato.
-- Le policy come disattivazione Wi-Fi/NTP della serra vengono applicate **dall’esterno**, tramite comandi console e automazioni sul Raspberry.
+- La password root della console viene impostata nel passo 04 perché il controller attuale la richiede.
+- La disattivazione di Wi-Fi/NTP viene comandata **dall'esterno**, tramite UART e un timer sul Raspberry; non serve riconfigurare la rete della serra per usare il bridge MQTT.
+- La sostituzione del token e il blocco degli aggiornamenti sono [modifiche facoltative documentate a parte](../approfondimenti/configurazione-serra.md), non prerequisiti dei passi 05–08.
+- Conserva un modo sicuro per ripristinare le modifiche che scegli di applicare. Il collegamento saldato e il foro nella scocca richiedono anche un intervento fisico per tornare alla configurazione originale.
 
 Implicazioni:
 

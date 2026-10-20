@@ -16,7 +16,7 @@ Controllo locale sperimentale per serre **Robonica Linfa** tramite Raspberry Pi,
 
 ## Documentazione
 
-Segui la [guida passo per passo su GitHub Pages](https://interstellar0verdrive.github.io/Linfa-local-control/): undici capitoli numerati, dal funzionamento del sistema al collegamento con Home Assistant. Ogni capitolo indica cosa verificare e rimanda al successivo. Le analisi facoltative sono raccolte negli approfondimenti.
+Segui la [guida passo per passo su GitHub Pages](https://interstellar0verdrive.github.io/Linfa-local-control/): nove capitoli numerati, dalla preparazione del collegamento fisico al controllo con Home Assistant. Il codice del controller e del bridge è già incluso; l'indagine sul cloud, il dump del modulo e le modifiche facoltative alla rete della serra sono negli approfondimenti.
 
 La documentazione segue automaticamente il tema chiaro o scuro del sistema; puoi anche scegliere manualmente dal menu in alto. I file Markdown in [`docs/`](docs/) restano le sorgenti modificabili della guida.
 

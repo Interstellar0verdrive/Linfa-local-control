@@ -1,0 +1,143 @@
+# 08 · Collegare Home Assistant
+
+**Percorso guidato:** [Indice dei capitoli](../index.md)
+
+> [!NOTE] Nota
+> Home Assistant comunica con il broker MQTT, non direttamente con la serra. Il Raspberry traduce i comandi MQTT in comandi UART.
+
+---
+
+Il broker MQTT e le sue credenziali sono stati predisposti nel [passo 06](06-bridge-mqtt.md).
+
+---
+
+## Integrazione MQTT in Home Assistant
+
+### Aggiungere l’integrazione MQTT
+
+In Home Assistant:
+
+1. **Settings → Devices & Services**
+2. **Add Integration**
+3. Cerca **MQTT**
+4. Se la configurazione non è automatica, inserisci:
+    - Broker
+    - Porta
+    - Username
+    - Password
+
+Se la connessione va a buon fine:
+
+- l’integrazione MQTT risulta connessa al broker
+- Home Assistant è pronto a leggere/pubblicare topic
+
+Per i nomi aggiornati dei menu e la configurazione del broker, consulta la [documentazione ufficiale MQTT di Home Assistant](https://www.home-assistant.io/integrations/mqtt/).
+
+---
+
+### Topic usati dal sistema serra
+
+**Topic base:**
+
+```
+serra/
+```
+
+### Stato (publish dal Raspberry → HA)
+
+```
+serra/status/online
+serra/status/last_seen
+serra/status/last
+
+serra/state/lights
+serra/state/fans/fan-1
+serra/state/fans/fan-2
+serra/state/fans/fan-F
+serra/state/ring
+serra/state/pumps/main
+serra/state/pumps/nutrient-0
+serra/state/pumps/nutrient-1
+serra/state/pumps/nutrient-2
+serra/state/net
+```
+
+Tutti questi topic sono **retained**.
+
+---
+
+### Comandi (publish da HA → Raspberry)
+
+```
+serra/cmd
+serra/cmd/<id>
+```
+
+Payload tipico:
+
+```
+lights on -f 3
+```
+
+oppure con ID (per ack):
+
+```
+topic: serra/cmd/abc123
+payload: lights off
+```
+
+### Prova senza installare altri strumenti
+
+Nell'integrazione MQTT di Home Assistant, apri **Impostazioni → Dispositivi e servizi → MQTT → Configura**. Nella sezione **Ascolta un topic**, inserisci `serra/#` e avvia l'ascolto. Dovresti vedere i topic di stato pubblicati dal Raspberry; se non arrivano subito, puoi eseguire `serra state sync` sul Raspberry per pubblicarli di nuovo.
+
+Nella sezione **Pubblica un pacchetto** inserisci:
+
+| Campo | Valore di prova |
+| --- | --- |
+| Topic | `serra/cmd` |
+| Payload | `lights on` |
+| Retain | **Disattivato**: un comando non deve essere ripetuto dal broker a una futura riconnessione. |
+
+Pubblica il comando e verifica che la luce si accenda e che compaiano messaggi su `serra/status/last` e `serra/state/lights`. Poi invia `lights off` allo stesso topic, sempre senza retain. La procedura di ascolto e pubblicazione è descritta anche nella [guida ufficiale MQTT](https://www.home-assistant.io/integrations/mqtt/#testing-your-setup).
+
+> [!NOTE] Stato dell'integrazione
+> Questa prova conferma che Home Assistant può leggere i topic e inviare comandi attraverso MQTT. **Non crea ancora entità, pulsanti o una dashboard dedicata**: l'app completa per Home Assistant è prevista in una fase successiva del progetto.
+
+
+---
+
+## Flusso end-to-end (riepilogo)
+
+1. Home Assistant pubblica: `serra/cmd`
+2. MQTT Bridge sul Raspberry riceve il messaggio
+3. Il bridge invoca: `serra ...`
+4. Il controller:
+    - esegue il comando via UART
+    - aggiorna `.serra_state.json`
+    - pubblica nuovi stati su MQTT
+5. Home Assistant riceve immediatamente lo stato aggiornato
+
+---
+
+## Stato finale del sistema
+
+A questo punto il percorso di base è completo:
+
+- ✅ Home Assistant può ascoltare gli stati e pubblicare comandi MQTT senza passare dal cloud Robonica
+- ✅ Il Raspberry traduce i comandi MQTT in istruzioni UART per la serra
+- ✅ Gli ultimi stati **logici** noti e gli esiti dei comandi sono osservabili nei topic MQTT
+- ✅ Per ottenere controlli e dashboard pronti da usare serve ancora l'app Home Assistant prevista nella roadmap
+
+---
+
+## Percorso completato
+
+> [!TIP] Controllo
+> **Verifica finale:** Home Assistant riceve gli stati MQTT e puoi inviare un comando di prova.
+
+<table width="100%" class="step-nav">
+  <tr>
+    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="07-servizi-automatici.md">← 07 · Attivare i servizi automatici</a></td>
+    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="../index.md">Indice completo →</a></td>
+  </tr>
+</table>

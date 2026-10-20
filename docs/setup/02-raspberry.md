@@ -5,12 +5,12 @@
 Obiettivo di questa sezione: preparare un Raspberry Pi “vergine” (solo OS + rete) con tutto l’ambiente necessario per:
 
 - aprire la console UART della serra (debug con picocom)
-- eseguire script Python (controller e bridge, che verranno copiati nel passo 07)
+- eseguire script Python (controller e bridge, che verranno copiati nel passo 05)
 - parlare con MQTT (lato Python + strumenti CLI per test)
 - predisporre permessi e cartelle standard
 
 > [!IMPORTANT] Da sapere prima di iniziare
-> Prima di iniziare: Raspberry con Debian/Raspberry Pi OS aggiornabile via APT, connesso alla rete domestica, adattatore USB→TTL a 3,3 V collegato e un utente con `sudo` (negli esempi: `pi`). La password del Raspberry è distinta dalla password root della serra.
+> Prima di iniziare: Raspberry con Debian/Raspberry Pi OS aggiornabile via APT, connesso alla rete domestica, adattatore USB→TTL a 3,3 V collegato e un utente con `sudo`. **Gli esempi usano l'utente `pi` e il percorso `/home/pi`: scegli `pi` durante la preparazione del sistema oppure sostituisci entrambi con il tuo nome utente e la tua home in tutti i comandi.** La password del Raspberry è distinta dalla password root della serra.
 
 ---
 
@@ -76,7 +76,7 @@ sudo apt install -y \
 
 ### (Opzionale ma consigliato) Installa pip
 
-Nel setup finale non è indispensabile perché verranno usati p`ython3-paho-mqtt` e `python3-serial` via APT, ma lo installiamo comunque perché torna sempre utile:
+Nel setup finale non è indispensabile perché `python3-paho-mqtt` e `python3-serial` vengono installati via APT. Se ti serve `pip` per altri progetti, puoi aggiungerlo:
 
 ```bash
 sudo apt install -y python3-pip
@@ -90,7 +90,7 @@ Verifica versione:
 
 ```bash
 python3 --version
-# Deve restituire qualcosa tipo: Python 3.13.5
+# Deve restituire un numero di versione Python 3.x
 ```
 
 Verifica che i moduli necessari siano importabili **prima** di caricare gli script:
@@ -142,7 +142,7 @@ ls -l /dev/ttyUSB0 2>/dev/null || true
 # crw-rw---- 1 root dialout 188, 0 Jan 25 10:46 /dev/ttyUSB0
 ```
 
-Se pi **non** è in dialout, aggiungilo:
+Se l'utente `pi` **non** è in `dialout`, aggiungilo (sostituisci `pi` se usi un altro utente):
 
 ```bash
 sudo usermod -aG dialout pi
@@ -162,19 +162,26 @@ mkdir -p /home/pi/serra/_bak
 
 Suggerimento pratico:
 
-- nel passo 07 copierai `serra_controller.py` e `serra_mqtt_bridge.py` in `/home/pi/`
+- nel passo 05 copierai `serra_controller.py` e `serra_mqtt_bridge.py` in `/home/pi/`
 - useremo poi un symlink per rendere disponibile il comando `serra`.
 
 ---
 
 ## (Opzionale) Verifica raggiungibilità broker MQTT prima di configurare il bridge
 
-Se il broker MQTT esiste già (es. Home Assistant/Mosquitto su `<LOCAL_IP>`:1883), puoi fare un test “grezzo”:
+Se il broker MQTT esiste già (es. Mosquitto su `<BROKER_IP>`:1883), puoi fare un test. **Apri due terminali sul Raspberry:** nel primo avvia il subscriber; nel secondo pubblica il messaggio. Avviare il subscriber dopo la pubblicazione non mostrerebbe il messaggio, perché il test non usa un topic retained.
 
 ```bash
-mosquitto_pub -h <LOCAL_IP> -p 1883 -u <MQTT_USER> -P 'PASSWORD' -t serra/test -m "hello"
-mosquitto_sub -h <LOCAL_IP> -p 1883 -u <MQTT_USER> -P 'PASSWORD' -t serra/test -C 1
+# Primo terminale: resta in attesa di un messaggio
+mosquitto_sub -h <BROKER_IP> -p 1883 -u <MQTT_USER> -P '<MQTT_PASSWORD>' -t serra/test -C 1
 ```
+
+```bash
+# Secondo terminale: invia il messaggio di prova
+mosquitto_pub -h <BROKER_IP> -p 1883 -u <MQTT_USER> -P '<MQTT_PASSWORD>' -t serra/test -m "hello"
+```
+
+Il primo terminale deve mostrare `hello` e terminare. Sostituisci tutti i segnaposto prima di eseguire i comandi.
 
 In questa fase non creiamo ancora `/etc/serra-mqtt.env`: lo faremo più avanti, insieme ai file e ai servizi.
 
@@ -187,7 +194,7 @@ Alla fine di questo capitolo, il Raspberry deve avere:
 - ✅ sistema aggiornato
 - ✅ python3 funzionante
 - ✅ moduli python3-serial e python3-paho-mqtt disponibili (import OK)
-- ✅ picocom installato e test UART riuscito
+- ✅ picocom installato; il test della UART è nel passo 03
 - ✅ mosquitto-clients installato (per test futuri)
 - ✅ utente pi in gruppo dialout
 - ✅ cartelle predisposte per i file del progetto

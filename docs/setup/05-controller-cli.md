@@ -1,8 +1,8 @@
-# 07 · Installare e provare il controller CLI
+# 05 · Installare e provare il controller CLI
 
 **Percorso guidato:** [Indice dei capitoli](../index.md)
 
-In questo passo copi gli script sul Raspberry e verifichi il **controller CLI** tramite UART. Il bridge MQTT e i servizi automatici saranno configurati nei passi 08 e 09.
+In questo passo copi gli script sul Raspberry e verifichi il **controller CLI** tramite UART. Il bridge MQTT e i servizi automatici saranno configurati nei passi 06 e 07.
 
 **Assunzioni in ingresso (stato iniziale):**
 
@@ -10,7 +10,7 @@ In questo passo copi gli script sul Raspberry e verifichi il **controller CLI** 
 - Nessun file serra_*.py ancora installato
 - Nessun servizio serra-* attivo
 
-Questi sono i file coinvolti nei passi 07–09:
+Questi sono i file coinvolti nei passi 05–07:
 
 | FILE | DESCRIZIONE | NOTE |
 | --- | --- | --- |
@@ -181,7 +181,7 @@ cat /home/pi/.serra_state.json | jq .
 
 <table width="100%" class="step-nav">
   <tr>
-    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="06-rete.md">← 06 · Verificare la rete</a></td>
-    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="08-bridge-mqtt.md">08 · Configurare il bridge MQTT →</a></td>
+    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="04-password-root.md">← 04 · Impostare la password root</a></td>
+    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="06-bridge-mqtt.md">06 · Configurare il bridge MQTT →</a></td>
   </tr>
 </table>

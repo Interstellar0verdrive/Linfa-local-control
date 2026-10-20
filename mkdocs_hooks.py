@@ -13,17 +13,26 @@ STEPS = [
     ("02", "Preparare il Raspberry Pi", "setup/02-raspberry.md", "Prepara il sistema, i pacchetti e i permessi necessari per parlare con la serra.", "PREPARAZIONE", "Python, picocom, i pacchetti richiesti e i permessi seriali sono pronti."),
     ("03", "Verificare la console UART", "setup/03-uart.md", "Apri la console seriale e controlla che il VoCore risponda prima di modificarne la configurazione.", "CONNESSIONE", "La console risponde, puoi effettuare il login e il comando di prova funziona."),
     ("04", "Impostare la password root", "setup/04-password-root.md", "Proteggi l’accesso alla serra e verifica la nuova password dalla console seriale.", "CONNESSIONE", "Hai impostato e verificato la password root della serra."),
-    ("05", "Configurare la serra per l’uso locale", "setup/05-modifiche-serra.md", "Applica con attenzione le modifiche necessarie per usare il dispositivo sulla rete locale.", "CONFIGURAZIONE", "Hai verificato le modifiche che hai scelto di applicare alla serra."),
-    ("06", "Verificare la rete", "setup/06-rete.md", "Controlla gli indirizzi e la connettività di serra e Raspberry prima di installare il software.", "CONFIGURAZIONE", "Conosci gli indirizzi della serra e del Raspberry e hai verificato il collegamento UART."),
-    ("07", "Installare e provare il controller CLI", "setup/07-controller-cli.md", "Installa il controller sul Raspberry e prova i primi comandi attraverso la UART.", "CONTROLLO", "Il comando serra state sync funziona dal Raspberry tramite UART."),
-    ("08", "Configurare il bridge MQTT", "setup/08-bridge-mqtt.md", "Collega il controller al broker MQTT e verifica stati e comandi end-to-end.", "INTEGRAZIONE", "Il servizio bridge è attivo e i topic di stato e comando rispondono."),
-    ("09", "Attivare i servizi automatici", "setup/09-servizi-automatici.md", "Automatizza la policy di rete e la sincronizzazione periodica dello stato.", "AUTOMAZIONE", "I timer sono attivi e i relativi servizi risultano verificati."),
-    ("10", "Collegare Home Assistant", "setup/10-home-assistant.md", "Completa il percorso portando stati e comandi MQTT in Home Assistant.", "COMPLETAMENTO", "Home Assistant riceve gli stati MQTT e puoi inviare un comando di prova."),
+    ("05", "Installare e provare il controller CLI", "setup/05-controller-cli.md", "Installa il controller sul Raspberry e prova i primi comandi attraverso la UART.", "CONTROLLO", "Il comando serra state sync funziona dal Raspberry tramite UART."),
+    ("06", "Configurare il bridge MQTT", "setup/06-bridge-mqtt.md", "Collega il controller al broker MQTT e verifica stati e comandi end-to-end.", "INTEGRAZIONE", "Il servizio bridge è attivo e i topic di stato e comando rispondono."),
+    ("07", "Attivare i servizi automatici", "setup/07-servizi-automatici.md", "Automatizza la policy di rete e la sincronizzazione periodica dello stato.", "AUTOMAZIONE", "I timer sono attivi e i relativi servizi risultano verificati."),
+    ("08", "Collegare Home Assistant", "setup/08-home-assistant.md", "Completa il percorso portando stati e comandi MQTT in Home Assistant.", "COMPLETAMENTO", "Home Assistant riceve gli stati MQTT e puoi inviare un comando di prova."),
 ]
 
 EXTRAS = {
+    "approfondimenti/configurazione-serra.md": ("Wi-Fi, token e aggiornamenti", "Modifiche facoltative alla configurazione interna della serra usate nel prototipo."),
+    "approfondimenti/rete-serra.md": ("Rete della serra durante il setup", "Indirizzi e accesso Wi-Fi della serra durante le prove originali."),
     "approfondimenti/traffico-cloud.md": ("Analisi del traffico cloud", "Come è stato osservato il dialogo originale tra la serra e il servizio remoto."),
     "approfondimenti/accesso-e-dump.md": ("Accesso e dump del modulo", "Appunti tecnici sull’accesso al VoCore e sulla copia del suo contenuto."),
+}
+
+REDIRECTS = {
+    "setup/05-modifiche-serra/": "approfondimenti/configurazione-serra/",
+    "setup/06-rete/": "approfondimenti/rete-serra/",
+    "setup/07-controller-cli/": "setup/05-controller-cli/",
+    "setup/08-bridge-mqtt/": "setup/06-bridge-mqtt/",
+    "setup/09-servizi-automatici/": "setup/07-servizi-automatici/",
+    "setup/10-home-assistant/": "setup/08-home-assistant/",
 }
 
 ANCHOR_RE = re.compile(r'(<a\b[^>]*>)(.*?)(</a>)', re.IGNORECASE | re.DOTALL)
@@ -95,3 +104,20 @@ def on_page_context(context, page, config, nav):
     context["page_phase"] = steps[current]["phase"] if current is not None else ("INDICE" if uri == "index.md" else "APPROFONDIMENTO")
     context["toc_items"] = [item for top in page.toc for item in (top.children if top.level == 1 and top.children else [top]) if item.level <= 2]
     return context
+
+
+def on_post_build(config):
+    """Keep existing Pages bookmarks usable after renumbering the guide."""
+    for old_path, new_path in REDIRECTS.items():
+        target = "../../" + new_path
+        destination = Path(config["site_dir"]) / old_path / "index.html"
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(
+            '<!doctype html><html lang="it"><head><meta charset="utf-8">'
+            '<meta name="robots" content="noindex">'
+            f'<meta http-equiv="refresh" content="0; url={html.escape(target, quote=True)}">'
+            f'<link rel="canonical" href="{html.escape(config["site_url"] + new_path, quote=True)}">'
+            f'</head><body><p>La pagina è stata spostata: <a href="{html.escape(target, quote=True)}">'
+            'apri la nuova pagina</a>.</p></body></html>',
+            encoding="utf-8",
+        )

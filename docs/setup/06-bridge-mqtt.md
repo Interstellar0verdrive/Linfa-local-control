@@ -1,8 +1,8 @@
-# 08 · Configurare il bridge MQTT
+# 06 · Configurare il bridge MQTT
 
 **Percorso guidato:** [Indice dei capitoli](../index.md)
 
-Prosegui dopo aver verificato il controller CLI nel passo 07. Qui configuri il broker, il servizio e una prova MQTT completa.
+Prosegui dopo aver verificato il controller CLI nel passo 05. Qui configuri il broker, il servizio e una prova MQTT completa.
 
 ## Prima di configurare il bridge: broker MQTT
 
@@ -15,7 +15,7 @@ Prosegui dopo aver verificato il controller CLI nel passo 07. Qui configuri il b
 
 Soluzioni tipiche:
 
-- Mosquitto add-on su Home Assistant
+- App ufficiale Mosquitto Broker in Home Assistant, se usi Home Assistant OS o Supervised
 - Broker MQTT esterno (NAS, server Linux)
 
 Requisiti minimi:
@@ -28,15 +28,12 @@ Requisiti minimi:
 
 ### Credenziali MQTT
 
-Le stesse credenziali devono essere:
-
-- in `/etc/serra-mqtt.env` sul Raspberry
-- configurate in Home Assistant
+Il Raspberry deve avere credenziali valide per il broker in `/etc/serra-mqtt.env`. Home Assistant deve collegarsi **allo stesso broker**, ma può usare credenziali diverse. Se utilizzi l'app ufficiale Mosquitto Broker di Home Assistant, l'integrazione MQTT può configurare automaticamente il proprio accesso; crea comunque un account MQTT per il Raspberry nelle opzioni del broker.
 
 Esempio (usato nel setup):
 
 ```bash
-host: <LOCAL_IP>
+host: <BROKER_IP>
 port: 1883
 user: <MQTT_USER>
 password: <MQTT_PASSWORD>
@@ -55,10 +52,10 @@ Puoi partire dal [modello senza credenziali](https://github.com/Interstellar0ver
 sudo nano /etc/serra-mqtt.env
 ```
 
-Contenuto (tutti i dati qui riportato sono quelli del broker MQTT, che nel nostro caso sarà mosquitto in Home Assistant):
+Contenuto (l'indirizzo e le credenziali MQTT sono quelli del broker; `SERRA_ROOT_PASSWORD` è invece la password della console della serra):
 
 ```bash
-SERRA_MQTT_HOST=<LOCAL_IP>
+SERRA_MQTT_HOST=<BROKER_IP>
 SERRA_MQTT_PORT=1883
 SERRA_MQTT_USER=<MQTT_USER>
 SERRA_MQTT_PASS=<MQTT_PASSWORD>
@@ -152,7 +149,7 @@ serra/status/last_seen
 Verifica:
 
 ```bash
-mosquitto_sub -h <LOCAL_IP> -u <MQTT_USER> -P '<DEVICE_PASSWORD>' -t "serra/status/#" -v
+mosquitto_sub -h <BROKER_IP> -u <MQTT_USER> -P '<MQTT_PASSWORD>' -t "serra/status/#" -v
 
 # Deve rispondere qualcosa che comincia con:
 # serra/status/online {"ok": true, "msg": "bridge online", "cli": "serra"... ... ...
@@ -164,18 +161,18 @@ Per uscire: `CTRL + C`
 
 ```bash
 # Proviamo ad accendere le luci con un fade in di 3 secondi:
-mosquitto_pub -h <LOCAL_IP> -u <MQTT_USER> -P '<DEVICE_PASSWORD>' \
+mosquitto_pub -h <BROKER_IP> -u <MQTT_USER> -P '<MQTT_PASSWORD>' \
   -t serra/cmd -m "lights on -f 3"
 
 # Poi per spegnere:
-mosquitto_pub -h <LOCAL_IP> -u <MQTT_USER> -P '<DEVICE_PASSWORD>' \
+mosquitto_pub -h <BROKER_IP> -u <MQTT_USER> -P '<MQTT_PASSWORD>' \
   -t serra/cmd -m "lights off"
 ```
 
 Verifica che lo stato venga aggiornato su `serra/state/...`:
 
 ```bash
-mosquitto_sub -h <LOCAL_IP> -u <MQTT_USER> -P '<DEVICE_PASSWORD>' -t "serra/status/last" -v
+mosquitto_sub -h <BROKER_IP> -u <MQTT_USER> -P '<MQTT_PASSWORD>' -t "serra/status/last" -v
 # Deve rispondere con qualcosa che indichi l'ultimo comando dato (nel nostro caso lights off):
 # serra/status/last {"ok": true, "rc": 0, "cmd": ["lights", "off"], "stdout": "✅ LIGHTS OFF (fade ~0.0s)", "stderr": "", "topic": "serra/cmd", "ts": 1769346265.2262807, "ts_iso": "2026-01-25T13:04:25.226281Z", "ts_local": "2026-01-25T14:04:25.226281+01:00"}
 ```
@@ -191,7 +188,7 @@ Per uscire: `CTRL + C`
 
 <table width="100%" class="step-nav">
   <tr>
-    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="07-controller-cli.md">← 07 · Installare e provare il controller CLI</a></td>
-    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="09-servizi-automatici.md">09 · Attivare i servizi automatici →</a></td>
+    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="05-controller-cli.md">← 05 · Installare e provare il controller CLI</a></td>
+    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="07-servizi-automatici.md">07 · Attivare i servizi automatici →</a></td>
   </tr>
 </table>

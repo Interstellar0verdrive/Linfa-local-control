@@ -1,6 +1,9 @@
-# 05 · Configurare la serra per l'uso locale
+# Wi-Fi, token e aggiornamenti della serra
 
-**Percorso guidato:** [Indice dei capitoli](../index.md)
+Questa pagina conserva le modifiche di configurazione provate durante lo sviluppo. **Non sono richieste** per seguire il [percorso essenziale](../index.md): il controller usa la console UART e il Raspberry comunica con Home Assistant tramite MQTT. Valutale solo se vuoi modificare anche il comportamento di rete e aggiornamento originale della serra.
+
+> [!CAUTION] Modifiche facoltative e persistenti
+> Cambiare token, credenziali Wi-Fi o permessi di `/var/update` modifica il comportamento originale della serra. Conserva i valori e i permessi iniziali prima di intervenire; non eseguire questi comandi come parte automatica dell'installazione del controller.
 
 In origine la serra ha uno **user-token** e un **UUID** come questi:
 
@@ -79,7 +82,7 @@ reboot
 
 Questo di solito forza di nuovo la modalità “setup” (AP).
 
-## cambiare il token della serra
+## Cambiare il token della serra
 
 Con questo comando si deve vedere il token in uso.
 Ricorda: Al punto precedente abbiamo già cambiato il token, impostandolo su `offline-token`.
@@ -165,14 +168,4 @@ Per ripristinare allo stato originale: `chmod 755 /var/update`
 
 ---
 
-## Continua il percorso
-
-> [!TIP] Controllo
-> **Verifica prima di proseguire:** Hai verificato le modifiche che hai scelto di applicare alla serra.
-
-<table width="100%" class="step-nav">
-  <tr>
-    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="04-password-root.md">← 04 · Impostare la password root</a></td>
-    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="06-rete.md">06 · Verificare la rete →</a></td>
-  </tr>
-</table>
+[Torna all’indice della guida](../index.md).

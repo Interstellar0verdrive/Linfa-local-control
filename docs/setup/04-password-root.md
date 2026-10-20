@@ -32,7 +32,7 @@ Se l'account root non ha ancora una password, il campo della password può risul
 passwd
 ```
 
-Il comando chiede di inserirla due volte; mentre digiti non vedrai caratteri sullo schermo. Annota la password in un luogo sicuro. Ti servirà nel [passo 07](07-controller-cli.md) per la prova della CLI e nel [passo 08](08-bridge-mqtt.md) per `/etc/serra-mqtt.env`.
+Il comando chiede di inserirla due volte; mentre digiti non vedrai caratteri sullo schermo. Annota la password in un luogo sicuro. Ti servirà nel [passo 05](05-controller-cli.md) per la prova della CLI e nel [passo 06](06-bridge-mqtt.md) per `/etc/serra-mqtt.env`.
 
 Chiudi la sessione della serra e ripeti il login dalla console UART per verificare la nuova password. Per uscire da `picocom` sul Raspberry usa `Ctrl+A`, poi `Ctrl+X`.
 
@@ -46,6 +46,6 @@ Chiudi la sessione della serra e ripeti il login dalla console UART per verifica
 <table width="100%" class="step-nav">
   <tr>
     <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="03-uart.md">← 03 · Verificare la console UART</a></td>
-    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="05-modifiche-serra.md">05 · Configurare la serra per l&#x27;uso locale →</a></td>
+    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="05-controller-cli.md">05 · Installare e provare il controller CLI →</a></td>
   </tr>
 </table>

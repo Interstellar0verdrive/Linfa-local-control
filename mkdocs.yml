@@ -30,13 +30,13 @@ nav:
       - '02 · Preparare il Raspberry Pi': setup/02-raspberry.md
       - '03 · Verificare la console UART': setup/03-uart.md
       - '04 · Impostare la password root': setup/04-password-root.md
-      - "05 · Configurare la serra per l'uso locale": setup/05-modifiche-serra.md
-      - '06 · Verificare la rete': setup/06-rete.md
-      - '07 · Installare e provare il controller CLI': setup/07-controller-cli.md
-      - '08 · Configurare il bridge MQTT': setup/08-bridge-mqtt.md
-      - '09 · Attivare i servizi automatici': setup/09-servizi-automatici.md
-      - '10 · Collegare Home Assistant': setup/10-home-assistant.md
+      - '05 · Installare e provare il controller CLI': setup/05-controller-cli.md
+      - '06 · Configurare il bridge MQTT': setup/06-bridge-mqtt.md
+      - '07 · Attivare i servizi automatici': setup/07-servizi-automatici.md
+      - '08 · Collegare Home Assistant': setup/08-home-assistant.md
   - Approfondimenti facoltativi:
+      - Wi-Fi, token e aggiornamenti: approfondimenti/configurazione-serra.md
+      - Rete della serra durante il setup: approfondimenti/rete-serra.md
       - Analisi del traffico cloud: approfondimenti/traffico-cloud.md
       - Accesso e dump del modulo: approfondimenti/accesso-e-dump.md
 

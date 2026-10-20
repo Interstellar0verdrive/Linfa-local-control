@@ -1,4 +1,4 @@
-# 09 · Attivare i servizi automatici
+# 07 · Attivare i servizi automatici
 
 **Percorso guidato:** [Indice dei capitoli](../index.md)
 
@@ -8,6 +8,8 @@ Con il bridge già funzionante, configura i timer per spegnere la rete del VoCor
 
 Questo service spegne la rete della serra (comando `serra net off`)
 Il timer fa avvenire questa azione una sola volta, dopo 60 secondi dal boot
+
+La serra deve essere già accesa e raggiungibile via UART quando il timer scatta. Se si accende più tardi, controlla il log con `journalctl -u serra-netoff.service -n 30 --no-pager` ed esegui `sudo systemctl start serra-netoff.service` dopo averla accesa: questo timer non riprova automaticamente.
 
 ### Service one-shot
 
@@ -199,7 +201,7 @@ Sostituisci `<RASPBERRY_IP>` prima di eseguire i comandi. Il file `/etc/serra-mq
 
 <table width="100%" class="step-nav">
   <tr>
-    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="08-bridge-mqtt.md">← 08 · Configurare il bridge MQTT</a></td>
-    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="10-home-assistant.md">10 · Collegare Home Assistant →</a></td>
+    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="06-bridge-mqtt.md">← 06 · Configurare il bridge MQTT</a></td>
+    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="08-home-assistant.md">08 · Collegare Home Assistant →</a></td>
   </tr>
 </table>
