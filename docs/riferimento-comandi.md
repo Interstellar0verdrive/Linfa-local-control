@@ -31,13 +31,13 @@ Sul Raspberry esegui l'intera riga che inizia con `serra`. Da Home Assistant o M
 | Dove | Topic | Testo da inviare |
 | --- | --- | --- |
 | Raspberry | — | `serra lights on -i 80 -f 15` |
-| Client MQTT · Home Assistant o MQTT Explorer | `serra/cmd` | `lights on -i 80 -f 15` |
+| Client MQTT | `serra/cmd` | `lights on -i 80 -f 15` |
 
 Nelle tabelle, le parti tra `<…>` sono valori da sostituire. Le opzioni tra parentesi quadre sono facoltative. Le opzioni lunghe (`--intensity`) e brevi (`-i`) sono equivalenti.
 
 ## Luci
 
-| Azione | Raspberry | Payload Home Assistant |
+| Azione | Raspberry | Payload MQTT |
 | --- | --- | --- |
 | Accendere tutti i LED | `serra lights on [-i 0..100] [-f secondi]` | `lights on [-i 0..100] [-f secondi]` |
 | Spegnere tutti i LED | `serra lights off [-f secondi]` | `lights off [-f secondi]` |
@@ -64,7 +64,7 @@ Esempi (ogni payload va pubblicato su `serra/cmd`, con **raw** e senza retain):
 
 ## Ventole
 
-| Azione | Raspberry | Payload Home Assistant |
+| Azione | Raspberry | Payload MQTT |
 | --- | --- | --- |
 | Accendere tutte | `serra fans on [-i livello]` | `fans on [-i livello]` |
 | Spegnere tutte | `serra fans off` | `fans off` |
@@ -81,7 +81,7 @@ Esempi (ogni payload va pubblicato su `serra/cmd`, con **raw** e senza retain):
 
 ## Pompe
 
-| Azione | Raspberry | Payload Home Assistant |
+| Azione | Raspberry | Payload MQTT |
 | --- | --- | --- |
 | Avviare la pompa principale | `serra pump main on [-s secondi]` | `pump main on [-s secondi]` |
 | Fermare subito la pompa principale | `serra pump main off` | `pump main off` |
@@ -108,7 +108,7 @@ Esempi: **verifica prima l’ID della pompa** e comincia con durate brevi, perch
 
 ## LED ring
 
-| Azione | Raspberry | Payload Home Assistant |
+| Azione | Raspberry | Payload MQTT |
 | --- | --- | --- |
 | Accendere | `serra ring on [-c colore] [-f secondi]` | `ring on [-c colore] [-f secondi]` |
 | Spegnere | `serra ring off [-f secondi]` | `ring off [-f secondi]` |
@@ -124,7 +124,7 @@ Esempi: **verifica prima l’ID della pompa** e comincia con durate brevi, perch
 
 ## Checkup, rete e stato
 
-| Azione | Raspberry | Payload Home Assistant |
+| Azione | Raspberry | Payload MQTT |
 | --- | --- | --- |
 | Testare i componenti | `serra checkup [opzioni]` | `checkup [opzioni]` |
 | Disattivare la rete della **serra** | `serra net off [-n on/off]` | `net off [-n on/off]` |
