@@ -373,10 +373,10 @@ h2 { margin: 0; font-size: clamp(26px, 2.6vw, 34px); font-weight: 750; letter-sp
 .system-diagram .flow-card-controller { fill: var(--accent-soft); stroke: var(--accent-strong); }
 .system-diagram .flow-number { fill: var(--accent-soft); stroke: var(--accent-strong); stroke-width: 1.3; }
 .system-diagram .flow-number-text { fill: var(--accent-dark); font-size: 11px; font-weight: 850; }
-.system-diagram .flow-title { fill: var(--ink); font-size: 17px; font-weight: 750; letter-spacing: -.02em; }
-.system-diagram .flow-caption { fill: var(--muted); font-size: 12px; }
+.system-diagram .flow-title { fill: var(--ink); font-size: 18px; font-weight: 750; letter-spacing: -.02em; }
+.system-diagram .flow-caption { fill: var(--muted); font-size: 13px; }
 .system-diagram .flow-link { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.system-diagram .flow-link-label { fill: var(--accent-dark); font-size: 10px; font-weight: 850; letter-spacing: .045em; }
+.system-diagram .flow-link-label { fill: var(--accent-dark); font-size: 11px; font-weight: 850; letter-spacing: .045em; }
 .system-diagram figcaption { color: var(--quiet); font-size: 11px; text-align: center; line-height: 1.5; }
 @media (max-width: 650px) {
   .topbar-github { gap: 4px; padding: 0 8px; font-size: 10px; }
@@ -388,7 +388,7 @@ h2 { margin: 0; font-size: clamp(26px, 2.6vw, 34px); font-weight: 750; letter-sp
   .quick-jump { padding: 16px 18px; }
   .quick-jump ul { grid-template-columns: 1fr; gap: 0; }
   .system-diagram { padding: 9px 5px 14px; }
-  .system-diagram figcaption { padding: 0 9px; font-size: 10px; }
+  .system-diagram figcaption { padding: 0 9px; }
   .markdown-body { margin-top: 43px; font-size: 14px; }
   .markdown-body h2 { margin-top: 60px; padding-left: 61px; font-size: 25px; }
   .markdown-body h2::before { width: 44px; height: 30px; font-size: 10px; }
