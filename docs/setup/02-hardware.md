@@ -1,7 +1,7 @@
-# 01 · Hardware e collegamenti
+# 02 · Hardware e collegamenti
 
 > [!CAUTION] Prima di toccare la scheda
-> **Stacca la spina della serra dalla presa e scollega l'adattatore USB → TTL dal Raspberry/computer.** Fallo prima di aprire la parte superiore, identificare o collegare i pin, saldare e forare. Tieni la scheda e i collegamenti lontani da acqua, serbatoi, tubi e pompe. [Leggi tutte le precauzioni](00-panoramica.md#prima-di-intervenire-sicurezza-elettrica-e-acqua) prima di iniziare.
+> **Stacca la spina della serra dalla presa e scollega l'adattatore USB → TTL dal Raspberry/computer.** Fallo prima di aprire la parte superiore, identificare o collegare i pin, saldare e forare. Tieni la scheda e i collegamenti lontani da acqua, serbatoi, tubi e pompe. [Leggi tutte le precauzioni](01-panoramica.md#prima-di-intervenire-sicurezza-elettrica-e-acqua) prima di iniziare.
 
 ## La serra Linfa Weezy
 
@@ -157,7 +157,7 @@ ls -l /dev/ttyUSB* /dev/ttyACM*
 
 <table width="100%" class="step-nav">
   <tr>
-    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="00-panoramica.md">← 00 · Panoramica e obiettivi</a></td>
-    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="02-raspberry.md">02 · Preparare il Raspberry Pi →</a></td>
+    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="01-panoramica.md">← 01 · Panoramica e obiettivi</a></td>
+    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="03-raspberry.md">03 · Preparare il Raspberry Pi →</a></td>
   </tr>
 </table>

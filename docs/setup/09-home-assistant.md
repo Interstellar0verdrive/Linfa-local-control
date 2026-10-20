@@ -1,4 +1,4 @@
-# 08 · Collegare Home Assistant
+# 09 · Collegare Home Assistant
 
 **Percorso guidato:** [Indice dei capitoli](../index.md)
 
@@ -7,7 +7,7 @@
 
 ---
 
-Il broker MQTT e le sue credenziali sono stati predisposti nel [passo 06](06-bridge-mqtt.md).
+Il broker MQTT e le sue credenziali sono stati predisposti nel [passo 07](07-bridge-mqtt.md).
 
 ---
 
@@ -148,7 +148,7 @@ A questo punto il percorso di base è completo:
 
 <table width="100%" class="step-nav">
   <tr>
-    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="07-servizi-automatici.md">← 07 · Attivare i servizi automatici</a></td>
+    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="08-servizi-automatici.md">← 08 · Attivare i servizi automatici</a></td>
     <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="../index.md">Indice completo →</a></td>
   </tr>
 </table>

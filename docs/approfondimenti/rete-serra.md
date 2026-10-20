@@ -31,7 +31,7 @@ ssh root@<SERRA_IP>
 Sostituisci `<SERRA_IP>` con l'indirizzo trovato nel router e inserisci la password root della serra quando richiesta.
 
 > [!WARNING] Attenzione
-> L'accesso SSH alla serra via Wi-Fi serve solo per configurazione e verifica. Nel funzionamento normale il Raspberry spegne la rete della serra: prima di attivare il timer del passo 07, assicurati che la UART funzioni.
+> L'accesso SSH alla serra via Wi-Fi serve solo per configurazione e verifica. Nel funzionamento normale il Raspberry spegne la rete della serra: prima di attivare il timer del passo 08, assicurati che la UART funzioni.
 
 ---
 

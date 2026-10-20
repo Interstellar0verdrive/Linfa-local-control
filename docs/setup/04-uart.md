@@ -1,4 +1,4 @@
-# 03 · Verificare la console UART
+# 04 · Verificare la console UART
 
 **Percorso guidato:** [Indice dei capitoli](../index.md)
 
@@ -136,7 +136,7 @@ Se la console non risponde:
 - ✅ Nessuna modifica persistente sulla serra
 - ✅ Pronti per il controllo esterno via Raspberry
 
-Nel passo 04 userai ancora la console per impostare la password root della serra. Poi il controller sul Raspberry invierà i comandi via UART.
+Nel passo 05 userai ancora la console per impostare la password root della serra. Poi il controller sul Raspberry invierà i comandi via UART.
 
 ---
 
@@ -147,7 +147,7 @@ Nel passo 04 userai ancora la console per impostare la password root della serra
 
 <table width="100%" class="step-nav">
   <tr>
-    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="02-raspberry.md">← 02 · Preparare il Raspberry Pi</a></td>
-    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="04-password-root.md">04 · Impostare la password root →</a></td>
+    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="03-raspberry.md">← 03 · Preparare il Raspberry Pi</a></td>
+    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="05-password-root.md">05 · Impostare la password root →</a></td>
   </tr>
 </table>

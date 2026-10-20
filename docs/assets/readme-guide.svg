@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title description">
   <title id="title">Tre pagine della guida Linfa Local Control</title>
-  <desc id="description">Mockup della documentazione: in primo piano il capitolo 00 con lo schema serra, Raspberry Pi, MQTT e Home Assistant; accanto le pagine dei collegamenti hardware e del bridge MQTT.</desc>
+  <desc id="description">Mockup della documentazione: in primo piano il capitolo 01 con lo schema serra, Raspberry Pi, MQTT e Home Assistant; accanto le pagine dei collegamenti hardware e del bridge MQTT.</desc>
   <defs>
     <linearGradient id="backdrop" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#0b1812"/>
@@ -40,9 +40,9 @@
   <path d="M0 836C348 770 480 824 747 880M1170 0c45 192 185 220 430 223" fill="none" stroke="#a3dca9" stroke-opacity=".11" stroke-width="2"/>
   <text x="73" y="56" class="micro" fill="#b9e6bf">LINFA LOCAL CONTROL <tspan fill="#759c7b"> / </tspan> DOCUMENTAZIONE</text>
   <text x="74" y="858" font-size="15" font-weight="650" fill="#bbd1bd">Dal collegamento fisico al controllo locale.</text>
-  <text x="1532" y="858" text-anchor="end" class="micro" fill="#8fb696">CAPITOLI 00—08</text>
+  <text x="1532" y="858" text-anchor="end" class="micro" fill="#8fb696">CAPITOLI 01—09</text>
 
-  <!-- Capitolo 01: una pagina chiara con la scheda e i tre pin. -->
+  <!-- Capitolo 02: una pagina chiara con la scheda e i tre pin. -->
   <g transform="translate(48 0)">
   <g filter="url(#soft-shadow)">
     <rect x="960" y="58" width="570" height="370" rx="19" fill="#f2f6ed" stroke="#adc7ae" stroke-width="2"/>
@@ -54,7 +54,7 @@
     <circle cx="1018" cy="80" r="5" fill="#9fbb9f"/>
     <text x="1054" y="84" font-size="12" font-weight="650" fill="#4c7053">GUIDA / HARDWARE</text>
     <rect x="995" y="124" width="38" height="4" rx="2" fill="#6ba17a"/>
-    <text x="995" y="167" font-size="29" font-weight="800" fill="#203e2a">01. Hardware</text>
+    <text x="995" y="167" font-size="29" font-weight="800" fill="#203e2a">02. Hardware</text>
     <text x="995" y="192" font-size="13" fill="#6b806d">Il collegamento alla console del VoCore2</text>
     <rect x="996" y="218" width="497" height="145" rx="15" fill="#e6eee4" stroke="#bfd1bf"/>
     <rect x="1032" y="238" width="231" height="103" rx="11" fill="url(#board)" stroke="#78aa80" stroke-width="2"/>
@@ -78,7 +78,7 @@
   </g>
   </g>
 
-  <!-- Capitolo 06: topics e stato del bridge MQTT. -->
+  <!-- Capitolo 07: topics e stato del bridge MQTT. -->
   <g filter="url(#soft-shadow)">
     <rect x="994" y="462" width="548" height="335" rx="19" fill="#17251b" stroke="#53765b" stroke-width="2"/>
   </g>
@@ -88,7 +88,7 @@
     <circle cx="1036" cy="484" r="5" fill="#729579"/>
     <circle cx="1052" cy="484" r="5" fill="#729579"/>
     <text x="1087" y="488" font-size="12" font-weight="650" fill="#a6d4ad">GUIDA / INTEGRAZIONE</text>
-    <text x="1028" y="547" font-size="29" font-weight="800" fill="#edf5eb">06. Bridge MQTT</text>
+    <text x="1028" y="547" font-size="29" font-weight="800" fill="#edf5eb">07. Bridge MQTT</text>
     <text x="1028" y="574" font-size="13" fill="#a7baa9">Stati e comandi, senza passare dal cloud</text>
     <rect x="1027" y="598" width="474" height="47" rx="9" fill="#213629" stroke="#42674b"/>
     <circle cx="1050" cy="622" r="6" fill="#a6e6aa"/>
@@ -105,7 +105,7 @@
     <text x="1457" y="740" text-anchor="end" font-size="12" fill="#acd9ae">lights on →</text>
   </g>
 
-  <!-- Capitolo 00 in primo piano: riproduce la struttura reale della guida. -->
+  <!-- Capitolo 01 in primo piano: riproduce la struttura reale della guida. -->
   <g filter="url(#window-shadow)">
     <rect x="72" y="100" width="943" height="706" rx="21" fill="#111b15" stroke="#7da982" stroke-width="2"/>
   </g>
@@ -115,7 +115,7 @@
     <circle cx="99" cy="124" r="5" fill="#698c70"/>
     <circle cx="115" cy="124" r="5" fill="#698c70"/>
     <circle cx="131" cy="124" r="5" fill="#698c70"/>
-    <text x="167" y="128" font-size="12" font-weight="600" fill="#bdcfbd">Documentazione  /  Passo 00</text>
+    <text x="167" y="128" font-size="12" font-weight="600" fill="#bdcfbd">Documentazione  /  Passo 01</text>
     <rect x="882" y="113" width="101" height="23" rx="7" fill="#263d2b" stroke="#496b50"/>
     <text x="932" y="129" text-anchor="middle" font-size="11" font-weight="750" fill="#b5dfb8">☼  Sistema</text>
 
@@ -130,24 +130,24 @@
     <path d="M95 311h150" stroke="#354a39"/>
     <text x="95" y="340" class="micro" fill="#94a998">CAPITOLI</text>
     <rect x="86" y="355" width="169" height="37" rx="7" fill="#2b4731" stroke="#719d77"/>
-    <text x="96" y="379" class="sidebar" fill="#d2efd1">00</text>
+    <text x="96" y="379" class="sidebar" fill="#d2efd1">01</text>
     <text x="121" y="379" class="sidebar" fill="#e6f6e4">Panoramica</text>
-    <text x="96" y="417" class="sidebar">01</text><text x="121" y="417" class="sidebar">Hardware</text>
-    <text x="96" y="455" class="sidebar">02</text><text x="121" y="455" class="sidebar">Raspberry Pi</text>
-    <text x="96" y="493" class="sidebar">03</text><text x="121" y="493" class="sidebar">Console UART</text>
-    <text x="96" y="531" class="sidebar">04</text><text x="121" y="531" class="sidebar">Password root</text>
-    <text x="96" y="569" class="sidebar">05</text><text x="121" y="569" class="sidebar">Controller CLI</text>
-    <text x="96" y="607" class="sidebar">06</text><text x="121" y="607" class="sidebar">Bridge MQTT</text>
-    <text x="96" y="645" class="sidebar">07</text><text x="121" y="645" class="sidebar">Servizi automatici</text>
-    <text x="96" y="683" class="sidebar">08</text><text x="121" y="683" class="sidebar">Home Assistant</text>
+    <text x="96" y="417" class="sidebar">02</text><text x="121" y="417" class="sidebar">Hardware</text>
+    <text x="96" y="455" class="sidebar">03</text><text x="121" y="455" class="sidebar">Raspberry Pi</text>
+    <text x="96" y="493" class="sidebar">04</text><text x="121" y="493" class="sidebar">Console UART</text>
+    <text x="96" y="531" class="sidebar">05</text><text x="121" y="531" class="sidebar">Password root</text>
+    <text x="96" y="569" class="sidebar">06</text><text x="121" y="569" class="sidebar">Controller CLI</text>
+    <text x="96" y="607" class="sidebar">07</text><text x="121" y="607" class="sidebar">Bridge MQTT</text>
+    <text x="96" y="645" class="sidebar">08</text><text x="121" y="645" class="sidebar">Servizi automatici</text>
+    <text x="96" y="683" class="sidebar">09</text><text x="121" y="683" class="sidebar">Home Assistant</text>
     <path d="M95 708h150" stroke="#354a39"/>
     <text x="95" y="737" class="micro" fill="#94a998">APPROFONDIMENTI</text>
     <text x="95" y="764" font-size="11" fill="#b7c9b8">Traffico cloud  ↗</text>
 
     <rect x="307" y="183" width="538" height="4" rx="2" fill="#344b37"/>
     <rect x="307" y="183" width="74" height="4" rx="2" fill="#a4e4aa"/>
-    <text x="307" y="221" class="micro" fill="#a5d9a9">◆  PASSO 00  —  ORIENTAMENTO</text>
-    <text x="307" y="269" font-size="40" font-weight="850" letter-spacing="-2" fill="#f3f8f0">00. Panoramica e obiettivi</text>
+    <text x="307" y="221" class="micro" fill="#a5d9a9">◆  PASSO 01  —  ORIENTAMENTO</text>
+    <text x="307" y="269" font-size="40" font-weight="850" letter-spacing="-2" fill="#f3f8f0">01. Panoramica e obiettivi</text>
     <text x="307" y="301" font-size="14" fill="#aebfb0">Componenti, responsabilità e limiti del controllo locale.</text>
     <rect x="307" y="328" width="31" height="27" rx="6" fill="#213127" stroke="#4a6b50"/>
     <text x="322" y="347" text-anchor="middle" font-size="11" font-weight="800" fill="#bde9c0">01</text>

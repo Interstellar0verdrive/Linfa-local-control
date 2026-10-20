@@ -2,21 +2,22 @@
 
 import hashlib
 import html
+import json
 import re
 from pathlib import Path
 from urllib.parse import urlsplit
 
 
 STEPS = [
-    ("00", "Panoramica e obiettivi", "setup/00-panoramica.md", "Il progetto in breve: componenti, responsabilità e limiti del controllo locale.", "ORIENTAMENTO", "Hai compreso il ruolo di serra, Raspberry, UART, MQTT e Home Assistant."),
-    ("01", "Hardware e collegamenti", "setup/01-hardware.md", "La base fisica del controllo locale: serra, Raspberry Pi e collegamento seriale sicuro.", "PREPARAZIONE", "Hai identificato TX, RX e GND, usi un adattatore TTL a 3,3 V e hai lasciato VCC scollegato."),
-    ("02", "Preparare il Raspberry Pi", "setup/02-raspberry.md", "Prepara il sistema, i pacchetti e i permessi necessari per parlare con la serra.", "PREPARAZIONE", "Python, picocom, i pacchetti richiesti e i permessi seriali sono pronti."),
-    ("03", "Verificare la console UART", "setup/03-uart.md", "Apri la console seriale e controlla che il VoCore risponda prima di modificarne la configurazione.", "CONNESSIONE", "La console risponde, puoi effettuare il login e il comando di prova funziona."),
-    ("04", "Impostare la password root", "setup/04-password-root.md", "Proteggi l’accesso alla serra e verifica la nuova password dalla console seriale.", "CONNESSIONE", "Hai impostato e verificato la password root della serra."),
-    ("05", "Installare il controller CLI", "setup/05-controller-cli.md", "Installa il controller sul Raspberry e prova i primi comandi attraverso la UART.", "CONTROLLO", "Il comando serra state sync funziona dal Raspberry tramite UART."),
-    ("06", "Configurare il bridge MQTT", "setup/06-bridge-mqtt.md", "Collega il controller al broker MQTT e verifica stati e comandi end-to-end.", "INTEGRAZIONE", "Il servizio bridge è attivo e i topic di stato e comando rispondono."),
-    ("07", "Attivare i servizi automatici", "setup/07-servizi-automatici.md", "Automatizza la policy di rete e la sincronizzazione periodica dello stato.", "AUTOMAZIONE", "I timer sono attivi e i relativi servizi risultano verificati."),
-    ("08", "Collegare Home Assistant", "setup/08-home-assistant.md", "Completa il percorso portando stati e comandi MQTT in Home Assistant.", "COMPLETAMENTO", "Home Assistant riceve gli stati MQTT e puoi inviare un comando di prova."),
+    ("01", "Panoramica e obiettivi", "setup/01-panoramica.md", "Il progetto in breve: componenti, responsabilità e limiti del controllo locale.", "ORIENTAMENTO", "Hai compreso il ruolo di serra, Raspberry, UART, MQTT e Home Assistant."),
+    ("02", "Hardware e collegamenti", "setup/02-hardware.md", "La base fisica del controllo locale: serra, Raspberry Pi e collegamento seriale sicuro.", "PREPARAZIONE", "Hai identificato TX, RX e GND, usi un adattatore TTL a 3,3 V e hai lasciato VCC scollegato."),
+    ("03", "Preparare il Raspberry Pi", "setup/03-raspberry.md", "Prepara il sistema, i pacchetti e i permessi necessari per parlare con la serra.", "PREPARAZIONE", "Python, picocom, i pacchetti richiesti e i permessi seriali sono pronti."),
+    ("04", "Verificare la console UART", "setup/04-uart.md", "Apri la console seriale e controlla che il VoCore risponda prima di modificarne la configurazione.", "CONNESSIONE", "La console risponde, puoi effettuare il login e il comando di prova funziona."),
+    ("05", "Impostare la password root", "setup/05-password-root.md", "Proteggi l’accesso alla serra e verifica la nuova password dalla console seriale.", "CONNESSIONE", "Hai impostato e verificato la password root della serra."),
+    ("06", "Installare il controller CLI", "setup/06-controller-cli.md", "Installa il controller sul Raspberry e prova i primi comandi attraverso la UART.", "CONTROLLO", "Il comando serra state sync funziona dal Raspberry tramite UART."),
+    ("07", "Configurare il bridge MQTT", "setup/07-bridge-mqtt.md", "Collega il controller al broker MQTT e verifica stati e comandi end-to-end.", "INTEGRAZIONE", "Il servizio bridge è attivo e i topic di stato e comando rispondono."),
+    ("08", "Attivare i servizi automatici", "setup/08-servizi-automatici.md", "Automatizza la policy di rete e la sincronizzazione periodica dello stato.", "AUTOMAZIONE", "I timer sono attivi e i relativi servizi risultano verificati."),
+    ("09", "Collegare Home Assistant", "setup/09-home-assistant.md", "Completa il percorso portando stati e comandi MQTT in Home Assistant.", "COMPLETAMENTO", "Home Assistant riceve gli stati MQTT e puoi inviare un comando di prova."),
 ]
 
 EXTRAS = {
@@ -29,10 +30,19 @@ EXTRAS = {
 REDIRECTS = {
     "setup/05-modifiche-serra/": "approfondimenti/configurazione-serra/",
     "setup/06-rete/": "approfondimenti/rete-serra/",
-    "setup/07-controller-cli/": "setup/05-controller-cli/",
-    "setup/08-bridge-mqtt/": "setup/06-bridge-mqtt/",
-    "setup/09-servizi-automatici/": "setup/07-servizi-automatici/",
-    "setup/10-home-assistant/": "setup/08-home-assistant/",
+    "setup/07-controller-cli/": "setup/06-controller-cli/",
+    "setup/08-bridge-mqtt/": "setup/07-bridge-mqtt/",
+    "setup/09-servizi-automatici/": "setup/08-servizi-automatici/",
+    "setup/10-home-assistant/": "setup/09-home-assistant/",
+    "setup/00-panoramica/": "setup/01-panoramica/",
+    "setup/01-hardware/": "setup/02-hardware/",
+    "setup/02-raspberry/": "setup/03-raspberry/",
+    "setup/03-uart/": "setup/04-uart/",
+    "setup/04-password-root/": "setup/05-password-root/",
+    "setup/05-controller-cli/": "setup/06-controller-cli/",
+    "setup/06-bridge-mqtt/": "setup/07-bridge-mqtt/",
+    "setup/07-servizi-automatici/": "setup/08-servizi-automatici/",
+    "setup/08-home-assistant/": "setup/09-home-assistant/",
 }
 
 ANCHOR_RE = re.compile(r'(<a\b[^>]*>)(.*?)(</a>)', re.IGNORECASE | re.DOTALL)
@@ -118,6 +128,7 @@ def on_post_build(config):
             '<meta name="robots" content="noindex">'
             f'<meta http-equiv="refresh" content="0; url={html.escape(target, quote=True)}">'
             f'<link rel="canonical" href="{html.escape(config["site_url"] + new_path, quote=True)}">'
+            f'<script>location.replace({json.dumps(target)} + location.hash);</script>'
             f'</head><body><p>La pagina è stata spostata: <a href="{html.escape(target, quote=True)}">'
             'apri la nuova pagina</a>.</p></body></html>',
             encoding="utf-8",

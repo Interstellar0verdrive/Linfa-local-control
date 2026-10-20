@@ -1,8 +1,8 @@
-# 06 · Configurare il bridge MQTT
+# 07 · Configurare il bridge MQTT
 
 **Percorso guidato:** [Indice dei capitoli](../index.md)
 
-Prosegui dopo aver verificato il controller CLI nel passo 05. Qui configuri il broker, il servizio e una prova MQTT completa.
+Prosegui dopo aver verificato il controller CLI nel passo 06. Qui configuri il broker, il servizio e una prova MQTT completa.
 
 ## Prima di configurare il bridge: broker MQTT
 
@@ -174,7 +174,7 @@ Per uscire: `CTRL + C`
 
 <table width="100%" class="step-nav">
   <tr>
-    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="05-controller-cli.md">← 05 · Installare il controller CLI</a></td>
-    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="07-servizi-automatici.md">07 · Attivare i servizi automatici →</a></td>
+    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="06-controller-cli.md">← 06 · Installare il controller CLI</a></td>
+    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="08-servizi-automatici.md">08 · Attivare i servizi automatici →</a></td>
   </tr>
 </table>

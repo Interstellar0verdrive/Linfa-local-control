@@ -10,9 +10,9 @@ La procedura è stata provata su **Linfa Weezy**. Potrebbe funzionare anche sull
 
 ## La guida
 
-[![Mockup delle pagine 00 Panoramica e obiettivi, 01 Hardware e collegamenti e 06 Bridge MQTT](docs/assets/readme-guide.svg)](https://interstellar0verdrive.github.io/Linfa-local-control/)
+[![Mockup delle pagine 01 Panoramica e obiettivi, 02 Hardware e collegamenti e 07 Bridge MQTT](docs/assets/readme-guide.svg)](https://interstellar0verdrive.github.io/Linfa-local-control/)
 
-La [documentazione navigabile](https://interstellar0verdrive.github.io/Linfa-local-control/) accompagna dal **capitolo 00 al capitolo 08**: materiali, collegamento alla scheda, Raspberry Pi, console seriale, controller, MQTT e Home Assistant. Ogni passo termina con una verifica e il collegamento al successivo.
+La [documentazione navigabile](https://interstellar0verdrive.github.io/Linfa-local-control/) è organizzata in **nove capitoli, numerati da 01 a 09**: materiali, collegamento alla scheda, Raspberry Pi, console seriale, controller, MQTT e Home Assistant. Ogni passo termina con una verifica e il collegamento al successivo.
 
 Chi vuole replicare il setup può seguire direttamente questo percorso. L'analisi del traffico cloud, il dump del VoCore e le modifiche facoltative alla configurazione originale sono raccolti negli **approfondimenti**.
 
@@ -20,7 +20,7 @@ Chi vuole replicare il setup può seguire direttamente questo percorso. L'analis
 
 | Componente | Stato |
 | --- | --- |
-| Guida hardware e setup | **Pubblicata** — [inizia dal capitolo 00](https://interstellar0verdrive.github.io/Linfa-local-control/setup/00-panoramica/) |
+| Guida hardware e setup | **Pubblicata** — [inizia dal capitolo 01](https://interstellar0verdrive.github.io/Linfa-local-control/setup/01-panoramica/) |
 | Controller CLI e bridge MQTT | **Disponibili** nella cartella [`bridge/`](bridge/) |
 | App completa per Home Assistant | **Pronta, in fase di test.** Verrà caricata e rilasciata qui a breve; non è ancora inclusa nella repository. |
 
@@ -40,7 +40,7 @@ Il controller usa il collegamento seriale alla console del VoCore2; il Raspberry
 > Aprire e modificare la serra può causare malfunzionamenti e **potrebbe far decadere la garanzia commerciale**. Verifica le condizioni applicabili prima di intervenire; i diritti della garanzia legale sono distinti dalla garanzia commerciale.
 
 > [!CAUTION]
-> **Scollega la serra dalla presa e l'adattatore USB → TTL dal Raspberry/computer** prima di aprire la scocca, toccare o collegare i pin, saldare o forare. Tieni l'elettronica lontana da acqua, serbatoi, tubi e pompe. La guida presuppone esperienza di base con collegamenti elettrici e saldature: se hai dubbi sulla sicurezza, fermati e chiedi aiuto a una persona qualificata. Leggi le [precauzioni complete](https://interstellar0verdrive.github.io/Linfa-local-control/setup/00-panoramica/#prima-di-intervenire-sicurezza-elettrica-e-acqua).
+> **Scollega la serra dalla presa e l'adattatore USB → TTL dal Raspberry/computer** prima di aprire la scocca, toccare o collegare i pin, saldare o forare. Tieni l'elettronica lontana da acqua, serbatoi, tubi e pompe. La guida presuppone esperienza di base con collegamenti elettrici e saldature: se hai dubbi sulla sicurezza, fermati e chiedi aiuto a una persona qualificata. Leggi le [precauzioni complete](https://interstellar0verdrive.github.io/Linfa-local-control/setup/01-panoramica/#prima-di-intervenire-sicurezza-elettrica-e-acqua).
 
 ## Licenza
 

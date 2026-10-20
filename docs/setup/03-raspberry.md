@@ -1,11 +1,11 @@
-# 02 · Preparare il Raspberry Pi
+# 03 · Preparare il Raspberry Pi
 
 **Percorso guidato:** [Indice dei capitoli](../index.md)
 
 Obiettivo di questa sezione: preparare un Raspberry Pi “vergine” (solo OS + rete) con tutto l’ambiente necessario per:
 
 - aprire la console UART della serra (debug con picocom)
-- eseguire script Python (controller e bridge, che verranno copiati nel passo 05)
+- eseguire script Python (controller e bridge, che verranno copiati nel passo 06)
 - parlare con MQTT (lato Python + strumenti CLI per test)
 - predisporre permessi e cartelle standard
 
@@ -159,7 +159,7 @@ mkdir -p /home/pi/serra/_bak
 
 Suggerimento pratico:
 
-- nel passo 05 copierai `serra_controller.py` e `serra_mqtt_bridge.py` in `/home/pi/`
+- nel passo 06 copierai `serra_controller.py` e `serra_mqtt_bridge.py` in `/home/pi/`
 - useremo poi un symlink per rendere disponibile il comando `serra`.
 
 ---
@@ -193,7 +193,7 @@ Alla fine di questo capitolo, il Raspberry deve avere:
 - ✅ sistema aggiornato
 - ✅ python3 funzionante
 - ✅ moduli python3-serial e python3-paho-mqtt disponibili (import OK)
-- ✅ picocom installato; il test della UART è nel passo 03
+- ✅ picocom installato; il test della UART è nel passo 04
 - ✅ mosquitto-clients installato (per test futuri)
 - ✅ utente pi in gruppo dialout
 - ✅ cartelle predisposte per i file del progetto
@@ -207,7 +207,7 @@ Alla fine di questo capitolo, il Raspberry deve avere:
 
 <table width="100%" class="step-nav">
   <tr>
-    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="01-hardware.md">← 01 · Hardware e collegamenti</a></td>
-    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="03-uart.md">03 · Verificare la console UART →</a></td>
+    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="02-hardware.md">← 02 · Hardware e collegamenti</a></td>
+    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="04-uart.md">04 · Verificare la console UART →</a></td>
   </tr>
 </table>

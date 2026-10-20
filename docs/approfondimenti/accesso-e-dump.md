@@ -1,9 +1,9 @@
 # Accesso e dump facoltativi
 
-Queste operazioni servono per l'esplorazione tecnica. Il percorso principale usa la [verifica UART](../setup/03-uart.md) e la [password root](../setup/04-password-root.md).
+Queste operazioni servono per l'esplorazione tecnica. Il percorso principale usa la [verifica UART](../setup/04-uart.md) e la [password root](../setup/05-password-root.md).
 
 > [!CAUTION] Alimentazione durante le prove
-> Collega o modifica la UART soltanto dopo aver scollegato la spina della serra e l'adattatore USB → TTL dal computer/Raspberry. Alimenta la serra per leggere la console solo quando i fili sono fissati e isolati, la scocca è richiusa e i componenti elettrici sono asciutti e lontani da acqua e pompe. Se devi intervenire di nuovo sul cablaggio, scollega prima entrambe le alimentazioni. Vedi le [precauzioni complete](../setup/00-panoramica.md#prima-di-intervenire-sicurezza-elettrica-e-acqua).
+> Collega o modifica la UART soltanto dopo aver scollegato la spina della serra e l'adattatore USB → TTL dal computer/Raspberry. Alimenta la serra per leggere la console solo quando i fili sono fissati e isolati, la scocca è richiusa e i componenti elettrici sono asciutti e lontani da acqua e pompe. Se devi intervenire di nuovo sul cablaggio, scollega prima entrambe le alimentazioni. Vedi le [precauzioni complete](../setup/01-panoramica.md#prima-di-intervenire-sicurezza-elettrica-e-acqua).
 
 ### Entrare nella serra
 

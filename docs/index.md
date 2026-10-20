@@ -1,37 +1,37 @@
-Questa guida accompagna la preparazione di una serra Robonica Linfa per il controllo locale con Raspberry Pi, UART, MQTT e Home Assistant. **Per replicare il sistema, segui i capitoli 00–08 nell'ordine:** ogni passo termina con una verifica e il collegamento al successivo.
+Questa guida accompagna la preparazione di una serra Robonica Linfa per il controllo locale con Raspberry Pi, UART, MQTT e Home Assistant. **Per replicare il sistema, segui i capitoli 01–09 nell'ordine:** ogni passo termina con una verifica e il collegamento al successivo.
 
 > [!IMPORTANT] Compatibilità e responsabilità
 > La procedura è stata provata su **Linfa Weezy**. La compatibilità con la Linfa standard è da verificare. Il progetto è indipendente da Robonica S.r.l.; [leggi il disclaimer completo](https://github.com/Interstellar0verdrive/Linfa-local-control#linfa-local-control) prima di aprire il dispositivo.
 
 > [!CAUTION] Prima di aprire la serra
-> **Stacca la spina della serra e scollega l'adattatore USB → TTL dal Raspberry/computer** prima di toccare la scheda, collegare o scollegare fili, saldare o forare. Tieni i componenti elettrici lontani da acqua, serbatoi, tubi e pompe. La guida presuppone esperienza di base con collegamenti elettrici e saldature; se non sai verificare che l'intervento sia sicuro, fermati e chiedi aiuto a una persona qualificata. Leggi le [precauzioni complete nel passo 00](setup/00-panoramica.md#prima-di-intervenire-sicurezza-elettrica-e-acqua).
+> **Stacca la spina della serra e scollega l'adattatore USB → TTL dal Raspberry/computer** prima di toccare la scheda, collegare o scollegare fili, saldare o forare. Tieni i componenti elettrici lontani da acqua, serbatoi, tubi e pompe. La guida presuppone esperienza di base con collegamenti elettrici e saldature; se non sai verificare che l'intervento sia sicuro, fermati e chiedi aiuto a una persona qualificata. Leggi le [precauzioni complete nel passo 01](setup/01-panoramica.md#prima-di-intervenire-sicurezza-elettrica-e-acqua).
 
 ## Percorso essenziale: dalla serra a Home Assistant
 
-Il software del controller e del bridge è già nella repository: non devi ripetere l'indagine sul traffico cloud né estrarre il contenuto del VoCore. Devi invece preparare il collegamento fisico, il Raspberry, l'accesso seriale, MQTT e Home Assistant. La [lista dei materiali](setup/00-panoramica.md#cosa-serve-prima-di-iniziare) è nel passo 00.
+Il software del controller e del bridge è già nella repository: non devi ripetere l'indagine sul traffico cloud né estrarre il contenuto del VoCore. Devi invece preparare il collegamento fisico, il Raspberry, l'accesso seriale, MQTT e Home Assistant. La [lista dei materiali](setup/01-panoramica.md#cosa-serve-prima-di-iniziare) è nel passo 01.
 
 > [!NOTE] Stato attuale del pacchetto
-> Gli script sono disponibili. L'app completa per Home Assistant è pronta e in fase di test, ma **non è ancora pubblicata in questa repository**; manca anche un installer automatico. I passi 05–08 spiegano come configurare manualmente il controller e il bridge sul Raspberry e provarli da Home Assistant.
+> Gli script sono disponibili. L'app completa per Home Assistant è pronta e in fase di test, ma **non è ancora pubblicata in questa repository**; manca anche un installer automatico. I passi 06–09 spiegano come configurare manualmente il controller e il bridge sul Raspberry e provarli da Home Assistant.
 
 <div class="chapter-grid" markdown="1">
 
-- **00** [Panoramica e obiettivi](setup/00-panoramica.md)
+- **01** [Panoramica e obiettivi](setup/01-panoramica.md)
   Scopri i componenti, il loro ruolo e i limiti del sistema.
-- **01** [Hardware e collegamenti](setup/01-hardware.md)
+- **02** [Hardware e collegamenti](setup/02-hardware.md)
   Identifica il VoCore, prepara Raspberry e adattatore seriale, collega TX/RX/GND.
-- **02** [Preparare il Raspberry Pi](setup/02-raspberry.md)
+- **03** [Preparare il Raspberry Pi](setup/03-raspberry.md)
   Installa il sistema, i pacchetti necessari e configura i permessi seriali.
-- **03** [Verificare la console UART](setup/03-uart.md)
+- **04** [Verificare la console UART](setup/04-uart.md)
   Apri la console della serra ed esegui i primi comandi di controllo.
-- **04** [Impostare la password root](setup/04-password-root.md)
+- **05** [Impostare la password root](setup/05-password-root.md)
   Proteggi l'accesso seriale e verifica la password richiesta dal controller.
-- **05** [Installare il controller CLI](setup/05-controller-cli.md)
+- **06** [Installare il controller CLI](setup/06-controller-cli.md)
   Installa il controller seriale e prova comandi e sincronizzazione.
-- **06** [Configurare il bridge MQTT](setup/06-bridge-mqtt.md)
+- **07** [Configurare il bridge MQTT](setup/07-bridge-mqtt.md)
   Collega Raspberry e broker, poi verifica stati e comandi MQTT.
-- **07** [Attivare i servizi automatici](setup/07-servizi-automatici.md)
+- **08** [Attivare i servizi automatici](setup/08-servizi-automatici.md)
   Attiva i timer per la policy di rete e la sincronizzazione periodica.
-- **08** [Collegare Home Assistant](setup/08-home-assistant.md)
+- **09** [Collegare Home Assistant](setup/09-home-assistant.md)
   Integra i topic MQTT e prova il flusso completo.
 
 </div>

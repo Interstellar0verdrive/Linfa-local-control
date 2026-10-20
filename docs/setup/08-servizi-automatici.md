@@ -1,4 +1,4 @@
-# 07 · Attivare i servizi automatici
+# 08 · Attivare i servizi automatici
 
 **Percorso guidato:** [Indice dei capitoli](../index.md)
 
@@ -205,7 +205,7 @@ Sostituisci `<RASPBERRY_IP>` prima di eseguire i comandi. Il file `/etc/serra-mq
 
 <table width="100%" class="step-nav">
   <tr>
-    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="06-bridge-mqtt.md">← 06 · Configurare il bridge MQTT</a></td>
-    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="08-home-assistant.md">08 · Collegare Home Assistant →</a></td>
+    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="07-bridge-mqtt.md">← 07 · Configurare il bridge MQTT</a></td>
+    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="09-home-assistant.md">09 · Collegare Home Assistant →</a></td>
   </tr>
 </table>

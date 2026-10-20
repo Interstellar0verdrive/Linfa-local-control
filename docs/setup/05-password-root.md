@@ -1,11 +1,11 @@
-# 04 · Impostare la password root
+# 05 · Impostare la password root
 
 **Percorso guidato:** [Indice dei capitoli](../index.md)
 
 > [!IMPORTANT] Da sapere prima di iniziare
 > Il controller richiede una password root sulla serra, da usare tramite `SERRA_ROOT_PASSWORD`. Questa è distinta dalla password del Raspberry: conservala localmente e non caricarla nella repository.
 
-Hai già verificato l'accesso alla console nel [passo 03](03-uart.md).
+Hai già verificato l'accesso alla console nel [passo 04](04-uart.md).
 
 ## Prima di iniziare
 
@@ -32,7 +32,7 @@ Se l'account root non ha ancora una password, il campo della password può risul
 passwd
 ```
 
-Il comando chiede di inserirla due volte; mentre digiti non vedrai caratteri sullo schermo. Annota la password in un luogo sicuro. Ti servirà nel [passo 05](05-controller-cli.md) per la prova della CLI e nel [passo 06](06-bridge-mqtt.md) per `/etc/serra-mqtt.env`.
+Il comando chiede di inserirla due volte; mentre digiti non vedrai caratteri sullo schermo. Annota la password in un luogo sicuro. Ti servirà nel [passo 06](06-controller-cli.md) per la prova della CLI e nel [passo 07](07-bridge-mqtt.md) per `/etc/serra-mqtt.env`.
 
 Chiudi la sessione della serra e ripeti il login dalla console UART per verificare la nuova password. Per uscire da `picocom` sul Raspberry usa `Ctrl+A`, poi `Ctrl+X`.
 
@@ -45,7 +45,7 @@ Chiudi la sessione della serra e ripeti il login dalla console UART per verifica
 
 <table width="100%" class="step-nav">
   <tr>
-    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="03-uart.md">← 03 · Verificare la console UART</a></td>
-    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="05-controller-cli.md">05 · Installare il controller CLI →</a></td>
+    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="04-uart.md">← 04 · Verificare la console UART</a></td>
+    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="06-controller-cli.md">06 · Installare il controller CLI →</a></td>
   </tr>
 </table>

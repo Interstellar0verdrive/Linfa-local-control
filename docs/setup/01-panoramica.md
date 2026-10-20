@@ -1,4 +1,4 @@
-# 00 · Panoramica e obiettivi
+# 01 · Panoramica e obiettivi
 
 **Percorso guidato:** [Indice dei capitoli](../index.md)
 
@@ -87,13 +87,13 @@ Questa guida **presuppone esperienza di base con elettronica e saldatura**: devi
 | --- | --- |
 | **Serra Linfa** | La procedura è stata provata su Linfa Weezy; la Linfa standard non è ancora verificata. |
 | **Raspberry Pi** | Il prototipo usa un Pi 3B. Servono microSD da almeno 16 GB, alimentatore adatto al modello e connessione alla rete domestica. Un Pi Zero 2 W richiede anche un adattatore USB OTG per collegare la seriale. |
-| **Adattatore USB → UART/TTL** | I segnali TX e RX devono essere a **3,3 V**; servono anche GND e una connessione USB al Raspberry. Il pin di alimentazione VCC non si collega alla serra. Vedi [i criteri e gli esempi nel passo 01](01-hardware.md#ladattatore-usb-ttl). |
+| **Adattatore USB → UART/TTL** | I segnali TX e RX devono essere a **3,3 V**; servono anche GND e una connessione USB al Raspberry. Il pin di alimentazione VCC non si collega alla serra. Vedi [i criteri e gli esempi nel passo 02](02-hardware.md#ladattatore-usb-ttl). |
 | **Tre collegamenti isolati** | TX, RX e GND: cavetti Dupont per una prova su pin accessibili, oppure fili da fissare in modo stabile per l'installazione definitiva. |
 | **Cavo USB** | Serve se l'adattatore ha una presa USB; non serve un secondo cavo se l'adattatore è già un cavo USB → UART integrato. Scegli la lunghezza in base alla posizione del Raspberry. |
 | **Per il montaggio definitivo** | Attrezzi per aprire la serra, saldatore e materiale isolante se saldi i fili; protezione del bordo e fermacavo se fai passare i fili da un foro nella scocca. |
 | **Software e rete** | Raspberry Pi OS, un broker MQTT raggiungibile da Raspberry e Home Assistant, e l'integrazione MQTT di Home Assistant. Il controller e il bridge sono già nella repository. |
 
-La modifica fisica illustrata in questa guida è stata realizzata nella **parte superiore della serra, dove si trovano le luci e il VoCore**, con **fili saldati** e un **foro nella scocca per il passaggio dei fili del cavo seriale**. Il [passo 01](01-hardware.md#cablaggio-uart) descrive i collegamenti e mostra il foro. Non è disponibile una foto ravvicinata delle saldature: prima di richiudere verifica che i collegamenti siano saldi e isolati.
+La modifica fisica illustrata in questa guida è stata realizzata nella **parte superiore della serra, dove si trovano le luci e il VoCore**, con **fili saldati** e un **foro nella scocca per il passaggio dei fili del cavo seriale**. Il [passo 02](02-hardware.md#cablaggio-uart) descrive i collegamenti e mostra il foro. Non è disponibile una foto ravvicinata delle saldature: prima di richiudere verifica che i collegamenti siano saldi e isolati.
 
 Per ottenere lo stesso controllo locale **non devi ripetere l'analisi MITM, il dump del modulo o le prove delle API originali**: sono documentati negli approfondimenti. Anche la [modifica del token, della Wi-Fi e dei permessi degli aggiornamenti](../approfondimenti/configurazione-serra.md) è separata dal percorso essenziale, perché il controller comunica con la serra via UART.
 
@@ -105,9 +105,9 @@ Il percorso essenziale **non sostituisce il firmware** né richiede il dump del 
 
 Vincoli/assunzioni:
 
-- La password root della console viene impostata nel passo 04 perché il controller attuale la richiede.
+- La password root della console viene impostata nel passo 05 perché il controller attuale la richiede.
 - La disattivazione di Wi-Fi/NTP viene comandata **dall'esterno**, tramite UART e un timer sul Raspberry; non serve riconfigurare la rete della serra per usare il bridge MQTT.
-- La sostituzione del token e il blocco degli aggiornamenti sono [modifiche facoltative documentate a parte](../approfondimenti/configurazione-serra.md), non prerequisiti dei passi 05–08.
+- La sostituzione del token e il blocco degli aggiornamenti sono [modifiche facoltative documentate a parte](../approfondimenti/configurazione-serra.md), non prerequisiti dei passi 06–09.
 - Conserva un modo sicuro per ripristinare le modifiche che scegli di applicare. Il collegamento saldato e il foro nella scocca richiedono anche un intervento fisico per tornare alla configurazione originale.
 
 Implicazioni:
@@ -178,6 +178,6 @@ Punti chiave:
 <table width="100%" class="step-nav">
   <tr>
     <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="../index.md">← Indice completo</a></td>
-    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="01-hardware.md">01 · Hardware e collegamenti →</a></td>
+    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="02-hardware.md">02 · Hardware e collegamenti →</a></td>
   </tr>
 </table>

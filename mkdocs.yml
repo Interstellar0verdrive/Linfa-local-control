@@ -25,15 +25,15 @@ hooks:
 nav:
   - Inizia qui: index.md
   - Percorso guidato:
-      - '00 · Panoramica e obiettivi': setup/00-panoramica.md
-      - '01 · Hardware e collegamenti': setup/01-hardware.md
-      - '02 · Preparare il Raspberry Pi': setup/02-raspberry.md
-      - '03 · Verificare la console UART': setup/03-uart.md
-      - '04 · Impostare la password root': setup/04-password-root.md
-      - '05 · Installare il controller CLI': setup/05-controller-cli.md
-      - '06 · Configurare il bridge MQTT': setup/06-bridge-mqtt.md
-      - '07 · Attivare i servizi automatici': setup/07-servizi-automatici.md
-      - '08 · Collegare Home Assistant': setup/08-home-assistant.md
+      - '01 · Panoramica e obiettivi': setup/01-panoramica.md
+      - '02 · Hardware e collegamenti': setup/02-hardware.md
+      - '03 · Preparare il Raspberry Pi': setup/03-raspberry.md
+      - '04 · Verificare la console UART': setup/04-uart.md
+      - '05 · Impostare la password root': setup/05-password-root.md
+      - '06 · Installare il controller CLI': setup/06-controller-cli.md
+      - '07 · Configurare il bridge MQTT': setup/07-bridge-mqtt.md
+      - '08 · Attivare i servizi automatici': setup/08-servizi-automatici.md
+      - '09 · Collegare Home Assistant': setup/09-home-assistant.md
   - Approfondimenti facoltativi:
       - Wi-Fi, token e aggiornamenti: approfondimenti/configurazione-serra.md
       - Rete della serra durante il setup: approfondimenti/rete-serra.md

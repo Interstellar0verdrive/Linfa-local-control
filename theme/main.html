@@ -66,11 +66,11 @@
 
       <div class="content-layout">
         <main id="contenuto" class="article" tabindex="-1">
-          <div class="reading-progress" aria-label="{% if step %}Passo {{ step.number }} della guida{% else %}Indice della guida{% endif %}"><span style="width: {% if step %}{{ ((step.number|int + 1) / (steps|length) * 100)|round(1) }}{% else %}100{% endif %}%"></span></div>
+          <div class="reading-progress" aria-label="{% if step %}Passo {{ step.number }} della guida{% else %}Indice della guida{% endif %}"><span style="width: {% if step %}{{ (step.number|int / (steps|length) * 100)|round(1) }}{% else %}100{% endif %}%"></span></div>
           <div class="eyebrow"><span class="eyebrow-square" aria-hidden="true"></span>{% if step %}PASSO {{ step.number }}{% else %}LINFA LOCAL CONTROL{% endif %}<span class="eyebrow-line"></span>{{ page_phase }}</div>
           <h1>{% if step %}<span class="hero-number">{{ step.number }}.</span> {% endif %}{{ page_title }}</h1>
           <p class="lead">{{ page_summary }}</p>
-          {% if is_home or (step and step.number == '01') %}<div class="hero-meta"><span class="meta-chip">◉ &nbsp;Verificato su Linfa Weezy</span><span class="meta-chip muted">Linfa standard da verificare</span></div>{% endif %}
+          {% if is_home or (step and step.number == '02') %}<div class="hero-meta"><span class="meta-chip">◉ &nbsp;Verificato su Linfa Weezy</span><span class="meta-chip muted">Linfa standard da verificare</span></div>{% endif %}
 
           {% if toc_items and not is_home %}
           <nav class="quick-jump" aria-label="In questa pagina">
@@ -79,7 +79,7 @@
           </nav>
           {% endif %}
 
-          {% if step and step.number == '01' %}
+          {% if step and step.number == '02' %}
           <div class="overview" aria-label="I tre componenti del sistema">
             <div class="overview-item"><span class="overview-number">01</span><strong>Serra</strong><span>VoCore2 e dispositivi interni</span></div>
             <div class="overview-item"><span class="overview-number">02</span><strong>Raspberry Pi</strong><span>Controller esterno</span></div>
@@ -96,7 +96,7 @@
             <a href="{{ (step_next.url if step_next else '')|url }}"><small>{% if step_next %}PASSO SUCCESSIVO{% else %}TORNA ALL'INDICE{% endif %} →</small><strong>{{ step_next.title if step_next else 'Indice completo' }}</strong></a>
           </nav>
           {% elif is_home %}
-          <nav class="step-nav single" aria-label="Inizia la guida"><a href="{{ steps[0].url|url }}"><small>INIZIA IL PERCORSO →</small><strong>00 · Panoramica e obiettivi</strong></a></nav>
+          <nav class="step-nav single" aria-label="Inizia la guida"><a href="{{ steps[0].url|url }}"><small>INIZIA IL PERCORSO →</small><strong>01 · Panoramica e obiettivi</strong></a></nav>
           {% else %}
           <nav class="step-nav single" aria-label="Torna alla guida"><a href="{{ ''|url }}"><small>← TORNA ALL'INDICE</small><strong>Indice completo della guida</strong></a></nav>
           {% endif %}
