@@ -24,6 +24,12 @@ Chi vuole replicare il setup può seguire direttamente questo percorso. L'analis
 | Controller CLI e bridge MQTT | **Disponibili** nella cartella [`bridge/`](bridge/) |
 | App completa per Home Assistant | **Pronta, in fase di test.** Verrà caricata e rilasciata qui a breve; non è ancora inclusa nella repository. |
 
+### Anteprima dell'app Home Assistant
+
+[![Anteprima della vista Coltivazione dell'app Home Assistant: fasi di crescita, timeline e attività del giorno](docs/assets/home-assistant-coltivazione-preview.webp)](docs/assets/home-assistant-coltivazione-preview.webp)
+
+*Vista Coltivazione della versione in test. L'interfaccia potrà cambiare prima del rilascio.*
+
 Il controller usa il collegamento seriale alla console del VoCore2; il Raspberry resta in rete e fa da ponte con MQTT. Gli stati pubblicati rappresentano soprattutto l'**ultimo stato logico noto**, non una misura hardware sempre affidabile. Il [file di configurazione di esempio](bridge/serra-mqtt.env.example) mostra quali parametri impostare sul proprio Raspberry.
 
 ## Prima di intervenire

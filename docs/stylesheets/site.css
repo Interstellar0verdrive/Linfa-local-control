@@ -369,6 +369,10 @@ h2 { margin: 0; font-size: clamp(26px, 2.6vw, 34px); font-weight: 750; letter-sp
 .markdown-body .photo-grid figure p { margin: 0; }
 .markdown-body .photo-grid figcaption { color: var(--ink); }
 .markdown-body .photo-grid figcaption small { color: var(--muted); }
+.markdown-body .ha-preview { overflow: hidden; margin: 30px 0 42px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface); box-shadow: var(--shadow); }
+.markdown-body .ha-preview a { display: block; }
+.markdown-body .ha-preview img { display: block; width: 100%; max-width: none; height: auto; margin: 0; border: 0; border-radius: 0; }
+.markdown-body .ha-preview figcaption { padding: 12px 17px; border-top: 1px solid var(--line); color: var(--quiet); font-size: 11px; line-height: 1.5; text-align: center; }
 .markdown-body .info-card p { margin: 0 0 8px; font-size: 13px; line-height: 1.55; }
 .markdown-body .info-card p:last-child { margin-bottom: 0; }
 .markdown-body .info-card .card-icon { margin-bottom: 16px; }

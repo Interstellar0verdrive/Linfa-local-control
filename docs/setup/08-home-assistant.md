@@ -11,6 +11,17 @@ Il broker MQTT e le sue credenziali sono stati predisposti nel [passo 06](06-bri
 
 ---
 
+## Anteprima dell'app in test
+
+Questa è la vista **Coltivazione** dell'app completa per Home Assistant. L'app è pronta e in fase di test, ma non è ancora pubblicata nella repository; i passi di questo capitolo servono per verificare il collegamento MQTT prima del rilascio.
+
+<figure class="ha-preview">
+  <a href="../../assets/home-assistant-coltivazione-preview.webp"><img src="../../assets/home-assistant-coltivazione-preview.webp" alt="Anteprima della vista Coltivazione: fasi di crescita, timeline e attività del giorno"></a>
+  <figcaption>Schermata della versione in test. Apri l'immagine per vederla a piena risoluzione; l'interfaccia potrà cambiare prima del rilascio.</figcaption>
+</figure>
+
+---
+
 ## Integrazione MQTT in Home Assistant
 
 ### Aggiungere l’integrazione MQTT
