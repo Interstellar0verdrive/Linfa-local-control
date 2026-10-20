@@ -95,20 +95,29 @@ Nel prototipo documentato qui, i tre collegamenti seriali sono stati **saldati n
 
 Prima di saldare o forare, scollega l'alimentazione della serra e verifica la posizione dei componenti all'interno della scocca. Non scegliere il punto del foro basandoti soltanto sulle foto: la disposizione interna può variare. **Prima di richiudere la parte superiore**, controlla che ciascun collegamento sia ben saldo e isolato, che non ci siano cortocircuiti tra TX, RX e GND e che il bordo del foro non possa tagliare il cavo. **VCC resta sempre scollegato.**
 
-Le prime due foto mostrano i punti di collegamento e la schedina adattatrice usata nelle prove. La terza mostra il passaggio dei fili attraverso la scocca. Non è disponibile una foto ravvicinata delle saldature: verifica i punti TX, RX e GND sulla tua scheda prima di procedere.
+La foto d'insieme mostra la scheda nella parte superiore della serra: **la freccia gialla indica la zona dei pin UART**. Le due foto successive mostrano il dettaglio dei pin con i cavetti collegati e la schedina adattatrice usata nelle prove. L'ultima foto mostra il passaggio dei fili attraverso la scocca. Non è disponibile una foto ravvicinata delle saldature: verifica i punti TX, RX e GND sulla tua scheda prima di procedere.
+
+<div class="photo-grid board-overview" markdown="1">
+<figure markdown="1">
+
+![Vista completa della scheda superiore della serra: una freccia gialla indica la zona dei pin UART sotto il VoCore](../assets/scheda-superiore-pin-uart.jpg)
+
+<figcaption><span>01</span><strong>Dove si trovano i pin UART</strong><small>Vista d'insieme della scheda nella parte superiore della serra. La freccia gialla indica i pin mostrati nel dettaglio qui sotto.</small></figcaption>
+</figure>
+</div>
 
 <div class="photo-grid" markdown="1">
 <figure markdown="1">
 
 ![Modulo VoCore montato sulla scheda della serra, con i tre fili della connessione seriale](../assets/vocore-wiring.jpg)
 
-<figcaption><span>01</span><strong>Pin seriali sulla serra</strong><small>Con il VoCore a destra, i pin da destra a sinistra sono GND, RX e TX. Verificali sulla tua scheda.</small></figcaption>
+<figcaption><span>02</span><strong>Pin seriali sulla serra</strong><small>Con il VoCore a destra, i pin da destra a sinistra sono GND, RX e TX. Verificali sulla tua scheda.</small></figcaption>
 </figure>
 <figure markdown="1">
 
 ![Adattatore USB TTL con i fili collegati ai pin seriali](../assets/uart-adapter.jpg)
 
-<figcaption><span>02</span><strong>Adattatore USB → TTL</strong><small>GND va a GND; TX e RX vanno incrociati rispetto al VoCore.</small></figcaption>
+<figcaption><span>03</span><strong>Adattatore USB → TTL</strong><small>GND va a GND; TX e RX vanno incrociati rispetto al VoCore.</small></figcaption>
 </figure>
 </div>
 
@@ -116,7 +125,7 @@ Le prime due foto mostrano i punti di collegamento e la schedina adattatrice usa
 
 ![Foro nella parte superiore della scocca della serra, attraversato dai tre fili della connessione seriale](../assets/uscita-fili-scocca.jpg)
 
-<figcaption>Uscita dei tre fili dalla parte superiore della serra. Il punto e le dimensioni del foro vanno scelti in base allo spazio effettivo nella propria scocca.</figcaption>
+<figcaption>04 · Uscita dei tre fili dalla parte superiore della serra. Il punto e le dimensioni del foro vanno scelti in base allo spazio effettivo nella propria scocca.</figcaption>
 </figure>
 
 ## Verifica la porta seriale

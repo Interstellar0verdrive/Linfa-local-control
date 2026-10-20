@@ -44,7 +44,7 @@ def on_config(config):
     """Refresh browser-cached assets whenever the shared CSS or JS changes."""
     root = Path(__file__).resolve().parent
     digest = hashlib.sha256()
-    for relative_path in ("docs/stylesheets/site.css", "docs/javascripts/site.js", "docs/assets/external-link.svg"):
+    for relative_path in ("docs/stylesheets/site.css", "docs/javascripts/site.js"):
         digest.update((root / relative_path).read_bytes())
     config["extra"]["asset_version"] = digest.hexdigest()[:10]
     return config

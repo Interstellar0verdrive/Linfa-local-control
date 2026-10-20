@@ -52,7 +52,8 @@ body { margin: 0; background: var(--page); color: var(--ink); font-family: -appl
 button, a { -webkit-tap-highlight-color: transparent; }
 button { font: inherit; }
 a { color: var(--accent); text-underline-offset: .18em; }
-.topbar-github[target="_blank"]::after, .article-footer a[target="_blank"]::after, .markdown-body a[target="_blank"]::after { content: ''; display: inline-block; flex: 0 0 auto; width: .85em; height: .85em; margin-left: .28em; background: currentColor; -webkit-mask: url('../assets/external-link.svg') center / contain no-repeat; mask: url('../assets/external-link.svg') center / contain no-repeat; vertical-align: -.06em; }
+.topbar-github[target="_blank"]::after, .article-footer a[target="_blank"]::after, .markdown-body a[target="_blank"]::after { content: '↗'; margin-left: .28em; font-weight: 700; text-decoration: none; }
+.topbar-github[target="_blank"]::after { margin-left: 0; }
 img { max-width: 100%; }
 ::selection { background: var(--accent-strong); color: var(--ink); }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
@@ -189,6 +190,8 @@ h2 { margin: 0; font-size: clamp(26px, 2.6vw, 34px); font-weight: 750; letter-sp
 .photo-grid figcaption span { grid-row: span 2; color: var(--accent); font-size: 10px; font-weight: 850; }
 .photo-grid figcaption strong { font-size: 12px; }
 .photo-grid figcaption small { margin-top: 3px; color: var(--muted); font-size: 11px; line-height: 1.45; }
+.photo-grid.board-overview { grid-template-columns: 1fr; }
+.photo-grid.board-overview img { aspect-ratio: auto; object-fit: contain; }
 .photo-grid.adapter-gallery img { object-fit: contain; background: #fff; }
 .installation-photo { width: min(100%, 500px); margin: 28px auto 38px; }
 .installation-photo img { display: block; width: 100%; margin: 0; }
