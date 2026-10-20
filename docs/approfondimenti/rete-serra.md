@@ -18,18 +18,17 @@ Dopo la configurazione iniziale (via API locali), la serra può collegarsi alla 
 
 Caratteristiche:
 
-- **IP assegnato dal router** (assegnato dal router via MAC address): `<LOCAL_IP>`
-- MAC address: `<DEVICE_MAC>` (wifi)
+- **IP della serra**: cercalo nell'elenco dei dispositivi connessi al router, se hai configurato la sua Wi-Fi
 - **Utente SSH**: root
 - **Password root**: `<DEVICE_PASSWORD>` *(modificata manualmente)*
 
 Accesso SSH (quando la rete NON è ancora disabilitata):
 
 ```bash
-ssh root@<LOCAL_IP>
+ssh root@<SERRA_IP>
 ```
 
-Inserisci la password root della serra quando richiesta.
+Sostituisci `<SERRA_IP>` con l'indirizzo trovato nel router e inserisci la password root della serra quando richiesta.
 
 > [!WARNING] Attenzione
 > L'accesso SSH alla serra via Wi-Fi serve solo per configurazione e verifica. Nel funzionamento normale il Raspberry spegne la rete della serra: prima di attivare il timer del passo 07, assicurati che la UART funzioni.
@@ -47,22 +46,28 @@ Configurazione tipica:
 - **Utente**: pi
 - **Accesso**: SSH
 
-Interfacce di rete:
-
-- **Ethernet**
-    - IP statico (assegnato dal router via MAC address): <LOCAL_IP>
-    - MAC address: <DEVICE_MAC>
-- **Wi-Fi**
-    - IP statico (assegnato dal router via MAC address): <LOCAL_IP>
-    - MAC address: <DEVICE_MAC>
-
-Puoi collegarti all'indirizzo del Raspberry sia via Ethernet sia via Wi-Fi:
+Il Raspberry può collegarsi alla rete via **Ethernet** o **Wi-Fi**. Per trovare l'indirizzo dell'interfaccia in uso, esegui sul Raspberry:
 
 ```bash
-ssh pi@<LOCAL_IP>
+ip -br -4 address show
 ```
 
-Se il nome locale è configurato, puoi usare `ssh pi@serra.local`. Inserisci la password dell'utente del Raspberry quando richiesta.
+Per esempio, una risposta *fittizia* potrebbe essere:
+
+```text {.expected-output}
+eth0   UP     192.168.1.42/24
+wlan0  DOWN
+```
+
+Qui l'indirizzo da usare è `192.168.1.42`, senza `/24`. Sul tuo Raspberry potrebbe essere diverso; anche i nomi delle interfacce possono cambiare. Se vuoi che l'indirizzo resti costante, configura una **prenotazione DHCP** nel router per l'interfaccia che usi. Trovi il suo MAC nella pagina del dispositivo sul router oppure con `ip -br link show` sul Raspberry. Ethernet e Wi-Fi hanno indirizzi MAC distinti.
+
+Collegati via SSH usando l'indirizzo effettivo del Raspberry:
+
+```bash
+ssh pi@<RASPBERRY_IP>
+```
+
+Sostituisci `<RASPBERRY_IP>` con l'indirizzo trovato sopra. Se il nome locale è configurato, puoi usare `ssh pi@serra.local`. Inserisci la password dell'utente del Raspberry quando richiesta.
 
 Il Raspberry **rimane sempre connesso** alla rete di casa ed è l’unico punto di controllo permanente.
 
