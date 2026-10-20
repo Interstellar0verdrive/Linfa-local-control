@@ -59,8 +59,8 @@
         <button class="menu-button" type="button" aria-label="Apri l'indice" aria-controls="site-sidebar" aria-expanded="false" data-open-menu><span></span><span></span><span></span></button>
         <div class="topbar-path"><a href="{{ ''|url }}">Documentazione</a><span class="path-separator">/</span><strong>{% if step %}Passo {{ step.number }}{% elif is_home %}Indice{% else %}Approfondimento{% endif %}</strong></div>
         <div class="topbar-actions">
-          <a class="topbar-github" href="{{ config.repo_url }}">GitHub <span aria-hidden="true">↗</span></a>
           <label class="theme-control"><span class="visually-hidden">Tema</span><select data-theme-select aria-label="Tema: segui il sistema, chiaro o scuro"><option value="auto">◐ &nbsp;Sistema</option><option value="light">☀ &nbsp;Chiaro</option><option value="dark">☾ &nbsp;Scuro</option></select></label>
+          <a class="topbar-github" href="{{ config.repo_url }}" aria-label="Vedi il progetto su GitHub"><span class="github-label-desktop">Vedi il progetto su GitHub</span><span class="github-label-mobile">GitHub</span><span aria-hidden="true">↗</span></a>
         </div>
       </header>
 
