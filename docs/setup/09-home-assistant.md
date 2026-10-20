@@ -79,6 +79,8 @@ Tutti questi topic sono **retained**.
 
 ### Comandi (publish da HA → Raspberry)
 
+La [tabella completa dei comandi](../riferimento-comandi.md) affianca le istruzioni da eseguire sul Raspberry ai payload da pubblicare da Home Assistant.
+
 ```text {.reference-example}
 serra/cmd
 serra/cmd/<id>

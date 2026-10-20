@@ -4,6 +4,12 @@
 
 Prosegui dopo aver verificato il controller CLI nel passo 06. Qui configuri il broker, il servizio e una prova MQTT completa.
 
+## Come viaggia un comando
+
+![Home Assistant invia un comando al broker MQTT; il Raspberry lo passa alla serra e pubblica esito e stato logico verso Home Assistant](../assets/diagramma-flusso-mqtt.svg)
+
+*Il messaggio di ritorno è pubblicato dal Raspberry: include l'esito del comando e lo stato **atteso** ricavato dal controller, non una misura continua dei dispositivi nella serra. La [tabella dei comandi](../riferimento-comandi.md) mostra le forme equivalenti per Raspberry e Home Assistant.*
+
 ## Prima di configurare il bridge: broker MQTT
 
 ### Broker MQTT

@@ -109,7 +109,7 @@ ESEMPI
   serra pump nutrient 2 --seconds 5 --times 2        # 5s, 2 volte
 
 OPZIONI
-  -s, --seconds    # Durata erogazione in secondi (default: 1.0, max: 30)
+  -s, --seconds    # Durata erogazione in secondi (default: 1.0, max tecnico: 300)
   -t, --times      # Numero ripetizioni (default: 1, max: 100)
   -i, --interval   # Pausa tra ripetizioni in secondi (default: 1.0, max: 120)
 

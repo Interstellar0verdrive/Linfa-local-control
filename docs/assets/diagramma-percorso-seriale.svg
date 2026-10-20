@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="465" viewBox="0 0 800 465" role="img" aria-labelledby="title desc">
+  <title id="title">Percorso dei comandi seriali nella serra</title>
+  <desc id="desc">Il Raspberry raggiunge la console Linux del VoCore2 attraverso l'adattatore USB TTL e UART2. I comandi di shell inviati alla console scrivono su due seriali USB interne: tty-local per luci e ventole, tty-nebbia per pompe e LED ring.</desc>
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#15271b"/><stop offset="1" stop-color="#203a28"/></linearGradient>
+    <marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1L7 4 1 7" fill="none" stroke="#a8dfa9" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <style>
+      text{font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+      .eyebrow{font-size:12px;font-weight:800;letter-spacing:1.8px;fill:#a8dfa9}
+      .head{font-size:20px;font-weight:750;fill:#edf6eb}
+      .title{font-size:20px;font-weight:750;fill:#f0f8ef}
+      .sub{font-size:13px;fill:#b5c9b7}
+      .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:16px;font-weight:700;fill:#d5f0d0}
+    </style>
+  </defs>
+  <rect x="1" y="1" width="798" height="463" rx="22" fill="url(#bg)" stroke="#4b7051" stroke-width="2"/>
+  <text x="34" y="38" class="eyebrow">04 / PERCORSO DELLA SERIALE</text>
+  <text x="34" y="70" class="head">Dalla console ai controller interni</text>
+  <rect x="145" y="93" width="510" height="69" rx="13" fill="#2d4934" stroke="#719779" stroke-width="1.5"/>
+  <circle cx="179" cy="127" r="17" fill="#416e49"/><text x="179" y="132" text-anchor="middle" font-size="12" font-weight="800" fill="#eaf7e6">01</text>
+  <text x="210" y="124" class="title">Raspberry Pi + adattatore USB → TTL</text>
+  <text x="210" y="144" class="sub">Il controller invia comandi testuali via seriale.</text>
+  <path d="M400 164V191" stroke="#a8dfa9" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <rect x="312" y="174" width="176" height="20" rx="10" fill="#253d2c"/>
+  <text x="400" y="189" text-anchor="middle" font-size="11" font-weight="800" fill="#bde3bc">UART2 · 115200 8N1</text>
+  <rect x="145" y="200" width="510" height="75" rx="13" fill="#253a2b" stroke="#719779" stroke-width="1.5"/>
+  <circle cx="179" cy="237" r="17" fill="#416e49"/><text x="179" y="242" text-anchor="middle" font-size="12" font-weight="800" fill="#eaf7e6">02</text>
+  <text x="210" y="232" class="title">VoCore2 · console Linux</text>
+  <text x="210" y="254" class="sub">Riceve una shell; non è la seriale dei dispositivi.</text>
+  <path d="M400 277V302H224V326" fill="none" stroke="#a8dfa9" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <path d="M400 302H576V326" fill="none" stroke="#a8dfa9" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <rect x="44" y="333" width="357" height="81" rx="13" fill="#294331" stroke="#668d6b" stroke-width="1.5"/>
+  <rect x="413" y="333" width="343" height="81" rx="13" fill="#294331" stroke="#668d6b" stroke-width="1.5"/>
+  <text x="66" y="364" class="mono">/dev/tty-local</text><text x="435" y="364" class="mono">/dev/tty-nebbia</text>
+  <text x="66" y="390" class="sub">Luci e ventole</text><text x="435" y="390" class="sub">Pompa principale, nutrienti e LED ring</text>
+  <path d="M34 431H766" stroke="#426348"/>
+  <text x="34" y="452" class="sub">Le due porte in basso sono seriali interne della serra, distinte dalla console UART2.</text>
+</svg>

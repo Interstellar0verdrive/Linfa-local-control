@@ -12,6 +12,12 @@ Questa verifica:
 - non dipende dalla rete Wi-Fi
 - è il metodo più affidabile per diagnosticare problemi futuri
 
+## Dove passano i comandi
+
+![Il Raspberry raggiunge la console Linux del VoCore2 via UART2; dalla shell i comandi raggiungono le due seriali interne della serra](../assets/diagramma-percorso-seriale.svg)
+
+*UART2 è la console Linux del VoCore2. `/dev/tty-local` e `/dev/tty-nebbia` sono invece due porte interne distinte: il controller le usa per raggiungere luci, ventole, pompe e LED ring.*
+
 ---
 
 ## Apertura console UART con picocom

@@ -107,6 +107,8 @@ serra --help
 
 **Risposta attesa:** la guida dei comandi della CLI.
 
+Per cercare un'azione senza scorrere l'help nel terminale, consulta il [riferimento completo dei comandi](../riferimento-comandi.md): mostra anche il payload equivalente per Home Assistant.
+
 Test di comunicazione UART (non distruttivo):
 
 ```bash

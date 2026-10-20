@@ -27,6 +27,10 @@ EXTRAS = {
     "approfondimenti/accesso-e-dump.md": ("Accesso e dump del modulo", "Appunti tecnici sull’accesso al VoCore e sulla copia del suo contenuto."),
 }
 
+REFERENCES = {
+    "riferimento-comandi.md": ("Riferimento comandi", "Tutti i comandi del controller, con la sintassi CLI e il payload MQTT equivalente per Home Assistant."),
+}
+
 REDIRECTS = {
     "setup/05-modifiche-serra/": "approfondimenti/configurazione-serra/",
     "setup/06-rete/": "approfondimenti/rete-serra/",
@@ -66,6 +70,8 @@ def on_page_markdown(markdown, page, config, files):
         markdown = re.sub(r"\A# .+?\n(?:\n\*\*Percorso guidato:\*\*.*?\n)?", "", markdown, count=1)
         markdown = re.split(r"\n## (?:Continua il percorso|Percorso completato)\s*\n", markdown, maxsplit=1)[0]
         markdown = re.sub(r"\n---\s*\Z", "\n", markdown)
+    elif page.file.src_uri in REFERENCES:
+        markdown = re.sub(r"\A# .+?\n(?:\n\*\*Percorso guidato:\*\*.*?\n)?", "", markdown, count=1)
     elif page.file.src_uri in EXTRAS:
         markdown = re.sub(r"\A# .+?\n", "", markdown, count=1)
         markdown = re.sub(r"\n(?:---\s*\n\s*)?\[Torna all’indice della guida\]\(\.\./index\.md\)\.\s*\Z", "\n", markdown)
@@ -105,14 +111,18 @@ def on_page_context(context, page, config, nav):
         {"title": title, "url": src.removesuffix(".md") + "/", "active": uri == src}
         for src, (title, _) in EXTRAS.items()
     ]
+    context["references"] = [
+        {"title": title, "url": src.removesuffix(".md") + "/", "active": uri == src}
+        for src, (title, _) in REFERENCES.items()
+    ]
     current = next((index for index, item in enumerate(steps) if item["src"] == uri), None)
     context["step"] = steps[current] if current is not None else None
     context["step_prev"] = steps[current - 1] if current is not None and current > 0 else None
     context["step_next"] = steps[current + 1] if current is not None and current < len(steps) - 1 else None
     context["is_home"] = uri == "index.md"
-    context["page_title"] = steps[current]["title"] if current is not None else EXTRAS.get(uri, ("Guida passo per passo",))[0]
-    context["page_summary"] = steps[current]["summary"] if current is not None else EXTRAS.get(uri, (None, "Dalla preparazione hardware al controllo locale con Home Assistant."))[1]
-    context["page_phase"] = steps[current]["phase"] if current is not None else ("INDICE" if uri == "index.md" else "APPROFONDIMENTO")
+    context["page_title"] = steps[current]["title"] if current is not None else REFERENCES.get(uri, EXTRAS.get(uri, ("Guida passo per passo",)))[0]
+    context["page_summary"] = steps[current]["summary"] if current is not None else REFERENCES.get(uri, EXTRAS.get(uri, (None, "Dalla preparazione hardware al controllo locale con Home Assistant.")))[1]
+    context["page_phase"] = steps[current]["phase"] if current is not None else ("INDICE" if uri == "index.md" else "RIFERIMENTO" if uri in REFERENCES else "APPROFONDIMENTO")
     context["toc_items"] = [item for top in page.toc for item in (top.children if top.level == 1 and top.children else [top]) if item.level <= 2]
     return context
 

@@ -36,6 +36,10 @@ Il software del controller e del bridge è già nella repository: non devi ripet
 
 </div>
 
+## Riferimento rapido
+
+La [tabella completa dei comandi](riferimento-comandi.md) affianca ogni comando da eseguire sul Raspberry al payload MQTT equivalente da inviare da Home Assistant. Include opzioni, limiti e topic di risposta; puoi consultarla dopo il primo avvio del controller.
+
 ## Prima di copiare i comandi
 
 I valori tra parentesi angolari, come `<LOCAL_IP>` e `<WIFI_PASSWORD>`, sono segnaposto. Sostituiscili con i valori del tuo impianto e conserva le credenziali solo sui dispositivi che le usano. Alcuni comandi modificano la configurazione della serra: leggi il capitolo per intero prima di eseguirli.

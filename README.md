@@ -16,6 +16,8 @@ La [documentazione navigabile](https://interstellar0verdrive.github.io/Linfa-loc
 
 Chi vuole replicare il setup può seguire direttamente questo percorso. L'analisi del traffico cloud, il dump del VoCore e le modifiche facoltative alla configurazione originale sono raccolti negli **approfondimenti**.
 
+La [tabella dei comandi](https://interstellar0verdrive.github.io/Linfa-local-control/riferimento-comandi/) mette affiancati i comandi del Raspberry e i payload MQTT equivalenti per Home Assistant.
+
 ## Stato del progetto
 
 | Componente | Stato |

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title description">
   <title id="title">Tre pagine della guida Linfa Local Control</title>
-  <desc id="description">Mockup della documentazione: in primo piano il capitolo 01 con lo schema serra, Raspberry Pi, MQTT e Home Assistant; in alto a destra il cablaggio UART del capitolo 02, TX con RX, RX con TX e GND con GND, senza collegare VCC; in basso a destra i topic MQTT del capitolo 07.</desc>
+  <desc id="description">Mockup della documentazione: in primo piano il capitolo 01 con lo schema serra, Raspberry Pi, MQTT e Home Assistant; in alto a destra l’illustrazione del cablaggio UART pubblicata nel capitolo 02, TX con RX, RX con TX e GND con GND, senza collegare VCC; in basso a destra i topic MQTT del capitolo 07.</desc>
   <defs>
     <linearGradient id="backdrop" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#0b1812"/>
@@ -18,7 +18,7 @@
       <feDropShadow dx="0" dy="15" stdDeviation="19" flood-color="#030d08" flood-opacity=".42"/>
     </filter>
     <clipPath id="main-clip"><rect x="72" y="100" width="943" height="706" rx="21"/></clipPath>
-    <clipPath id="hardware-clip"><rect x="960" y="58" width="570" height="370" rx="19"/></clipPath>
+    <clipPath id="hardware-clip"><rect x="960" y="58" width="570" height="400" rx="19"/></clipPath>
     <clipPath id="mqtt-clip"><rect x="994" y="462" width="548" height="335" rx="19"/></clipPath>
     <style>
       text { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
@@ -41,7 +41,7 @@
   <!-- Capitolo 02: il cablaggio UART presente nella guida, con ogni collegamento su una riga distinta. -->
   <g transform="translate(48 0)">
   <g filter="url(#soft-shadow)">
-    <rect x="960" y="58" width="570" height="370" rx="19" fill="#f2f6ed" stroke="#adc7ae" stroke-width="2"/>
+    <rect x="960" y="58" width="570" height="400" rx="19" fill="#f2f6ed" stroke="#adc7ae" stroke-width="2"/>
   </g>
   <g clip-path="url(#hardware-clip)">
     <rect x="960" y="58" width="570" height="43" fill="#e4ece1"/>
@@ -52,29 +52,50 @@
     <rect x="995" y="124" width="38" height="4" rx="2" fill="#6ba17a"/>
     <text x="995" y="165" font-size="26" font-weight="800" fill="#203e2a">02. Hardware e collegamenti</text>
     <text x="995" y="190" font-size="13" fill="#6b806d">Cablaggio UART · console del VoCore2</text>
-    <rect x="995" y="207" width="500" height="178" rx="12" fill="#f9fbf7" stroke="#bfd1bf"/>
-    <path d="M996 237h498M996 274h498M996 311h498M996 348h498" stroke="#dce8d9"/>
-    <text x="1015" y="228" font-size="10" font-weight="800" letter-spacing=".5" fill="#438050">ADATTATORE USB → TTL</text>
-    <text x="1475" y="228" text-anchor="end" font-size="10" font-weight="800" letter-spacing=".5" fill="#438050">SERRA · VOCORE2</text>
-    <text x="1021" y="261" font-size="15" font-weight="800" fill="#254d32">TX</text>
-    <path d="M1111 256h278" stroke="#76a982" stroke-width="2.5" stroke-linecap="round"/>
-    <circle cx="1111" cy="256" r="3" fill="#76a982"/><circle cx="1389" cy="256" r="3" fill="#76a982"/>
-    <text x="1468" y="261" text-anchor="end" font-size="15" font-weight="800" fill="#254d32">RX</text>
-    <text x="1021" y="298" font-size="15" font-weight="800" fill="#254d32">RX</text>
-    <path d="M1111 293h278" stroke="#76a982" stroke-width="2.5" stroke-linecap="round"/>
-    <circle cx="1111" cy="293" r="3" fill="#76a982"/><circle cx="1389" cy="293" r="3" fill="#76a982"/>
-    <text x="1468" y="298" text-anchor="end" font-size="15" font-weight="800" fill="#254d32">TX</text>
-    <text x="1021" y="335" font-size="15" font-weight="800" fill="#254d32">GND</text>
-    <path d="M1111 330h278" stroke="#92b399" stroke-width="2.5" stroke-linecap="round"/>
-    <circle cx="1111" cy="330" r="3" fill="#92b399"/><circle cx="1389" cy="330" r="3" fill="#92b399"/>
-    <text x="1468" y="335" text-anchor="end" font-size="15" font-weight="800" fill="#254d32">GND</text>
-    <rect x="996" y="349" width="498" height="35" fill="#fbebdf"/>
-    <text x="1021" y="371" font-size="14" font-weight="800" fill="#a35332">VCC</text>
-    <text x="1250" y="372" text-anchor="middle" font-size="18" font-weight="800" fill="#a35332">×</text>
-    <text x="1468" y="371" text-anchor="end" font-size="12" font-weight="800" fill="#a35332">NON COLLEGARE</text>
-    <text x="996" y="410" font-size="11" font-weight="750" fill="#356744">3,3 V TTL</text>
-    <text x="1104" y="410" font-size="11" font-weight="750" fill="#356744">115200 baud</text>
-    <text x="1250" y="410" font-size="11" font-weight="750" fill="#356744">8N1</text>
+    <svg x="995" y="200" width="500" height="245" viewBox="0 0 800 392">
+      <defs>
+        <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#15271b"/><stop offset="1" stop-color="#203a28"/></linearGradient>
+        <marker id="right" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1L7 4 1 7" fill="none" stroke="#a8dfa9" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
+        <marker id="left" viewBox="0 0 8 8" refX="1" refY="4" markerWidth="8" markerHeight="8" orient="auto"><path d="M7 1L1 4 7 7" fill="none" stroke="#a8dfa9" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
+        <style>
+          text{font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+          .eyebrow{font-size:12px;font-weight:800;letter-spacing:1.8px;fill:#a8dfa9}
+          .head{font-size:20px;font-weight:750;fill:#edf6eb}
+          .sub{font-size:13px;fill:#b5c9b7}
+          .pin{font-size:18px;font-weight:800;fill:#f2f8f0}
+          .label{font-size:13px;font-weight:700;fill:#bde3bc}
+        </style>
+      </defs>
+      <rect x="1" y="1" width="798" height="390" rx="22" fill="url(#bg)" stroke="#4b7051" stroke-width="2"/>
+      <text x="34" y="38" class="eyebrow">02 / COLLEGAMENTO FISICO</text>
+      <text x="34" y="70" class="head">Tre segnali, alimentazioni separate</text>
+      <rect x="34" y="94" width="243" height="42" rx="9" fill="#2c4732" stroke="#678c6b"/>
+      <text x="51" y="120" class="label">ADATTATORE USB → TTL · 3,3 V</text>
+      <rect x="523" y="94" width="243" height="42" rx="9" fill="#2c4732" stroke="#678c6b"/>
+      <text x="540" y="120" class="label">SCHEDA SUPERIORE · UART2</text>
+      <path d="M278 165H522M278 213H522M278 261H522" stroke="#789b7d" stroke-width="1" stroke-dasharray="3 6"/>
+      <g fill="#263e2d" stroke="#709b75" stroke-width="1.5">
+        <rect x="46" y="149" width="109" height="35" rx="9"/><rect x="645" y="149" width="109" height="35" rx="9"/>
+        <rect x="46" y="197" width="109" height="35" rx="9"/><rect x="645" y="197" width="109" height="35" rx="9"/>
+        <rect x="46" y="245" width="109" height="35" rx="9"/><rect x="645" y="245" width="109" height="35" rx="9"/>
+      </g>
+      <text x="100" y="172" class="pin" text-anchor="middle">TX</text><text x="700" y="172" class="pin" text-anchor="middle">RX</text>
+      <text x="100" y="220" class="pin" text-anchor="middle">RX</text><text x="700" y="220" class="pin" text-anchor="middle">TX</text>
+      <text x="100" y="268" class="pin" text-anchor="middle">GND</text><text x="700" y="268" class="pin" text-anchor="middle">GND</text>
+      <path d="M163 166H627" stroke="#a8dfa9" stroke-width="3" stroke-linecap="round" marker-end="url(#right)"/>
+      <path d="M637 214H173" stroke="#a8dfa9" stroke-width="3" stroke-linecap="round" marker-end="url(#left)"/>
+      <path d="M163 262H637" stroke="#a3baa5" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="400" cy="262" r="5" fill="#a3baa5"/>
+      <rect x="46" y="292" width="109" height="35" rx="9" fill="#4a3225" stroke="#bb7854"/>
+      <text x="100" y="315" text-anchor="middle" font-size="18" font-weight="800" fill="#ffdbbe">VCC</text>
+      <path d="M163 310H310" stroke="#d69670" stroke-width="2" stroke-dasharray="5 5"/>
+      <circle cx="327" cy="310" r="15" fill="#68402d"/>
+      <path d="M321 304l12 12m0-12-12 12" stroke="#ffdbc0" stroke-width="2.5" stroke-linecap="round"/>
+      <text x="358" y="315" font-size="15" font-weight="750" fill="#ffdbc0">NON COLLEGARE</text>
+      <path d="M34 344H766" stroke="#426348"/>
+      <text x="34" y="369" class="sub">Schema dei segnali, non della posizione fisica dei pin: usa la foto della scheda per individuarli.</text>
+    </svg>
+
   </g>
   </g>
 

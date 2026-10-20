@@ -34,6 +34,8 @@ nav:
       - '07 · Configurare il bridge MQTT': setup/07-bridge-mqtt.md
       - '08 · Attivare i servizi automatici': setup/08-servizi-automatici.md
       - '09 · Collegare Home Assistant': setup/09-home-assistant.md
+  - Riferimento:
+      - Riferimento comandi: riferimento-comandi.md
   - Approfondimenti facoltativi:
       - Wi-Fi, token e aggiornamenti: approfondimenti/configurazione-serra.md
       - Rete della serra durante il setup: approfondimenti/rete-serra.md
