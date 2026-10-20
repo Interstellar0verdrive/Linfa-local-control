@@ -58,6 +58,7 @@ def on_page_markdown(markdown, page, config, files):
         markdown = re.sub(r"\n---\s*\Z", "\n", markdown)
     elif page.file.src_uri in EXTRAS:
         markdown = re.sub(r"\A# .+?\n", "", markdown, count=1)
+        markdown = re.sub(r"\n(?:---\s*\n\s*)?\[Torna all’indice della guida\]\(\.\./index\.md\)\.\s*\Z", "\n", markdown)
     return markdown
 
 

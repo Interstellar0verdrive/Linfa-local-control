@@ -220,7 +220,6 @@ h2 { margin: 0; font-size: clamp(26px, 2.6vw, 34px); font-weight: 750; letter-sp
 .toc-title { margin: 0 0 17px; padding-left: 15px; color: var(--quiet); font-size: 9px; }
 .page-toc a { padding: 7px 0 7px 15px; border-left: 2px solid transparent; margin-left: -1px; color: var(--muted); font-size: 11px; font-weight: 600; line-height: 1.35; text-decoration: none; }
 .page-toc a:hover, .page-toc a.is-current { border-left-color: var(--accent); color: var(--accent); }
-.toc-bottom { margin-top: 24px; padding-left: 15px; color: var(--quiet); font-size: 9px; font-weight: 850; letter-spacing: .12em; }
 
 @media (max-width: 1240px) {
   .content-layout { grid-template-columns: minmax(0, 760px); max-width: 900px; }

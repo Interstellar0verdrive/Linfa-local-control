@@ -207,3 +207,7 @@ Dal file HAR si vede chiaramente che:
 - Il **bottom è solo uno slave,** il **top è il cervello e comanda pompe e luci**
 - il bottom **NON decide nulla,** riceve: segnali, enable/disable, PWM / on-off
 - ESISTE codice locale che comanda i componenti (es. luci e pompe), NON è esposto via HTTP come API, è chiamabile internamente dal firmware
+
+---
+
+[Torna all’indice della guida](../index.md).

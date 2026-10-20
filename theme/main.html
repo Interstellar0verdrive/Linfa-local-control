@@ -66,7 +66,7 @@
 
       <div class="content-layout">
         <main id="contenuto" class="article" tabindex="-1">
-          <div class="reading-progress" aria-label="{% if step %}Passo {{ step.number }} di {{ steps|length - 1 }}{% else %}Indice della guida{% endif %}"><span style="width: {% if step %}{{ ((step.number|int + 1) / (steps|length) * 100)|round(1) }}{% else %}100{% endif %}%"></span></div>
+          <div class="reading-progress" aria-label="{% if step %}Passo {{ step.number }} della guida{% else %}Indice della guida{% endif %}"><span style="width: {% if step %}{{ ((step.number|int + 1) / (steps|length) * 100)|round(1) }}{% else %}100{% endif %}%"></span></div>
           <div class="eyebrow"><span class="eyebrow-square" aria-hidden="true"></span>{% if step %}PASSO {{ step.number }}{% else %}LINFA LOCAL CONTROL{% endif %}<span class="eyebrow-line"></span>{{ page_phase }}</div>
           <h1>{% if step %}<span class="hero-number">{{ step.number }}.</span> {% endif %}{{ page_title }}</h1>
           <p class="lead">{{ page_summary }}</p>
@@ -97,12 +97,14 @@
           </nav>
           {% elif is_home %}
           <nav class="step-nav single" aria-label="Inizia la guida"><a href="{{ steps[0].url|url }}"><small>INIZIA IL PERCORSO →</small><strong>00 · Panoramica e obiettivi</strong></a></nav>
+          {% else %}
+          <nav class="step-nav single" aria-label="Torna alla guida"><a href="{{ ''|url }}"><small>← TORNA ALL'INDICE</small><strong>Indice completo della guida</strong></a></nav>
           {% endif %}
           <footer class="article-footer">Progetto indipendente e non ufficiale. <a href="{{ config.repo_url }}#linfa-local-control" target="_blank" rel="noopener noreferrer">Leggi il disclaimer completo<span class="visually-hidden"> (si apre in una nuova scheda)</span></a> prima di intervenire sul dispositivo.</footer>
         </main>
 
         {% if toc_items and not is_home %}
-        <aside class="page-toc" aria-label="In questa pagina"><div class="toc-inner"><span class="toc-title">IN QUESTA PAGINA</span>{% for item in toc_items %}<a href="#{{ item.id }}">{{ item.title }}</a>{% endfor %}<span class="toc-bottom">{% if step %}PASSO {{ step.number }} / {{ steps|length - 1 }}{% else %}APPROFONDIMENTO{% endif %}</span></div></aside>
+        <aside class="page-toc" aria-label="In questa pagina"><div class="toc-inner"><span class="toc-title">IN QUESTA PAGINA</span>{% for item in toc_items %}<a href="#{{ item.id }}">{{ item.title }}</a>{% endfor %}</div></aside>
         {% endif %}
       </div>
     </div>

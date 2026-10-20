@@ -286,3 +286,5 @@ NOTE IMPORTANTI
 - Il water level sembra basato su magnetometro: in status.sp ci sono :earth-mag-field e :empty-vassel-field; in properties.clj ci sono mag-file e coefficienti; c’è ipotesi galleggiante magnetico calibrato “vuoto” e “pieno 4.5L”.
 
 ---
+
+[Torna all’indice della guida](../index.md).
