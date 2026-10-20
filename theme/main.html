@@ -35,16 +35,19 @@
       <div class="sidebar-scroll">
         <div class="sidebar-label">DOCUMENTAZIONE</div>
         <p class="sidebar-intro">Dalla modifica hardware al controllo locale con Home Assistant.</p>
+        <nav class="chapter-nav" aria-label="Indice della documentazione">
+          <a href="{{ ''|url }}"{% if is_home %} class="is-active" aria-current="page"{% endif %}><span aria-hidden="true">⌂</span>Indice completo</a>
+        </nav>
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-label sidebar-group-label">CAPITOLI</div>
         <nav class="chapter-nav" aria-label="Capitoli">
           {% for item in steps %}
           <a href="{{ item.url|url }}"{% if step and step.number == item.number %} class="is-active" aria-current="page"{% endif %}><span>{{ item.number }}</span>{{ item.title }}</a>
           {% endfor %}
         </nav>
         <div class="sidebar-divider"></div>
-        <div class="sidebar-label">ALTRI CONTENUTI</div>
-        <a class="sidebar-extra{% if is_home %} is-active{% endif %}" href="{{ ''|url }}">Indice completo <span aria-hidden="true">↗</span></a>
+        <div class="sidebar-label">APPROFONDIMENTI</div>
         {% for item in extras %}<a class="sidebar-extra{% if item.active %} is-active{% endif %}" href="{{ item.url|url }}">{{ item.title }} <span aria-hidden="true">↗</span></a>{% endfor %}
-        <a class="sidebar-extra" href="{{ config.repo_url }}">Repository GitHub <span aria-hidden="true">↗</span></a>
       </div>
       <div class="sidebar-foot"><span class="status-dot" aria-hidden="true"></span> Guida indipendente · non ufficiale</div>
     </aside>

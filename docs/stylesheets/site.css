@@ -276,6 +276,7 @@ h2 { margin: 0; font-size: clamp(26px, 2.6vw, 34px); font-weight: 750; letter-sp
 .theme-control select { min-height: 35px; padding: 0 26px 0 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); color: var(--ink); font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; }
 .theme-control select:hover { border-color: var(--accent); }
 .sidebar-extra.is-active { background: var(--accent-soft); color: var(--accent-dark); }
+.sidebar-group-label { margin-bottom: 9px; }
 .hero-number { color: var(--accent); }
 .article h1 { max-width: 800px; font-size: clamp(39px, 4.7vw, 64px); line-height: 1.08; }
 .article .lead { max-width: 760px; }
