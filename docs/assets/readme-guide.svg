@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title description">
   <title id="title">Tre pagine della guida Linfa Local Control</title>
-  <desc id="description">Mockup della documentazione: in primo piano il capitolo 01 con lo schema serra, Raspberry Pi, MQTT e Home Assistant; accanto le pagine dei collegamenti hardware e del bridge MQTT.</desc>
+  <desc id="description">Mockup della documentazione: in primo piano il capitolo 01 con lo schema serra, Raspberry Pi, MQTT e Home Assistant; in alto a destra il cablaggio UART del capitolo 02, TX con RX, RX con TX e GND con GND, senza collegare VCC; in basso a destra i topic MQTT del capitolo 07.</desc>
   <defs>
     <linearGradient id="backdrop" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#0b1812"/>
@@ -10,10 +10,6 @@
     <linearGradient id="diagram" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#1b2b20"/>
       <stop offset="1" stop-color="#233a29"/>
-    </linearGradient>
-    <linearGradient id="board" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#24543a"/>
-      <stop offset="1" stop-color="#123b2c"/>
     </linearGradient>
     <filter id="window-shadow" x="-30%" y="-30%" width="160%" height="180%">
       <feDropShadow dx="0" dy="20" stdDeviation="28" flood-color="#020a05" flood-opacity=".55"/>
@@ -42,7 +38,7 @@
   <text x="74" y="858" font-size="15" font-weight="650" fill="#bbd1bd">Dal collegamento fisico al controllo locale.</text>
   <text x="1532" y="858" text-anchor="end" class="micro" fill="#8fb696">CAPITOLI 01—09</text>
 
-  <!-- Capitolo 02: una pagina chiara con la scheda e i tre pin. -->
+  <!-- Capitolo 02: il cablaggio UART presente nella guida, con ogni collegamento su una riga distinta. -->
   <g transform="translate(48 0)">
   <g filter="url(#soft-shadow)">
     <rect x="960" y="58" width="570" height="370" rx="19" fill="#f2f6ed" stroke="#adc7ae" stroke-width="2"/>
@@ -54,27 +50,31 @@
     <circle cx="1018" cy="80" r="5" fill="#9fbb9f"/>
     <text x="1054" y="84" font-size="12" font-weight="650" fill="#4c7053">GUIDA / HARDWARE</text>
     <rect x="995" y="124" width="38" height="4" rx="2" fill="#6ba17a"/>
-    <text x="995" y="167" font-size="29" font-weight="800" fill="#203e2a">02. Hardware</text>
-    <text x="995" y="192" font-size="13" fill="#6b806d">Il collegamento alla console del VoCore2</text>
-    <rect x="996" y="218" width="497" height="145" rx="15" fill="#e6eee4" stroke="#bfd1bf"/>
-    <rect x="1032" y="238" width="231" height="103" rx="11" fill="url(#board)" stroke="#78aa80" stroke-width="2"/>
-    <path d="M1050 248v85m23-85v25h32m90-24v18h46m-153 60h48m70-42h31v38" fill="none" stroke="#5fa273" stroke-width="2" opacity=".58"/>
-    <rect x="1102" y="251" width="96" height="75" rx="7" fill="#112d22" stroke="#d1b57b" stroke-width="3"/>
-    <text x="1150" y="287" text-anchor="middle" font-size="15" font-weight="800" fill="#deebda">VoCore2</text>
-    <text x="1150" y="306" text-anchor="middle" font-size="10" fill="#a8c3ab">MT7628</text>
-    <circle cx="1238" cy="268" r="4" fill="#e4c978"/>
-    <circle cx="1238" cy="284" r="4" fill="#e4c978"/>
-    <circle cx="1238" cy="300" r="4" fill="#e4c978"/>
-    <path d="M1250 270c31-5 35-16 58-16m-58 15c30 24 36 24 58 24m-58 9c34 49 36 29 58 29" fill="none" stroke-width="4" stroke-linecap="round" stroke="#69a9e0"/>
-    <text x="1323" y="260" font-size="13" font-weight="750" fill="#254d32">GND</text>
-    <text x="1323" y="299" font-size="13" font-weight="750" fill="#254d32">RX</text>
-    <text x="1323" y="335" font-size="13" font-weight="750" fill="#254d32">TX</text>
-    <rect x="995" y="380" width="79" height="25" rx="12" fill="#d8e9d7"/>
-    <rect x="1082" y="380" width="63" height="25" rx="12" fill="#d8e9d7"/>
-    <rect x="1153" y="380" width="140" height="25" rx="12" fill="#d8e9d7"/>
-    <text x="1034" y="397" text-anchor="middle" font-size="11" font-weight="750" fill="#356744">3,3 V</text>
-    <text x="1114" y="397" text-anchor="middle" font-size="11" font-weight="750" fill="#356744">8N1</text>
-    <text x="1223" y="397" text-anchor="middle" font-size="11" font-weight="750" fill="#356744">115200 baud</text>
+    <text x="995" y="165" font-size="26" font-weight="800" fill="#203e2a">02. Hardware e collegamenti</text>
+    <text x="995" y="190" font-size="13" fill="#6b806d">Cablaggio UART · console del VoCore2</text>
+    <rect x="995" y="207" width="500" height="178" rx="12" fill="#f9fbf7" stroke="#bfd1bf"/>
+    <path d="M996 237h498M996 274h498M996 311h498M996 348h498" stroke="#dce8d9"/>
+    <text x="1015" y="228" font-size="10" font-weight="800" letter-spacing=".5" fill="#438050">ADATTATORE USB → TTL</text>
+    <text x="1475" y="228" text-anchor="end" font-size="10" font-weight="800" letter-spacing=".5" fill="#438050">SERRA · VOCORE2</text>
+    <text x="1021" y="261" font-size="15" font-weight="800" fill="#254d32">TX</text>
+    <path d="M1111 256h278" stroke="#76a982" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="1111" cy="256" r="3" fill="#76a982"/><circle cx="1389" cy="256" r="3" fill="#76a982"/>
+    <text x="1468" y="261" text-anchor="end" font-size="15" font-weight="800" fill="#254d32">RX</text>
+    <text x="1021" y="298" font-size="15" font-weight="800" fill="#254d32">RX</text>
+    <path d="M1111 293h278" stroke="#76a982" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="1111" cy="293" r="3" fill="#76a982"/><circle cx="1389" cy="293" r="3" fill="#76a982"/>
+    <text x="1468" y="298" text-anchor="end" font-size="15" font-weight="800" fill="#254d32">TX</text>
+    <text x="1021" y="335" font-size="15" font-weight="800" fill="#254d32">GND</text>
+    <path d="M1111 330h278" stroke="#92b399" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="1111" cy="330" r="3" fill="#92b399"/><circle cx="1389" cy="330" r="3" fill="#92b399"/>
+    <text x="1468" y="335" text-anchor="end" font-size="15" font-weight="800" fill="#254d32">GND</text>
+    <rect x="996" y="349" width="498" height="35" fill="#fbebdf"/>
+    <text x="1021" y="371" font-size="14" font-weight="800" fill="#a35332">VCC</text>
+    <text x="1250" y="372" text-anchor="middle" font-size="18" font-weight="800" fill="#a35332">×</text>
+    <text x="1468" y="371" text-anchor="end" font-size="12" font-weight="800" fill="#a35332">NON COLLEGARE</text>
+    <text x="996" y="410" font-size="11" font-weight="750" fill="#356744">3,3 V TTL</text>
+    <text x="1104" y="410" font-size="11" font-weight="750" fill="#356744">115200 baud</text>
+    <text x="1250" y="410" font-size="11" font-weight="750" fill="#356744">8N1</text>
   </g>
   </g>
 
@@ -88,7 +88,7 @@
     <circle cx="1036" cy="484" r="5" fill="#729579"/>
     <circle cx="1052" cy="484" r="5" fill="#729579"/>
     <text x="1087" y="488" font-size="12" font-weight="650" fill="#a6d4ad">GUIDA / INTEGRAZIONE</text>
-    <text x="1028" y="547" font-size="29" font-weight="800" fill="#edf5eb">07. Bridge MQTT</text>
+    <text x="1028" y="547" font-size="25" font-weight="800" fill="#edf5eb">07. Configurare il bridge MQTT</text>
     <text x="1028" y="574" font-size="13" fill="#a7baa9">Stati e comandi, senza passare dal cloud</text>
     <rect x="1027" y="598" width="474" height="47" rx="9" fill="#213629" stroke="#42674b"/>
     <circle cx="1050" cy="622" r="6" fill="#a6e6aa"/>
