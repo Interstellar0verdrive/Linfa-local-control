@@ -60,7 +60,7 @@
         <div class="topbar-path"><a href="{{ ''|url }}">Documentazione</a><span class="path-separator">/</span><strong>{% if step %}Passo {{ step.number }}{% elif is_home %}Indice{% else %}Approfondimento{% endif %}</strong></div>
         <div class="topbar-actions">
           <label class="theme-control"><span class="visually-hidden">Tema</span><select data-theme-select aria-label="Tema: segui il sistema, chiaro o scuro"><option value="auto">◐ &nbsp;Sistema</option><option value="light">☀ &nbsp;Chiaro</option><option value="dark">☾ &nbsp;Scuro</option></select></label>
-          <a class="topbar-github" href="{{ config.repo_url }}" aria-label="Vedi il progetto su GitHub"><span class="github-label-desktop">Vedi il progetto su GitHub</span><span class="github-label-mobile">GitHub</span><span aria-hidden="true">↗</span></a>
+          <a class="topbar-github" href="{{ config.repo_url }}" target="_blank" rel="noopener noreferrer" aria-label="Vedi il progetto su GitHub (si apre in una nuova scheda)"><span class="github-label-desktop">Vedi il progetto su GitHub</span><span class="github-label-mobile">GitHub</span></a>
         </div>
       </header>
 
@@ -98,7 +98,7 @@
           {% elif is_home %}
           <nav class="step-nav single" aria-label="Inizia la guida"><a href="{{ steps[0].url|url }}"><small>INIZIA IL PERCORSO →</small><strong>00 · Panoramica e obiettivi</strong></a></nav>
           {% endif %}
-          <footer class="article-footer">Progetto indipendente e non ufficiale. <a href="{{ config.repo_url }}#linfa-local-control">Leggi il disclaimer completo</a> prima di intervenire sul dispositivo.</footer>
+          <footer class="article-footer">Progetto indipendente e non ufficiale. <a href="{{ config.repo_url }}#linfa-local-control" target="_blank" rel="noopener noreferrer">Leggi il disclaimer completo<span class="visually-hidden"> (si apre in una nuova scheda)</span></a> prima di intervenire sul dispositivo.</footer>
         </main>
 
         {% if toc_items and not is_home %}

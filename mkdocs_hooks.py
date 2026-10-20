@@ -1,8 +1,10 @@
 """Shared navigation and page introductions for the published guide."""
 
 import hashlib
+import html
 import re
 from pathlib import Path
+from urllib.parse import urlsplit
 
 
 STEPS = [
@@ -24,12 +26,16 @@ EXTRAS = {
     "approfondimenti/accesso-e-dump.md": ("Accesso e dump del modulo", "Appunti tecnici sull’accesso al VoCore e sulla copia del suo contenuto."),
 }
 
+ANCHOR_RE = re.compile(r'(<a\b[^>]*>)(.*?)(</a>)', re.IGNORECASE | re.DOTALL)
+HREF_RE = re.compile(r'\bhref\s*=\s*(["\'])(.*?)\1', re.IGNORECASE | re.DOTALL)
+LINK_ATTR_RE = re.compile(r'\s+(?:target|rel)\s*=\s*(["\']).*?\1', re.IGNORECASE | re.DOTALL)
+
 
 def on_config(config):
     """Refresh browser-cached assets whenever the shared CSS or JS changes."""
     root = Path(__file__).resolve().parent
     digest = hashlib.sha256()
-    for relative_path in ("docs/stylesheets/site.css", "docs/javascripts/site.js"):
+    for relative_path in ("docs/stylesheets/site.css", "docs/javascripts/site.js", "docs/assets/external-link.svg"):
         digest.update((root / relative_path).read_bytes())
     config["extra"]["asset_version"] = digest.hexdigest()[:10]
     return config
@@ -44,6 +50,28 @@ def on_page_markdown(markdown, page, config, files):
     elif page.file.src_uri in EXTRAS:
         markdown = re.sub(r"\A# .+?\n", "", markdown, count=1)
     return markdown
+
+
+def on_page_content(content, page, config, files):
+    """Mark links outside this documentation site after Markdown has rendered them."""
+    site = urlsplit(config["site_url"])
+
+    def mark_external(match):
+        opening, label, closing = match.groups()
+        href = HREF_RE.search(opening)
+        if not href:
+            return match.group(0)
+        destination = urlsplit(html.unescape(href.group(2)))
+        if destination.scheme not in {"http", "https"}:
+            return match.group(0)
+        if destination.netloc == site.netloc and destination.path.startswith(site.path):
+            return match.group(0)
+
+        opening = LINK_ATTR_RE.sub("", opening)
+        opening = opening[:-1] + ' target="_blank" rel="noopener noreferrer">'
+        return opening + label + '<span class="visually-hidden"> (si apre in una nuova scheda)</span>' + closing
+
+    return ANCHOR_RE.sub(mark_external, content)
 
 
 def on_page_context(context, page, config, nav):

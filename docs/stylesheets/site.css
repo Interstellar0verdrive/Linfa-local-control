@@ -52,6 +52,7 @@ body { margin: 0; background: var(--page); color: var(--ink); font-family: -appl
 button, a { -webkit-tap-highlight-color: transparent; }
 button { font: inherit; }
 a { color: var(--accent); text-underline-offset: .18em; }
+.topbar-github[target="_blank"]::after, .article-footer a[target="_blank"]::after, .markdown-body a[target="_blank"]::after { content: ''; display: inline-block; flex: 0 0 auto; width: .85em; height: .85em; margin-left: .28em; background: currentColor; -webkit-mask: url('../assets/external-link.svg') center / contain no-repeat; mask: url('../assets/external-link.svg') center / contain no-repeat; vertical-align: -.06em; }
 img { max-width: 100%; }
 ::selection { background: var(--accent-strong); color: var(--ink); }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
