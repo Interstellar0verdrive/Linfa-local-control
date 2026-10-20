@@ -82,19 +82,11 @@ Sono esempi di compatibilità **elettrica** dei segnali, non una garanzia che i 
 
 **Esegui e modifica questi collegamenti solo con la serra scollegata dalla presa e l'adattatore USB → TTL scollegato dal Raspberry/computer.** Collega la massa in comune e **incrocia TX con RX**. Verifica sempre i pin sulla tua scheda prima di collegare l’adattatore.
 
-<div class="wiring-card" aria-label="Collegamenti tra adattatore USB TTL e serra">
-  <div class="wiring-head"><span>ADATTATORE USB → TTL</span><span>SERRA · VOCORE2</span></div>
-  <div class="wiring-row"><span><b>TX</b></span><span class="wire-line" aria-hidden="true">↗</span><span><b>RX</b></span></div>
-  <div class="wiring-row"><span><b>RX</b></span><span class="wire-line" aria-hidden="true">↘</span><span><b>TX</b></span></div>
-  <div class="wiring-row"><span><b>GND</b></span><span class="wire-line" aria-hidden="true">⟶</span><span><b>GND</b></span></div>
-  <div class="wiring-row is-disconnected"><span><b>VCC</b></span><span class="wire-line" aria-hidden="true">×</span><span><b>NON COLLEGARE</b></span></div>
-</div>
-
-<div class="serial-settings"><span><small>VELOCITÀ</small><strong>115200 baud</strong></span><span><small>FORMATO</small><strong>8N1</strong></span><span><small>LIVELLI LOGICI</small><strong>3,3 V TTL</strong></span></div>
-
 ![Schema dei tre segnali UART: TX dell'adattatore verso RX della serra, RX verso TX, GND verso GND; VCC scollegato](../assets/diagramma-cablaggio-uart.svg)
 
 *Schema logico dei collegamenti. Per individuare i pin fisici sulla tua serra, usa le foto annotate qui sotto.*
+
+<div class="serial-settings"><span><small>VELOCITÀ</small><strong>115200 baud</strong></span><span><small>FORMATO</small><strong>8N1</strong></span><span><small>LIVELLI LOGICI</small><strong>3,3 V TTL</strong></span></div>
 
 La console di debug del VoCore2 usa **UART2**: nel [pinout ufficiale del modulo](https://vocore.io/v2.html) i contatti sono **RXD2 (40)** e **TXD2 (42)**. Nella serra ci si collega invece ai tre pin accessibili della scheda superiore, mostrati nelle foto qui sotto; con il VoCore a destra, da destra verso sinistra sono **GND, RX e TX**. Controlla l'orientamento della tua scheda prima di saldare.
 

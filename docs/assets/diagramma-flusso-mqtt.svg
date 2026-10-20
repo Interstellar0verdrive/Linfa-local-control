@@ -25,7 +25,9 @@
   <text x="240" y="146" class="title">Broker MQTT</text><text x="240" y="169" class="tag">serra/cmd</text>
   <text x="430" y="146" class="title">Raspberry Pi</text><text x="430" y="169" class="sub">Bridge → CLI</text>
   <text x="620" y="146" class="title">Serra Linfa</text><text x="620" y="169" class="sub">Console UART2</text>
-  <path d="M196 158h23m167 0h23m167 0h23" stroke="#a8dfa9" stroke-width="2.6" marker-end="url(#arrow)"/>
+  <path d="M196 158h23" stroke="#a8dfa9" stroke-width="2.6" marker-end="url(#arrow)"/>
+  <path d="M386 158h23" stroke="#a8dfa9" stroke-width="2.6" marker-end="url(#arrow)"/>
+  <path d="M576 158h23" stroke="#a8dfa9" stroke-width="2.6" marker-end="url(#arrow)"/>
   <text x="34" y="226" font-size="11" font-weight="800" letter-spacing="1.4" fill="#a8dfa9">RITORNO · PUBBLICATO DAL RASPBERRY</text>
   <g fill="#253a2b" stroke="#658a6a" stroke-width="1.4">
     <rect x="34" y="243" width="218" height="94" rx="12"/><rect x="290" y="243" width="218" height="94" rx="12"/>
