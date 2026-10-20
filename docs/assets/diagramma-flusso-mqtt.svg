@@ -3,7 +3,6 @@
   <desc id="desc">Home Assistant pubblica un comando MQTT sul broker. Il bridge sul Raspberry lo passa al controller CLI e via UART2 alla serra. Il Raspberry pubblica l'esito e gli stati logici sul broker, che Home Assistant legge; gli stati non sono telemetria hardware diretta.</desc>
   <defs>
     <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#15271b"/><stop offset="1" stop-color="#203a28"/></linearGradient>
-    <marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1L7 4 1 7" fill="none" stroke="#a8dfa9" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
     <style>
       text{font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
       .eyebrow{font-size:12px;font-weight:800;letter-spacing:1.8px;fill:#a8dfa9}
@@ -25,9 +24,11 @@
   <text x="240" y="146" class="title">Broker MQTT</text><text x="240" y="169" class="tag">serra/cmd</text>
   <text x="430" y="146" class="title">Raspberry Pi</text><text x="430" y="169" class="sub">Bridge → CLI</text>
   <text x="620" y="146" class="title">Serra Linfa</text><text x="620" y="169" class="sub">Console UART2</text>
-  <path d="M196 158h23" stroke="#a8dfa9" stroke-width="2.6" marker-end="url(#arrow)"/>
-  <path d="M386 158h23" stroke="#a8dfa9" stroke-width="2.6" marker-end="url(#arrow)"/>
-  <path d="M576 158h23" stroke="#a8dfa9" stroke-width="2.6" marker-end="url(#arrow)"/>
+  <g fill="none" stroke="#a8dfa9" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M196 158h22m-8-6 8 6-8 6"/>
+    <path d="M386 158h22m-8-6 8 6-8 6"/>
+    <path d="M576 158h22m-8-6 8 6-8 6"/>
+  </g>
   <text x="34" y="226" font-size="11" font-weight="800" letter-spacing="1.4" fill="#a8dfa9">RITORNO · PUBBLICATO DAL RASPBERRY</text>
   <g fill="#253a2b" stroke="#658a6a" stroke-width="1.4">
     <rect x="34" y="243" width="218" height="94" rx="12"/><rect x="290" y="243" width="218" height="94" rx="12"/>
@@ -36,8 +37,10 @@
   <text x="50" y="273" class="title">Home Assistant</text><text x="50" y="299" class="sub">Legge risultato e stato</text>
   <text x="306" y="273" class="title">Broker MQTT</text><text x="306" y="299" class="tag">status/last · state/*</text>
   <text x="562" y="273" class="title">Raspberry Pi</text><text x="562" y="299" class="sub">Esito + stato atteso</text>
-  <path d="M541 287H513" stroke="#a8dfa9" stroke-width="2.6" marker-end="url(#arrow)"/>
-  <path d="M285 287h-28" stroke="#a8dfa9" stroke-width="2.6" marker-end="url(#arrow)"/>
+  <g fill="none" stroke="#a8dfa9" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M541 287h-28m8-6-8 6 8 6"/>
+    <path d="M285 287h-28m8-6-8 6 8 6"/>
+  </g>
   <path d="M493 201v16h160v22" fill="none" stroke="#729a79" stroke-width="1.7" stroke-dasharray="4 5"/>
   <path d="M34 358H766" stroke="#426348"/>
   <text x="34" y="382" class="sub">Lo stato pubblicato deriva dai comandi e dai timer del controller.</text>
