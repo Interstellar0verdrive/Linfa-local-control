@@ -11,7 +11,7 @@ Questa guida accompagna la preparazione di una serra Robonica Linfa per il contr
 Il software del controller e del bridge è già nella repository: non devi ripetere l'indagine sul traffico cloud né estrarre il contenuto del VoCore. Devi invece preparare il collegamento fisico, il Raspberry, l'accesso seriale, MQTT e Home Assistant. La [lista dei materiali](setup/00-panoramica.md#cosa-serve-prima-di-iniziare) è nel passo 00.
 
 > [!NOTE] Stato attuale del pacchetto
-> Gli script sono disponibili, ma non c'è ancora un installer automatico né l'app completa per Home Assistant. I passi 05–08 spiegano come copiarli e configurarli sul Raspberry e come collegarli a Home Assistant.
+> Gli script sono disponibili. L'app completa per Home Assistant è pronta e in fase di test, ma **non è ancora pubblicata in questa repository**; manca anche un installer automatico. I passi 05–08 spiegano come configurare manualmente il controller e il bridge sul Raspberry e provarli da Home Assistant.
 
 <div class="chapter-grid" markdown="1">
 

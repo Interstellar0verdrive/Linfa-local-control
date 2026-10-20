@@ -101,7 +101,7 @@ Nella sezione **Pubblica un pacchetto** inserisci:
 Pubblica il comando e verifica che la luce si accenda e che compaiano messaggi su `serra/status/last` e `serra/state/lights`. Poi invia `lights off` allo stesso topic, sempre senza retain. La procedura di ascolto e pubblicazione è descritta anche nella [guida ufficiale MQTT](https://www.home-assistant.io/integrations/mqtt/#testing-your-setup).
 
 > [!NOTE] Stato dell'integrazione
-> Questa prova conferma che Home Assistant può leggere i topic e inviare comandi attraverso MQTT. **Non crea ancora entità, pulsanti o una dashboard dedicata**: l'app completa per Home Assistant è prevista in una fase successiva del progetto.
+> Questa prova conferma che Home Assistant può leggere i topic e inviare comandi attraverso MQTT. **Non crea ancora entità, pulsanti o una dashboard dedicata.** L'app completa per Home Assistant è pronta e in fase di test, ma non è ancora stata pubblicata qui.
 
 
 ---
@@ -126,7 +126,7 @@ A questo punto il percorso di base è completo:
 - ✅ Home Assistant può ascoltare gli stati e pubblicare comandi MQTT senza passare dal cloud Robonica
 - ✅ Il Raspberry traduce i comandi MQTT in istruzioni UART per la serra
 - ✅ Gli ultimi stati **logici** noti e gli esiti dei comandi sono osservabili nei topic MQTT
-- ✅ Per ottenere controlli e dashboard pronti da usare serve ancora l'app Home Assistant prevista nella roadmap
+- ℹ️ L'app completa con controlli e dashboard è pronta e in fase di test, ma non è ancora disponibile nella repository
 
 ---
 

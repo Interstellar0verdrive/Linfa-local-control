@@ -1,38 +1,41 @@
 # Linfa Local Control
 
-Controllo locale sperimentale per serre **Robonica Linfa** tramite Raspberry Pi, UART, MQTT e Home Assistant, senza dipendere dal cloud per il normale funzionamento. La procedura è stata provata su **Linfa Weezy**; la compatibilità con la Linfa standard è plausibile, ma non ancora verificata.
+> **English:** The documentation is currently in Italian because Linfa is an Italian product. If an English translation would help you, [open an issue](https://github.com/Interstellar0verdrive/Linfa-local-control/issues/new) or get in touch; I'm happy to translate it if there's interest.
 
-> [!WARNING]
-> **Progetto indipendente e non ufficiale.** Questo repository non è affiliato, approvato, sponsorizzato o supportato da Robonica S.r.l. I nomi Linfa e Weezy identificano soltanto i dispositivi a cui si riferisce la guida.
->
-> Le procedure richiedono l'apertura del dispositivo, il collegamento a una console seriale e modifiche alla sua configurazione. Possono causare malfunzionamenti e **potrebbero far decadere la garanzia commerciale**. Verifica le condizioni applicabili prima di intervenire. I diritti previsti dalla garanzia legale sono distinti dalla garanzia commerciale.
+**Una serra Linfa, sotto il tuo controllo.** Questo progetto collega la serra a un Raspberry Pi tramite UART e porta comandi e stati su MQTT, per usarla in locale con Home Assistant senza dipendere dal cloud per il normale funzionamento.
 
-> [!CAUTION]
-> **Sicurezza elettrica e acqua.** Prima di aprire la serra, toccare o collegare i pin, saldare o forare, **scollega la spina della serra dalla presa e l'adattatore USB → TTL dal Raspberry/computer**. Lavora su una superficie asciutta; tieni schede, fili, alimentatori e giunzioni lontani da acqua, serbatoi, tubi e pompe, soprattutto quando la parte superiore è smontata. Ridai alimentazione solo dopo aver isolato i collegamenti, verificato che tutto sia asciutto e richiuso la scocca. Non alimentare componenti bagnati o danneggiati.
->
-> Questa guida presuppone che tu sappia identificare i collegamenti elettrici, saldare e isolare fili senza creare cortocircuiti e riconoscere quando un intervento non è sicuro. Se non hai queste competenze o hai dubbi, fermati e rivolgiti a una persona qualificata. **Non aprire né modificare l'alimentatore o i collegamenti alla rete elettrica.**
+La procedura è stata provata su **Linfa Weezy**. Potrebbe funzionare anche sulla Linfa standard, ma questa variante non è ancora stata verificata.
+
+[**Apri la guida passo per passo →**](https://interstellar0verdrive.github.io/Linfa-local-control/) · [Esplora il controller](bridge/) · [Stato dell'app Home Assistant](#stato-del-progetto)
+
+## La guida
+
+[![Mockup delle pagine 00 Panoramica e obiettivi, 01 Hardware e collegamenti e 06 Bridge MQTT](docs/assets/readme-guide.svg)](https://interstellar0verdrive.github.io/Linfa-local-control/)
+
+La [documentazione navigabile](https://interstellar0verdrive.github.io/Linfa-local-control/) accompagna dal **capitolo 00 al capitolo 08**: materiali, collegamento alla scheda, Raspberry Pi, console seriale, controller, MQTT e Home Assistant. Ogni passo termina con una verifica e il collegamento al successivo.
+
+Chi vuole replicare il setup può seguire direttamente questo percorso. L'analisi del traffico cloud, il dump del VoCore e le modifiche facoltative alla configurazione originale sono raccolti negli **approfondimenti**.
 
 ## Stato del progetto
 
-- **Disponibile ora:** guida di preparazione hardware, controller CLI per Raspberry Pi e bridge MQTT.
-- **In programma:** applicazione e interfaccia complete per Home Assistant, nella stessa repository.
-- **Dispositivi:** Linfa Weezy provata; Linfa standard non ancora verificata.
-- **Stato degli stati MQTT:** rappresentano principalmente l'ultimo stato logico noto, non una telemetria hardware sempre affidabile.
+| Componente | Stato |
+| --- | --- |
+| Guida hardware e setup | **Pubblicata** — [inizia dal capitolo 00](https://interstellar0verdrive.github.io/Linfa-local-control/setup/00-panoramica/) |
+| Controller CLI e bridge MQTT | **Disponibili** nella cartella [`bridge/`](bridge/) |
+| App completa per Home Assistant | **Pronta, in fase di test.** Verrà caricata e rilasciata qui a breve; non è ancora inclusa nella repository. |
 
-## Documentazione
+Il controller usa il collegamento seriale alla console del VoCore2; il Raspberry resta in rete e fa da ponte con MQTT. Gli stati pubblicati rappresentano soprattutto l'**ultimo stato logico noto**, non una misura hardware sempre affidabile. Il [file di configurazione di esempio](bridge/serra-mqtt.env.example) mostra quali parametri impostare sul proprio Raspberry.
 
-Segui la [guida passo per passo su GitHub Pages](https://interstellar0verdrive.github.io/Linfa-local-control/): nove capitoli numerati, dalla preparazione del collegamento fisico al controllo con Home Assistant. Il codice del controller e del bridge è già incluso; l'indagine sul cloud, il dump del modulo e le modifiche facoltative alla rete della serra sono negli approfondimenti.
+## Prima di intervenire
 
-La documentazione segue automaticamente il tema chiaro o scuro del sistema; puoi anche scegliere manualmente dal menu in alto. I file Markdown in [`docs/`](docs/) restano le sorgenti modificabili della guida.
+> [!WARNING]
+> **Progetto indipendente e non ufficiale.** Questo repository non è affiliato, approvato, sponsorizzato o supportato da Robonica S.r.l. I nomi Linfa e Weezy servono solo a identificare i prodotti trattati.
+>
+> Aprire e modificare la serra può causare malfunzionamenti e **potrebbe far decadere la garanzia commerciale**. Verifica le condizioni applicabili prima di intervenire; i diritti della garanzia legale sono distinti dalla garanzia commerciale.
 
-## Codice incluso
-
-La cartella [`bridge/`](bridge/) contiene il controller seriale, il bridge MQTT e un [file di configurazione di esempio](bridge/serra-mqtt.env.example). Sono script sperimentali da configurare sul proprio Raspberry Pi; non includono credenziali personali. Gli esempi con `<...>` sono segnaposto da sostituire prima dell'esecuzione.
-
-## Sicurezza
-
-Non inserire password Wi-Fi, credenziali MQTT, token originali del dispositivo, dump di rete o file `.env` nella repository o nelle issue. La guida pubblica usa valori di esempio. Se una credenziale è già comparsa nella pagina Notion condivisa pubblicamente, cambiala: rimuoverla dalla pagina non basta a renderla nuovamente segreta.
+> [!CAUTION]
+> **Scollega la serra dalla presa e l'adattatore USB → TTL dal Raspberry/computer** prima di aprire la scocca, toccare o collegare i pin, saldare o forare. Tieni l'elettronica lontana da acqua, serbatoi, tubi e pompe. La guida presuppone esperienza di base con collegamenti elettrici e saldature: se hai dubbi sulla sicurezza, fermati e chiedi aiuto a una persona qualificata. Leggi le [precauzioni complete](https://interstellar0verdrive.github.io/Linfa-local-control/setup/00-panoramica/#prima-di-intervenire-sicurezza-elettrica-e-acqua).
 
 ## Licenza
 
-La licenza del progetto è ancora da scegliere. Fino all'aggiunta di un file `LICENSE`, la presenza del codice su GitHub non concede automaticamente il diritto di riutilizzarlo o distribuirlo.
+La licenza è in definizione. Fino alla pubblicazione di un file `LICENSE`, la visibilità della repository non autorizza automaticamente il riutilizzo o la distribuzione del materiale.

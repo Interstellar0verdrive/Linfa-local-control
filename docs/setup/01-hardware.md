@@ -92,6 +92,10 @@ Sono esempi di compatibilità **elettrica** dei segnali, non una garanzia che i 
 
 <div class="serial-settings"><span><small>VELOCITÀ</small><strong>115200 baud</strong></span><span><small>FORMATO</small><strong>8N1</strong></span><span><small>LIVELLI LOGICI</small><strong>3,3 V TTL</strong></span></div>
 
+La console di debug del VoCore2 usa **UART2**: nel [pinout ufficiale del modulo](https://vocore.io/v2.html) i contatti sono **RXD2 (40)** e **TXD2 (42)**. Nella serra ci si collega invece ai tre pin accessibili della scheda superiore, mostrati nelle foto qui sotto; con il VoCore a destra, da destra verso sinistra sono **GND, RX e TX**. Controlla l'orientamento della tua scheda prima di saldare.
+
+Questa UART porta la **console Linux** del VoCore: il Raspberry invia comandi di shell come testo. I comandi per luci, ventole e pompe vengono poi scritti dal VoCore su **altre seriali interne**, `/dev/tty-local` e `/dev/tty-nebbia`, come brevi stringhe testuali. Non sono messaggi JSON inviati direttamente all'UART2. Le osservazioni sulle seriali interne sono nell'[approfondimento sul dump del modulo](../approfondimenti/accesso-e-dump.md#cosa-si-deduce-dal-dump).
+
 ### Montaggio definitivo: fili saldati e uscita seriale
 
 Nel prototipo documentato qui, i tre collegamenti seriali sono stati **saldati nella parte superiore della serra**. I fili del collegamento con l'adattatore USB → TTL escono dalla scocca attraverso **un foro**. I cavetti Dupont sono comodi per identificare i segnali e fare una prova, ma per un uso continuativo i collegamenti devono restare fermi, isolati e protetti da trazione.
