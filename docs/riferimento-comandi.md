@@ -10,7 +10,7 @@ Sul Raspberry, dopo aver installato il controller, puoi leggere l'help completo 
 serra --help
 ```
 
-Per i comandi manuali via SSH, `serra auth save` chiede una volta la password della console della serra e la conserva in un file privato dell'utente sul Raspberry. È un comando **solo locale**: non si invia via MQTT e non modifica la serra. I servizi automatici usano invece la credenziale nel proprio file di configurazione; vedi il [passo 06](setup/06-controller-cli.md).
+Per i comandi manuali via SSH, `serra auth save` chiede una volta la password della console della serra e la conserva in un file privato dell'utente sul Raspberry. È un comando **solo locale**: non si invia via MQTT e non modifica la serra. Anche i servizi automatici eseguiti come utente `pi` leggono la password da quel file, senza duplicarla nella configurazione MQTT; vedi il [passo 06](setup/06-controller-cli.md).
 
 ## Dove fare le prove MQTT
 

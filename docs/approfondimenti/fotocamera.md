@@ -45,7 +45,7 @@ sudo systemd-run --wait --collect --pipe -p User=pi \
   /usr/local/bin/serra-foto --check
 ```
 
-Sostituisci `<RASPBERRY_IP>` con l'indirizzo reale del Raspberry. `--check` deve mostrare `pipeline UART pronta`: verifica dipendenze e variabili, **senza scattare o modificare le luci**. La password della console resta nel file privato `/etc/serra-mqtt.env`; non pubblicarlo. Non serve configurare un indirizzo IP della serra o installare `sshpass`, Pillow o un encoder WebP.
+Sostituisci `<RASPBERRY_IP>` con l'indirizzo reale del Raspberry. `--check` deve mostrare `pipeline UART pronta`: verifica dipendenze e variabili, **senza scattare o modificare le luci**. La password della console resta nel file privato `~/.config/serra/root-password`, creato al passo 06; non pubblicarlo. Non serve configurare un indirizzo IP della serra o installare `sshpass`, Pillow o un encoder WebP.
 
 ## Prima prova
 

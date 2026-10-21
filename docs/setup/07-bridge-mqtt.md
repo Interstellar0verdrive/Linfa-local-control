@@ -51,7 +51,7 @@ Nel seguito, `<BROKER_IP>`, `<MQTT_USER>` e `<MQTT_PASSWORD>` indicano l'indiriz
 ## Creazione file /etc/serra-mqtt.env
 
 > [!CAUTION] Attenzione
-> `/etc/serra-mqtt.env` contiene le credenziali MQTT e la password root della serra. Conservalo solo sul Raspberry e non caricarlo nella repository o nelle issue.
+> `/etc/serra-mqtt.env` contiene le credenziali MQTT. La password della console della serra resta nel file privato creato con `serra auth save` al passo 06. Non caricare nessuno dei due file nella repository o nelle issue.
 
 Puoi partire dal [modello senza credenziali](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/serra-mqtt.env.example).
 
@@ -60,7 +60,7 @@ if [ ! -e /etc/serra-mqtt.env ]; then sudo install -m 600 /dev/null /etc/serra-m
 sudo nano /etc/serra-mqtt.env
 ```
 
-Contenuto (l'indirizzo e le credenziali MQTT sono quelli del broker; `SERRA_ROOT_PASSWORD` è invece la password della console della serra):
+Contenuto (l'indirizzo e le credenziali MQTT sono quelli del broker):
 
 ```text {.file-content}
 SERRA_MQTT_HOST=<BROKER_IP>
@@ -69,7 +69,6 @@ SERRA_MQTT_USER=<MQTT_USER>
 SERRA_MQTT_PASS=<MQTT_PASSWORD>
 SERRA_MQTT_TOPIC=serra
 SERRA_CLI=/usr/local/bin/serra
-SERRA_ROOT_PASSWORD=<DEVICE_ROOT_PASSWORD>
 SERRA_UART_LOCK_TIMEOUT=60
 SERRA_CMD_TIMEOUT=120
 SERRA_MQTT_CONNECT_TIMEOUT=4

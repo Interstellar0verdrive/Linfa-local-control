@@ -181,7 +181,7 @@ export SERRA_UART_PORT=/dev/ttyUSB1
 
 Nel passo 07 riporterai l'eventuale `SERRA_UART_PORT` anche nel file usato dai servizi.
 
-Per i servizi automatici, la password sarà inserita anche nel file locale `/etc/serra-mqtt.env` al passo 07. I servizi continueranno a usare quel file; la credenziale privata salvata sopra serve ai comandi manuali. Nessuno dei due file va caricato su GitHub.
+I servizi automatici eseguiti come utente `pi` leggeranno la stessa password da questo file privato. Nel passo 07 `/etc/serra-mqtt.env` conterrà le credenziali del broker MQTT e gli altri parametri, senza duplicare la password della serra. Nessuno dei due file va caricato su GitHub.
 
 ```bash
 serra --help
