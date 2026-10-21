@@ -73,7 +73,7 @@ serra/state/pumps/nutrient-2
 serra/state/net
 ```
 
-Tutti questi topic sono **retained**.
+Il controller e il bridge pubblicano questi topic con il flag **retain**. I contenuti sono gli ultimi stati **logici** noti, non telemetria hardware: dopo un riavvio della sola serra potrebbero essere superati finché non invii nuovi comandi o verifichi i componenti.
 
 ---
 
@@ -146,7 +146,7 @@ Pubblica il comando e verifica che le ventole si avviino e che compaiano messagg
     - esegue il comando via UART
     - aggiorna `.serra_state.json`
     - pubblica nuovi stati su MQTT
-5. Home Assistant riceve immediatamente lo stato aggiornato
+5. Home Assistant riceve lo stato logico pubblicato, se il collegamento MQTT è operativo
 
 ---
 

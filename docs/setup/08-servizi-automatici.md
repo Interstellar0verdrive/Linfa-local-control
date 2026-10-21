@@ -6,10 +6,9 @@ Con il bridge già funzionante, configura i timer per spegnere la rete del VoCor
 
 ## Service + timer: spegnimento rete VoCore dopo boot
 
-Questo service spegne la rete della serra (comando `serra net off`)
-Il timer fa avvenire questa azione una sola volta, dopo 60 secondi dal boot
+Questo service invia alla serra il comando `serra net off`. Il timer lo esegue **una sola volta, circa 60 secondi dopo l'avvio del Raspberry**: non è un rilevatore dell'avvio della serra. Se abiliti il timer quando il Raspberry è acceso da più di 60 secondi, systemd può eseguirlo subito.
 
-La serra deve essere già accesa e raggiungibile via UART quando il timer scatta. Se si accende più tardi, controlla il log con `journalctl -u serra-netoff.service -n 30 --no-pager` ed esegui `sudo systemctl start serra-netoff.service` dopo averla accesa: questo timer non riprova automaticamente.
+La serra deve essere già accesa e raggiungibile via UART quando il timer scatta. Se si accende più tardi, controlla il log con `journalctl -u serra-netoff.service -n 30 --no-pager` ed esegui `sudo systemctl start serra-netoff.service` dopo averla accesa. **Se riavvii soltanto la serra, il timer non scatta di nuovo:** ripeti il comando manualmente o riavvia il Raspberry. Verifica sulla rete che la serra non sia più raggiungibile; il log conferma l'invio del comando, non è una misura indipendente della radio Wi-Fi.
 
 ### Service one-shot
 
@@ -42,7 +41,6 @@ Description=Serra: run net off once after boot (60s)
 [Timer]
 OnBootSec=60
 AccuracySec=1s
-Persistent=false
 
 [Install]
 WantedBy=timers.target
@@ -59,9 +57,11 @@ Verifica:
 
 ```bash
 systemctl list-timers --all | grep serra
+systemctl status serra-netoff.service --no-pager
+journalctl -u serra-netoff.service -n 30 --no-pager
 ```
 
-**Risposta attesa:** una riga con `serra-netoff.timer` e `serra-netoff.service`. Essendo un timer che scatta una sola volta dopo il boot, la prossima esecuzione può apparire come `-` dopo che è già partito. Date, orari e spaziatura dipendono dal sistema.
+**Risposta attesa:** una riga con `serra-netoff.timer` e `serra-netoff.service`. Essendo un timer che scatta una sola volta dopo il boot, la prossima esecuzione può apparire come `-` dopo che è già partito. Per il servizio one-shot, `inactive (dead)` dopo un'**esecuzione riuscita** è normale; controlla che compaia `status=0/SUCCESS` o `Finished` nel log. Un timer elencato non prova da solo che il comando sia riuscito. Date, orari e spaziatura dipendono dal sistema.
 
 ---
 
@@ -104,7 +104,6 @@ Description=Serra: run state sync every 30 minutes
 OnBootSec=2min
 OnUnitActiveSec=30min
 AccuracySec=10s
-Persistent=true
 
 [Install]
 WantedBy=timers.target
@@ -124,7 +123,7 @@ systemctl list-timers --all | grep serra
 journalctl -u serra-state-sync.service -n 50 --no-pager
 ```
 
-**Risposta attesa:** nell'elenco compaiono `serra-state-sync.timer` associato a `serra-state-sync.service` e `serra-netoff.timer` associato a `serra-netoff.service`. Il log del servizio di sincronizzazione deve contenere `STATE SYNC OK` e una conclusione senza errori. Date e intervalli sono variabili.
+**Risposta attesa:** nell'elenco compaiono `serra-state-sync.timer` associato a `serra-state-sync.service` e `serra-netoff.timer` associato a `serra-netoff.service`. Il log del servizio di sincronizzazione deve contenere `STATE SYNC OK` e una conclusione senza errori. Date e intervalli sono variabili. Questo sync ricalcola gli stati registrati, **non legge lo stato fisico** della serra.
 
 ### Comandi utili per verificare i timer e services
 
@@ -168,8 +167,8 @@ A questo punto questo dovrebbe essere lo stato attuale:
 - ✅ comando serra funzionante
 - ✅ controllo serra via UART
 - ✅ bridge MQTT attivo e resiliente
-- ✅ stati MQTT retained coerenti
-- ✅ rete VoCore spenta automaticamente dopo boot
+- ✅ topic di stato MQTT pubblicati; coerenza logica da verificare dopo riavvii o comandi non osservati
+- ✅ tentativo di spegnimento della rete VoCore dopo l'avvio del Raspberry, con esito da verificare
 - ✅ state sync periodico attivo
 
 Da qui in poi:

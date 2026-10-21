@@ -396,6 +396,9 @@ class SerraMqttBridge:
     ) -> None:
         """Handle MQTT connection."""
         rc = getattr(reason_code, "value", reason_code)
+        if rc != 0:
+            print(f"[mqtt] connection rejected rc={rc}", file=sys.stderr)
+            return
 
         # Publish online status
         online_payload = {
@@ -416,7 +419,6 @@ class SerraMqttBridge:
         subscriptions = [
             topic_join(self.cfg.base_topic, "cmd"),
             topic_join(self.cfg.base_topic, "cmd", "+"),
-            topic_join(self.cfg.base_topic, "cmd", "json"),
             topic_join(self.cfg.base_topic, "cmd", "json", "+"),
         ]
 
@@ -473,7 +475,10 @@ class SerraMqttBridge:
         """Run the bridge (blocking, with auto-reconnect)."""
         while True:
             try:
-                self.client.connect(self.cfg.host, self.cfg.port, keepalive=60)
+                # on_message esegue la CLI in modo sincrono: il keepalive deve
+                # superare il timeout del comando per non perdere l'ack.
+                keepalive = min(max(60, self.cfg.timeout_s + 30), 65535)
+                self.client.connect(self.cfg.host, self.cfg.port, keepalive=keepalive)
                 self.client.loop_forever()
             except KeyboardInterrupt:
                 print("\n[mqtt] interrupted, shutting down...")

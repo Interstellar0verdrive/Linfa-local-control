@@ -16,6 +16,8 @@ La [documentazione navigabile](https://interstellar0verdrive.github.io/Linfa-loc
 
 Chi vuole replicare il setup può seguire direttamente questo percorso. L'analisi del traffico cloud, il dump del VoCore e le modifiche facoltative alla configurazione originale sono raccolti negli **approfondimenti**.
 
+**Limite attuale della procedura:** i comandi del controller sono stati provati quando il servizio originale `robocontrol/rcc` era già fermo. Un log successivo registra la disattivazione della sua voce di avvio automatico, ma non conserva i comandi esatti né una prova dopo il riavvio. La convivenza dei due controlli non è verificata: leggi il [controllo nel passo 06](https://interstellar0verdrive.github.io/Linfa-local-control/setup/06-controller-cli/#verifica-del-servizio-originale) prima di azionare i componenti. La guida non va ancora considerata convalidata da una serra nello stato originale.
+
 La [tabella dei comandi](https://interstellar0verdrive.github.io/Linfa-local-control/riferimento-comandi/) mette affiancati i comandi del Raspberry e i payload MQTT equivalenti per Home Assistant.
 
 ## Stato del progetto

@@ -19,8 +19,6 @@ Obiettivo di questa sezione: preparare un Raspberry Pi “vergine” (solo OS + 
 Sul Raspberry (eventualmente collegandosi dal Mac via SSH):
 
 ```bash
-set -e
-
 date
 hostname
 uname -a
@@ -46,6 +44,8 @@ sudo apt -y full-upgrade
 sudo apt -y autoremove
 ```
 
+Se l'aggiornamento ha installato un nuovo kernel o richiede un riavvio, esegui `sudo reboot`, attendi il ritorno del Raspberry e riconnettiti via SSH prima dei passi successivi.
+
 ---
 
 ## Installa i pacchetti necessari
@@ -60,6 +60,7 @@ sudo apt install -y \
   python3-serial \
   python3-paho-mqtt \
   picocom \
+  nano \
   curl
 ```
 
@@ -92,7 +93,7 @@ Verifica versione:
 python3 --version
 ```
 
-**Risposta attesa:** un numero di versione Python 3.x.
+**Risposta attesa:** Python **3.10 o successivo**. Il bridge usa sintassi introdotta in Python 3.10; se il sistema ha 3.9 o precedente, aggiorna Raspberry Pi OS prima di copiare gli script.
 
 Verifica che i moduli necessari siano importabili **prima** di caricare gli script:
 
@@ -124,7 +125,7 @@ Con adattatore collegato:
 ls -l /dev/ttyUSB* /dev/ttyACM* 2>/dev/null || true
 ```
 
-**Risposta attesa:** almeno un dispositivo seriale, tipicamente `/dev/ttyUSB0`, appartenente al gruppo `dialout`. Il percorso può variare. Poiché il comando sopprime gli errori, non vedrai il messaggio “No such file or directory” per i pattern che non corrispondono.
+**Risposta attesa:** almeno un dispositivo seriale, tipicamente `/dev/ttyUSB0`, appartenente al gruppo `dialout`. Il percorso può variare. Poiché il comando sopprime gli errori, non vedrai il messaggio “No such file or directory” per i pattern che non corrispondono. Se la tua porta non è `/dev/ttyUSB0`, usa il percorso effettivo nei passi 04 e 05 e imposta `SERRA_UART_PORT` nel file di configurazione del passo 07.
 
 ### Verifica gruppo dialout
 
@@ -137,6 +138,7 @@ ls -l /dev/ttyUSB0 2>/dev/null || true
 ```
 
 **Risposta attesa:** `groups` include `dialout`, `getent group dialout` mostra il gruppo e `ls -l` mostra la porta seriale. Nomi, date e numeri variano da sistema a sistema.
+Se la porta trovata sopra ha un nome diverso, sostituisci `/dev/ttyUSB0` nell'ultimo comando.
 
 Se l'utente `pi` **non** è in `dialout`, aggiungilo (sostituisci `pi` se usi un altro utente):
 
@@ -195,7 +197,7 @@ Alla fine di questo capitolo, il Raspberry deve avere:
 - ✅ moduli python3-serial e python3-paho-mqtt disponibili (import OK)
 - ✅ picocom installato; il test della UART è nel passo 04
 - ✅ mosquitto-clients installato (per test futuri)
-- ✅ utente pi in gruppo dialout
+- ✅ utente scelto per i servizi (negli esempi, `pi`) in gruppo `dialout`
 - ✅ cartelle predisposte per i file del progetto
 
 ---

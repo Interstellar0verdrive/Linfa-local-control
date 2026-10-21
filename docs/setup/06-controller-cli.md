@@ -9,12 +9,13 @@ In questo passo copi gli script sul Raspberry e verifichi il **controller CLI** 
 - Raspberry pronto, con UART funzionante
 - Nessun file serra_*.py ancora installato
 - Nessun servizio serra-* attivo
+- Il servizio originale `robocontrol/rcc` non deve comandare i componenti contemporaneamente: sul prototipo era già fermo quando i comandi sono stati provati.
 
 Questi sono i file coinvolti nei passi 06–08:
 
 | FILE | DESCRIZIONE | NOTE |
 | --- | --- | --- |
-| /home/pi/serra_help.txt | **Help CLI**: è usato dal comando `serra --help` (il path è hardcoded nel controller) | Va copiato a mano nel Raspberry al primo setup. |
+| /home/pi/serra_help.txt | **Help CLI**: è usato dal comando `serra --help` e deve stare accanto a `serra_controller.py`. | Va copiato sul Raspberry al primo setup. |
 | /home/pi/serra_controller.py | **Controller**: cuore logico del sistema (CLI, UART, stato, MQTT publish) | Va copiato a mano nel Raspberry al primo setup. |
 | /home/pi/serra_mqtt_bridge.py | **MQTT Bridge**: si occupa di fare la traduzione MQTT → CLI | Va copiato a mano nel Raspberry al primo setup. |
 | /home/pi/.serra_state.json | **Stato runtime (source of truth logica):** cache JSON con ultimo stato noto dei componenti + ultimi comandi. Viene aggiornata dalla CLI ad ogni comando e usata per pubblicare serra/state/... su MQTT (retained). | Viene creata/aggiornata automaticamente dal controller al primo comando (serra ...). Non va caricata manualmente al primo setup.  |
@@ -92,12 +93,28 @@ I due comandi stampano, nell'ordine:
 
 Prima di introdurre il bridge MQTT, verificare che la CLI funzioni **localmente**.
 
+### Verifica del servizio originale
+
+Nella console della **serra**, prima di avviare prove che azionano componenti, esegui `ps` e cerca un processo `rcc`, `robocontrol` o un processo Node avviato da `start-rcc`. Controlla di nuovo dopo ogni riavvio della serra. Nel prototipo questo servizio era già fermo durante le prove. Un [log successivo](../approfondimenti/accesso-e-dump.md#il-servizio-originale-rcc) registra il backup di `/etc/inittab`, la sua voce `respawn` commentata, il ricaricamento di `init` e l'arresto del processo; non conserva però i comandi esatti né conferma che l'arresto sopravviva al riavvio. Se `rcc` è in esecuzione, **non proseguire con i comandi di controllo** sulla base di questa guida: l'interazione simultanea con il controller non è stata verificata. Anche un processo assente non dimostra da solo che l'arresto sia persistente.
+
+Questo è un limite aperto della procedura per una serra nello stato originale. Non modificare `/etc/inittab` o terminare processi seguendo comandi trovati altrove senza comprendere l'effetto sul firmware e sul suo ripristino.
+
+Chiudi `picocom` con `Ctrl+A`, poi `Ctrl+X` prima di usare la CLI; altrimenti la porta resta occupata.
+
 Il controller non contiene una password root predefinita. In questa sessione di terminale imposta la password della console della **tua** serra senza scriverla nella cronologia della shell:
 
 ```bash
 read -rsp 'Password della console della serra: ' SERRA_ROOT_PASSWORD; echo
 export SERRA_ROOT_PASSWORD
 ```
+
+Se la porta individuata nel passo 03 non è `/dev/ttyUSB0`, imposta anche il percorso reale **nella stessa sessione** (esempio):
+
+```bash
+export SERRA_UART_PORT=/dev/ttyUSB1
+```
+
+Nel passo 07 riporterai l'eventuale `SERRA_UART_PORT` anche nel file usato dai servizi.
 
 Per i servizi automatici, la stessa variabile sarà inserita nel file locale `/etc/serra-mqtt.env`, che non deve essere caricato su GitHub.
 
@@ -109,13 +126,15 @@ serra --help
 
 Per cercare un'azione senza scorrere l'help nel terminale, consulta il [riferimento completo dei comandi](../riferimento-comandi.md): mostra anche il payload equivalente per Home Assistant.
 
-Test di comunicazione UART (non distruttivo):
+Test di apertura della console e login via UART (non aziona i componenti):
 
 ```bash
 serra state sync
 ```
 
 **Risposta attesa:** `STATE SYNC OK`.
+
+`state sync` ricalcola solo lo stato **logico** registrato: l'esito conferma l'accesso alla console, ma non misura lo stato fisico né prova ancora i comandi verso luci e ventole. In questo passo non hai configurato il broker MQTT, quindi non aspettarti nuovi topic finché non completi il passo 07.
 
 Esegui questi comandi di prova **uno alla volta**, osservando il risultato dopo ciascuno.
 
@@ -143,12 +162,7 @@ Spegni le ventole:
 serra fans off
 ```
 
-Se questi comandi:
-
-- non vanno in errore
-- producono output coerente
-
-allora il controller è operativo.
+Osserva **fisicamente** che luci e ventole rispondano e si spengano. I messaggi della CLI confermano che la shell della serra ha accettato i comandi; da soli non provano che i componenti abbiano eseguito l'azione. Se un comando mostra un errore, fermati e controlla cablaggio e console prima di proseguire.
 
 ---
 

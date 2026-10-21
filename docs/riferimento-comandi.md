@@ -91,6 +91,8 @@ Per la pompa principale `-s, --seconds` vale **1 secondo** per impostazione pred
 
 Per le pompe nutrienti `-s, --seconds` è la durata di una singola erogazione (predefinito `1`), `-t, --times` il numero di ripetizioni (predefinito `1`, massimo `100`) e `-i, --interval` la pausa fra ripetizioni (predefinito `1` secondo, massimo `120`). Il limite tecnico per una singola erogazione è **300 secondi**, ma il dosaggio reale dipende dalla pompa, dal liquido e dal circuito: calibra con tempi piccoli prima di usarla sulle piante. Non esiste un'azione `pump nutrient off` nella CLI: ogni impulso viene inviato con la durata richiesta.
 
+Il bridge interrompe un comando CLI dopo **120 secondi** per impostazione predefinita (`SERRA_CMD_TIMEOUT`): sequenze di pompe o lampeggi più lunghe vanno evitate via MQTT, oppure richiedono una configurazione consapevole del timeout. Se arriva un timeout, **verifica fisicamente** cosa è già stato eseguito prima di inviare di nuovo il comando: ripeterlo può dosare due volte.
+
 | ID | Gocciolatore nel prototipo |
 | --- | --- |
 | `0` | Destra, vasetto verde |
@@ -131,9 +133,9 @@ Esempi: **verifica prima l’ID della pompa** e comincia con durate brevi, perch
 | Riattivare la rete della **serra** | `serra net on [-n on/off]` | `net on [-n on/off]` |
 | Ricalcolare e ripubblicare gli stati | `serra state sync` | `state sync` |
 
-Il **checkup è intrusivo**: sovrascrive le impostazioni correnti e termina con i componenti spenti. Puoi escludere gruppi dal test con `-l, --lights`, `-f, --fans`, `-lr, --led-ring`, `-pm, --pump-main` e `-pn, --pump-nutrients`: ogni opzione accetta `on` (predefinito) o `off`. Per esempio, `checkup -pm off -pn off` non prova le pompe.
+Il **checkup è intrusivo**: sovrascrive le impostazioni dei gruppi inclusi e, se arriva al termine, li spegne. Se viene interrotto, un componente può restare attivo: controllalo fisicamente. Puoi escludere gruppi dal test con `-l, --lights`, `-f, --fans`, `-lr, --led-ring`, `-pm, --pump-main` e `-pn, --pump-nutrients`: ogni opzione accetta `on` (predefinito) o `off`. Per esempio, `checkup -pm off -pn off` non prova le pompe.
 
-`net on/off` agisce sul **VoCore della serra**, non sulla rete del Raspberry. `-n, --ntp on/off` permette di forzare NTP; senza opzione, NTP segue l'azione di rete. `net on` non è permanente: un riavvio o la policy automatica possono disattivare di nuovo la rete.
+`net on/off` agisce sul **VoCore della serra**, non sulla rete del Raspberry. `-n, --ntp on/off` permette di forzare NTP; senza opzione, NTP segue l'azione di rete. `net on` non è permanente: un riavvio o la policy automatica possono disattivare di nuovo la rete. Un esito positivo conferma l'esecuzione dei comandi nella shell, **non** la disconnessione radio: verifica separatamente che la serra non sia più raggiungibile.
 
 `state sync` aggiorna i timer e ripubblica su `serra/state/*` gli **stati logici attesi**. Non interroga i sensori della serra per confermare lo stato fisico delle ventole, delle luci o delle pompe.
 
@@ -159,7 +161,7 @@ Anche il checkup senza pompe cambia temporaneamente luci, ventole e ring e li la
 | `serra/status/last_seen` | Ultima attività nota pubblicata dal bridge o dal controller. |
 | `serra/state/*` | Ultimi stati logici pubblicati dal controller, retained. |
 
-Gli ID e gli ack sono facoltativi. Per un comando semplice bastano topic `serra/cmd`, payload `lights on` e **retain disattivato**. Per vedere i risultati, osserva `serra/#` con MQTT Explorer oppure usa **Ascolta un topic** nell'[integrazione MQTT di Home Assistant](setup/09-home-assistant.md#alternativa-usare-gli-strumenti-mqtt-integrati).
+Gli ID e gli ack sono facoltativi. L'ID serve a collegare una risposta alla richiesta: **non impedisce l'esecuzione ripetuta** dello stesso comando. `ok` e `rc` confermano l'esito del processo e della scrittura sulla console, non misurano l'effetto fisico. Per un comando semplice bastano topic `serra/cmd`, payload `lights on` e **retain disattivato**. Per vedere i risultati, osserva `serra/#` con MQTT Explorer oppure usa **Ascolta un topic** nell'[integrazione MQTT di Home Assistant](setup/09-home-assistant.md#alternativa-usare-gli-strumenti-mqtt-integrati).
 
 | Tipo di prova | Topic di pubblicazione | Payload | Risposta da osservare |
 | --- | --- | --- | --- |

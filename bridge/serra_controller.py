@@ -29,6 +29,7 @@ from typing import Optional, Dict, Any, List
 
 import fcntl
 import json
+import tempfile
 import threading
 
 import serial
@@ -63,7 +64,7 @@ MAX_LIGHT_FADE_UNITS = 0xFFF                # 12-bit fade luci
 MAX_RING_FADE_UNITS = 0xFF                  # 8-bit fade ring
 SERIAL_READ_CHUNK_SIZE = 4096               # dimensione lettura seriale
 STATE_SCHEMA_VERSION = 1                    # versione schema file stato
-HELP_FILE_NAME = "/home/pi/serra_help.txt"  # file esterno contenente la guida CLI
+HELP_FILE_NAME = "serra_help.txt"  # file esterno accanto al controller
 
 
 # ---------------------------
@@ -119,8 +120,9 @@ MQTT_PASS = os.environ.get("SERRA_MQTT_PASS", "")
 SERRA_CLI = os.environ.get("SERRA_CLI", "serra")
 MQTT_TOPIC = os.environ.get("SERRA_MQTT_TOPIC", "serra").strip() or "serra"
 
-MQTT_CLIENT_ID = os.environ.get("SERRA_MQTT_CLIENT_ID", "serra-controller").strip() or "serra-controller"
+MQTT_CLIENT_ID = os.environ.get("SERRA_MQTT_CLIENT_ID", "").strip() or f"serra-controller-{os.getpid()}"
 MQTT_ENABLED = bool(MQTT_HOST)  # solo "host presente" (la libreria è verificata da _mqtt_enabled)
+COMMAND_FAILED = False
 
 ROME_TZ = ZoneInfo("Europe/Rome")
 
@@ -194,24 +196,21 @@ def _load_state(path: str = STATE_FILE_DEFAULT) -> Dict[str, Any]:
 
 def _save_state(state: Dict[str, Any], path: str = STATE_FILE_DEFAULT) -> None:
     """
-    Salva lo stato in modo atomico e con lock di file per evitare corruzione
-    in caso di accessi concorrenti.
+    Salva lo stato in modo atomico. Il lock della CLI serializza l'intera
+    operazione di lettura, modifica e scrittura tra processi del controller.
     """
     dir_path = os.path.dirname(path)
     if dir_path:
         os.makedirs(dir_path, exist_ok=True)
 
-    tmp = path + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        # Lock esclusivo per evitare scritture concorrenti
-        fcntl.flock(f.fileno(), fcntl.LOCK_EX)
-        try:
+    fd, tmp = tempfile.mkstemp(prefix=".serra-state-", dir=dir_path or ".")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
             json.dump(state, f, ensure_ascii=False, indent=2)
-        finally:
-            fcntl.flock(f.fileno(), fcntl.LOCK_UN)
-
-    # Sostituzione atomica del file
-    os.replace(tmp, path)
+        os.replace(tmp, path)
+    finally:
+        if os.path.exists(tmp):
+            os.unlink(tmp)
 
 
 def _mqtt_enabled() -> bool:
@@ -272,7 +271,8 @@ class MQTTManager:
         self._client.loop_start()
         self._connected = True
 
-    def _on_disconnect(self, client, userdata, rc) -> None:  # type: ignore[override]
+    def _on_disconnect(self, client, userdata, *args) -> None:  # type: ignore[override]
+        # Paho 1.x passa rc; Paho 2.x VERSION2 passa flags, reason_code, properties.
         self._connected = False
 
     def publish(self, topic: str, payload: Dict[str, Any], retain: bool = True) -> None:
@@ -282,13 +282,16 @@ class MQTTManager:
         if self._client is None:
             return
         data = json.dumps(payload, ensure_ascii=False)
-        self._client.publish(topic, data, qos=0, retain=retain)
+        info = self._client.publish(topic, data, qos=1, retain=retain)
+        info.wait_for_publish(timeout=5)
+        if not info.is_published():
+            raise SerraConnectionError(f"MQTT: pubblicazione non confermata per {topic}")
 
     def close(self) -> None:
         if self._client and self._connected:
             try:
-                self._client.loop_stop()
                 self._client.disconnect()
+                self._client.loop_stop()
             except Exception:
                 pass
         self._client = None
@@ -373,7 +376,7 @@ def _derive_running_flags(state: Dict[str, Any]) -> None:
     def derive_until(obj: Dict[str, Any]) -> Dict[str, Any]:
         until = obj.get("until_ts")
         if isinstance(until, (int, float)):
-            running_now = now < float(until)
+            running_now = now < float(until) and bool(obj.get("ok", True))
             obj["running_now"] = running_now
             if "running" in obj:
                 obj["running"] = running_now
@@ -390,7 +393,15 @@ def _derive_running_flags(state: Dict[str, Any]) -> None:
     # ring
     rg = state.get("ring", {}).get("state", {})
     if isinstance(rg, dict):
-        derive_until(rg)
+        if rg.get("mode") == "on":
+            # Il fade termina, ma il ring resta acceso: until_ts nelle vecchie
+            # versioni descriveva il fade e non lo spegnimento del LED.
+            rg["running_now"] = bool(rg.get("running"))
+            transition_until = rg.get("transition_until_ts", rg.get("until_ts"))
+            if isinstance(transition_until, (int, float)) and now >= transition_until:
+                rg["transition"] = "complete"
+        else:
+            derive_until(rg)
 
     # lights fade
     li = state.get("lights", {}).get("state", {})
@@ -530,16 +541,18 @@ class SerraConsole:
 
     def run_checked(self, cmd: str, timeout: float = 4.0) -> bool:
         """
-        Esegue cmd e stampa marker per confermare che la shell l'ha eseguito.
-        Ritorna True se marker trovato.
+        Conferma il completamento con successo del comando nella shell.
+        Il marker non compare per intero nella riga inviata, così l'eco
+        della console non può essere scambiata per la risposta.
         """
         assert self.ser is not None
-        marker = f"__SERRA_OK_{now_ms()}__"
-        full = f"{cmd}; echo {marker}"
+        nonce = f"{now_ms()}_{os.getpid()}"
+        marker = f"__SERRA_OK_{nonce}__"
+        full = f"{cmd} && printf '\\n__SERRA_OK_%s__\\n' '{nonce}'"
         self._write_line(full)
 
-        marker_re = re.compile(re.escape(marker).encode("utf-8"))
-        out = self._read_until([marker_re, self.PROMPT_RE, self.LOGIN_RE], timeout=timeout)
+        marker_re = re.compile(rb"(?:^|[\r\n])" + re.escape(marker.encode("ascii")) + rb"(?:[\r\n]|$)")
+        out = self._read_until([marker_re], timeout=timeout)
 
         return bool(marker_re.search(out))
 
@@ -722,6 +735,9 @@ def _record(
     last_update: dict che va in <component>.last
     existing_state: stato già caricato da riutilizzare (per evitare doppio _load_state)
     """
+    global COMMAND_FAILED
+    if not ok:
+        COMMAND_FAILED = True
     try:
         st = existing_state if existing_state is not None else (_load_state() or {})
         _bump_last_seen(st)
@@ -767,6 +783,7 @@ def _record(
             eprint(f"[mqtt] warning status publish failed: {_ex}")
     except Exception as ex:
         # Non bloccare mai i comandi hardware per colpa di logging/MQTT
+        COMMAND_FAILED = True
         eprint(f"[state] warning: {ex}")
 
 
@@ -877,6 +894,8 @@ def do_fans(console: SerraConsole, action: str, target: Optional[str], intensity
         fan_proto = FAN_TARGETS.get(fan_id, fan_id)
         cmd = fan_cmd(fan_proto, pct_val)
         ok = step(console, f"FAN {fan_id} {pct_val}% ({level})", cmd)
+        if level in ("low", "medium"):
+            ok = ok and wake_used
 
         ts = now_ts()
         state_now[fan_id] = {
@@ -957,7 +976,7 @@ def do_pump_main(console: SerraConsole, action: str, seconds: float) -> None:
     ok = step(console, f"PUMP MAIN ON ({sec}s)", cmd)
 
     st: Dict[str, Any] = {
-        "running": True,
+        "running": bool(ok),
         "seconds": sec,
         "cmd": cmd,
         **now_ts(),
@@ -987,12 +1006,16 @@ def do_pump_nutrient(console: SerraConsole, nid: int, seconds: float, times: int
         cmd = pump_nutrient_cmd(nid, seconds)
         ok = step(console, f"PUMP NUTRIENT-{nid} ON ({seconds:.2f}s) [{i+1}/{times}]", cmd)
         ok_all = ok_all and ok
+        if not ok:
+            break
         if i < times - 1:
-            time.sleep(interval)
+            # L'MCU esegue l'impulso in autonomia: aspetta che finisca prima
+            # di iniziare la pausa richiesta e inviare l'impulso successivo.
+            time.sleep(seconds + interval)
 
-    # Stato: best-effort. Consideriamo "running" fino a fine sequenza.
+    # All'uscita dal ciclo resta soltanto l'ultimo impulso da completare.
     total = (times * float(seconds)) + ((times - 1) * float(interval))
-    until = time.time() + max(0.0, total)
+    until = time.time() + max(0.0, float(seconds))
 
     dt_utc = datetime.fromtimestamp(until, tz=timezone.utc)
     dt_local = dt_utc.astimezone(ROME_TZ)
@@ -1019,7 +1042,7 @@ def do_pump_nutrient(console: SerraConsole, nid: int, seconds: float, times: int
     }
 
     state_now[str(nid)] = {
-        "running": True,
+        "running": bool(ok_all),
         "seconds": float(seconds),
         "times": int(times),
         "interval": float(interval),
@@ -1090,7 +1113,8 @@ def do_ring(
         extra: Dict[str, Any] = {"cmd": cmd}
         if fade and fade > 0:
             extra["transition"] = "fading"
-            extra.update(make_until_timestamps(fade))
+            transition_until = make_until_timestamps(fade)
+            extra.update({f"transition_{key}": value for key, value in transition_until.items()})
 
         _record(
             "ring",
@@ -1110,7 +1134,7 @@ def do_ring(
     interval = float(clamp(interval, 0.0, 10.0))
 
     # publish "running" all'inizio, con until
-    total = (t * (duration + interval)) + (2 * fade * t)
+    total = (t * duration) + ((t - 1) * interval) + (2 * fade * t)
     until_info = make_until_timestamps(max(0.0, total))
     _record(
         "ring",
@@ -1391,6 +1415,8 @@ def do_checkup(
         do_state_sync()
         print("✅ STATE SYNC OK (post-checkup)")
     except Exception as e:
+        global COMMAND_FAILED
+        COMMAND_FAILED = True
         print(f"⚠️ STATE SYNC FAILED (post-checkup): {e}")
 
     print("=== CHECKUP END ===")
@@ -1407,7 +1433,8 @@ def _load_help_text() -> str:
     Per modificare la guida CLI, edita il file `serra_help.txt`
     posizionato nella stessa directory di questo script.
     """
-    base_dir = os.path.dirname(os.path.abspath(__file__))
+    # Il comando /usr/local/bin/serra è un symlink: risolvi il file reale.
+    base_dir = os.path.dirname(os.path.realpath(__file__))
     help_path = os.path.join(base_dir, HELP_FILE_NAME)
     try:
         with open(help_path, "r", encoding="utf-8") as f:
@@ -1522,6 +1549,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> None:
+    global COMMAND_FAILED
+    COMMAND_FAILED = False
     parser = build_parser()
     args = parser.parse_args()
 
@@ -1534,6 +1563,13 @@ def main() -> None:
         user=DEFAULT_USER,
         password=DEFAULT_PASSWORD,
     )
+
+    # Un solo processo alla volta può usare la console e aggiornare lo stato.
+    # Include i comandi MQTT e i due timer systemd.
+    lock_path = STATE_FILE_DEFAULT + ".lock"
+    os.makedirs(os.path.dirname(lock_path) or ".", exist_ok=True)
+    lock_file = open(lock_path, "a+")
+    fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
 
     console = SerraConsole(cfg)
     try:
@@ -1593,6 +1629,9 @@ def main() -> None:
         else:
             raise SerraError("Comando non riconosciuto (bug parser).")
 
+        if COMMAND_FAILED:
+            raise SerraError("Uno o piu comandi non sono stati confermati dalla console; controlla i messaggi sopra.")
+
     except SerraCommandError as ex:
         eprint(f"ERRORE COMANDO: {ex}")
         sys.exit(2)
@@ -1613,6 +1652,8 @@ def main() -> None:
             except Exception:
                 pass
         console.close()
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+        lock_file.close()
 
 
 if __name__ == "__main__":

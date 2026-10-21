@@ -7,20 +7,20 @@ Queste operazioni servono per l'esplorazione tecnica. Il percorso principale usa
 
 ### Entrare nella serra
 
-1. Collegarsi alla rete temporanea creata dalla serra con il Mac, via SSH:
+1. Collegare il Mac alla rete temporanea creata dalla serra e, **se SSH è disponibile su quel firmware**, provare l'accesso alla serra:
 
     ```bash
-    ssh root@<LOCAL_IP>
+    ssh root@<SERRA_AP_IP>
     ```
 
     Nella rete temporanea iniziale l'accesso potrebbe non chiedere una password.
 
 2. Oppure dal Terminale del Mac collegarsi al Raspberry (collegato via UART) via SSH:
 
-    Usa l'indirizzo del Raspberry, sia che sia collegato via Ethernet sia che usi Wi-Fi:
+    Usa l'indirizzo del Raspberry, sia che sia collegato via Ethernet sia che usi Wi-Fi; non usare l'indirizzo della rete temporanea della serra:
 
     ```bash
-    ssh pi@<LOCAL_IP>
+    ssh pi@<RASPBERRY_IP>
     ```
 
     Se il nome locale è configurato e si risolve correttamente, puoi usare `ssh pi@serra.local`. Inserisci la password del **Raspberry** quando richiesta; non è necessariamente la password root della serra.
@@ -57,22 +57,18 @@ Queste operazioni servono per l'esplorazione tecnica. Il percorso principale usa
 7. Nel caso si voglia copiare il file log nel mac:
 
     ```bash
-    scp pi@serra:/home/pi/serra_uart.log ~/Desktop/serra_uart.log
+    scp pi@<RASPBERRY_IP>:/home/pi/serra_uart.log ~/Desktop/serra_uart.log
     ```
 
-    Se `serra` non si risolve, usa l'indirizzo del Raspberry, indipendentemente dal collegamento Ethernet o Wi-Fi:
+    Sostituisci `<RASPBERRY_IP>` con l'indirizzo reale del Raspberry.
 
-    ```bash
-    scp pi@<LOCAL_IP>:/home/pi/serra_uart.log ~/Desktop/serra_uart.log
-    ```
-
-8. Per entrare nella serra, questi sono i parametri di accesso: user: root / password: *(vuota)* → premi solo INVIO
+8. Per entrare nella serra usa `root` e la password effettiva del dispositivo: nel prototipo iniziale poteva essere vuota o `vocore`; dopo il passo 05 è quella che hai impostato tu.
 9. Per testare se funziona, dare come comando: `echo OK` e premere invio. Si dovrebbe ricevere indietro “OK”
-10. Per vedere i processi in corso, dare questo: `ps aux`
+10. Per vedere i processi in corso, usa `ps` (la BusyBox del dispositivo potrebbe non accettare le opzioni `aux`).
 
 ### Fare il dump del modulo robocontrol (rcc.js, properties, ecc.)
 
-Sulla serra (shell # via UART) dal **Mac**, devi essere collegato con: `ssh root@<LOCAL_IP>`
+I comandi dei primi cinque punti vanno eseguiti **nella shell della serra**, raggiunta tramite UART oppure tramite SSH se la rete della serra è attiva. Il trasferimento del file nei punti successivi richiede invece SSH alla serra: la sola UART non basta per usare `scp`. Nei comandi di trasferimento `<SERRA_IP>` indica l'indirizzo al quale il Mac raggiunge **la serra**, sulla rete temporanea o su quella domestica.
 
 ---
 
@@ -127,7 +123,7 @@ Sulla serra (shell # via UART) dal **Mac**, devi essere collegato con: `ssh root
 6. Scaricare il file sul mac:
 
     ```bash
-    scp root@<LOCAL_IP>:/tmp/robocontrol.tar.gz ~/Desktop/
+    scp root@<SERRA_IP>:/tmp/robocontrol.tar.gz ~/Desktop/
     ```
 
     Inserisci la password root della serra quando richiesta.
@@ -137,7 +133,7 @@ Sulla serra (shell # via UART) dal **Mac**, devi essere collegato con: `ssh root
     **Sul Mac**, non nella shell della serra:
 
     ```bash
-    ssh root@<LOCAL_IP> "cat /tmp/robocontrol.tar.gz" > ~/Desktop/robocontrol.tar.gz
+    ssh root@<SERRA_IP> "cat /tmp/robocontrol.tar.gz" > ~/Desktop/robocontrol.tar.gz
     ```
 
     Inserisci la password root della serra quando richiesta.
@@ -152,6 +148,14 @@ Sulla serra (shell # via UART) dal **Mac**, devi essere collegato con: `ssh root
     **Risposta attesa:** una cartella `robocontrol/` sulla Scrivania.
 
 
+### Il servizio originale `rcc`
+
+Il modulo `robocontrol` è avviato da BusyBox init tramite la voce `::respawn:/usr/bin/start-rcc` in `/etc/inittab`. Nel prototipo il processo era già fermo durante le prove dei comandi via UART.
+
+Un log di manutenzione successivo (luglio 2026) registra questi passaggi **effettivamente osservati**: backup di `/etc/inittab`, riga `::respawn:/usr/bin/start-rcc` commentata come `#::respawn:/usr/bin/start-rcc`, ricaricamento di `init` con segnale HUP, arresto di `rcc`; i controlli a 6 e 14 secondi mostravano **zero processi Node**. Il log contiene soltanto l'output, non la trascrizione dei comandi impartiti. Non documenta una prova di persistenza dopo il riavvio né un ripristino completo verificato della procedura. Per questo non lo presentiamo come istruzione pronta da eseguire su altre versioni del firmware.
+
+Verifica sempre la situazione sulla tua serra prima di provare il controller: se il servizio originale è attivo, la convivenza con i comandi manuali non è stata testata. Il codice sorgente di [BusyBox init](https://sources.debian.org/src/busybox/1%3A1.37.0-6/init/init.c/) conferma che il segnale HUP rilegge `/etc/inittab`, ma questo da solo non verifica le conseguenze specifiche sul firmware Robonica.
+
 ### Cosa si deduce dal dump:
 
 ARCHITETTURA / COMPONENTI
@@ -160,9 +164,7 @@ ARCHITETTURA / COMPONENTI
     - /dev/tty-local -> symlink a /dev/ttyUSB1 (controller “Cirronembo”)
     - /dev/tty-nebbia -> symlink a /dev/ttyUSB0 (controller “Nebbia”)
     (ls: /dev/tty-local -> ttyUSB1, /dev/tty-nebbia -> ttyUSB0)
-- Il demone “robocontrol / rcc” è avviato da BusyBox init:
-    - /etc/inittab contiene: ::respawn:/usr/bin/start-rcc
-    - ho fermato il demone (rcc.log non cresce più / file rimosso), ma i comandi diretti su tty continuano a funzionare.
+- Il demone `robocontrol/rcc` era stato fermato sul prototipo; i comandi diretti sulle seriali interne continuavano a funzionare. La configurazione di avvio e i limiti di verifica sono descritti [sopra](#il-servizio-originale-rcc).
 - Il log rcc mostrava tentativi websocket cloud:
     - wss://channels.linfa.robonica.it:4443/ con errori 401 ecc.
     - Quindi il controllo cloud è separato dal controllo seriale locale.
@@ -189,7 +191,7 @@ FILE CHIAVE DAL DUMP (da usare per analisi)
     - :data-file "/opt/data/data.sp"
     - ecc.
 
-COMANDI HARDWARE GIÀ CONFERMATI (FUNZIONANO VIA SERIAL DIRETTA)
+COMANDI HARDWARE OSSERVATI O RICAVATI DAL DUMP (GRADO DI VERIFICA INDICATO PER OGNI GRUPPO)
 Ventole (su /dev/tty-local):
 
 - Fan 1 ON: printf 'V1ffxxx\r\n' > /dev/tty-local

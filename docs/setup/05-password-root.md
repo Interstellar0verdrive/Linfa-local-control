@@ -23,10 +23,9 @@ Controlla di essere sulla serra: l'architettura del VoCore è MIPS.
 
 ```sh
 uname -m
-grep '^root:' /etc/shadow || grep '^root:' /etc/passwd
 ```
 
-Se l'account root non ha ancora una password, il campo della password può risultare vuoto. Imposta una nuova password:
+Imposta una nuova password senza stampare in terminale il contenuto di `/etc/shadow`:
 
 ```sh
 passwd
@@ -34,7 +33,7 @@ passwd
 
 Il comando chiede di inserirla due volte; mentre digiti non vedrai caratteri sullo schermo. Annota la password in un luogo sicuro. Ti servirà nel [passo 06](06-controller-cli.md) per la prova della CLI e nel [passo 07](07-bridge-mqtt.md) per `/etc/serra-mqtt.env`.
 
-Chiudi la sessione della serra e ripeti il login dalla console UART per verificare la nuova password. Per uscire da `picocom` sul Raspberry usa `Ctrl+A`, poi `Ctrl+X`.
+Esci dalla shell della serra con `exit`, poi ripeti il login dalla console UART per verificare la nuova password. Riavvia la serra e verifica che il login funzioni ancora: la password deve essere persistente prima di configurare i servizi automatici. Per uscire da `picocom` sul Raspberry usa `Ctrl+A`, poi `Ctrl+X`; lascia la porta libera per il controller.
 
 ---
 

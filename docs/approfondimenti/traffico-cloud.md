@@ -77,11 +77,11 @@ Scaricare il certificato **macOS**, installarlo nel Portachiavi e impostare **�
     2. Avviare **aggiunta nuova serra**
     3. quando la serra chiede di passare alla Wi-Fi della serra → accettare e procedere
     4. Lanciare il checkup
-    👉 mitmproxy/mitmdump continuerà a vedere tutto, perché è locale al Mac
+    👉 mitmproxy/mitmdump vedrà **solo il traffico dei programmi del Mac che usano il proxy**. Non acquisisce automaticamente le connessioni avviate dalla serra.
     5. Quando finisce → chiudere il browser
 4. Tornare al Terminale dove gira mitmdump e premere: CTRL + C
 5. Verificare che il file esista: `ls -lh ~/Desktop/serra_ALL.mitm`
-Se esiste un file > **0 byte** → PROCEDURA OK
+Un file non vuoto conferma che qualcosa è stato registrato, **non** che contenga tutti i flussi della serra. Aprilo e controlla quali host e richieste sono realmente presenti.
 6. Per visualizzare il file si può usare il comando:
 
 ```bash
@@ -96,117 +96,22 @@ mitmproxy -r ~/Desktop/serra_ALL.mitm
 | Richieste POST | `~m POST` |
 | POST verso destinazioni locali | `~m POST & ~dst 192.168.` |
 
-1. Ora dobbiamo trasformare il file mitm in un fine HAR
-Probabilmente sarà un HAR “minimal” (manca timing corretto, cookies, queryString, ecc.). Ma bene per analisi funzionale anche se non è un HAR “completo”.
-    1. Crea l’addon har_dump.py
+1. Per esportare un HAR dalla cattura, usa l'opzione **integrata** di mitmproxy (disponibile dalla versione 10.1):
 
-        ```bash
-        nano ~/.mitmproxy/har_dump.py
-        ```
+    ```bash
+    mitmdump -n -r "$HOME/Desktop/serra_ALL.mitm" \
+      --set "hardump=$HOME/Desktop/serra_ALL_OK.har"
+    ```
 
-        Incollare esattamente questo codice e salvare (CTRL + O → INVIO → CTRL + X):
+    Controlla che il comando termini senza errori e apri il file generato per verificare che contenga le richieste cercate. L'opzione `hardump` è descritta nella [documentazione ufficiale di mitmproxy](https://docs.mitmproxy.org/stable/concepts/options/). Le note originali includevano un piccolo script artigianale per produrre un “HAR minimal”, ma mancava di campi e formati richiesti da HAR: non lo riproponiamo come esportazione affidabile.
 
-        ```python {.source-code}
-        import json
-        from mitmproxy import ctx, http, options, version
-        from mitmproxy.addons import core
+    **Non pubblicare né condividere i file `.mitm` e `.har` senza revisarli:** possono contenere token, credenziali, cookie e altri dati privati.
 
-        class Hardump:
-            def __init__(self):
-                self.flows = []
+### 4) Risultati e limiti
 
-            def load(self, loader):
-                loader.add_option(
-                    name="har_dump_path",
-                    typespec=str,
-                    default="dump.har",
-                    help="Path to the HAR file to write"
-                )
+La cattura tramite proxy del Mac può mostrare gli endpoint, i token e le richieste della **webapp o del browser**, se questi transitano effettivamente nel proxy. Non basta, da sola, a dimostrare che **la serra** mantiene una connessione persistente al cloud o a stabilire se questa usi WebSocket o long-polling: per quelle conclusioni serve osservare il traffico della serra o i suoi log.
 
-            def response(self, flow: http.HTTPFlow):
-                self.flows.append(flow)
-
-            def done(self):
-                har = {
-                    "log": {
-                        "version": "1.2",
-                        "creator": {
-                            "name": "mitmproxy",
-                            "version": version.MITMPROXY
-                        },
-                        "entries": []
-                    }
-                }
-
-                for f in self.flows:
-                    if not f.response:
-                        continue
-
-                    entry = {
-                        "startedDateTime": f.request.timestamp_start,
-                        "time": 0,
-                        "request": {
-                            "method": f.request.method,
-                            "url": f.request.pretty_url,
-                            "httpVersion": "HTTP/1.1",
-                            "headers": [
-                                {"name": k, "value": v}
-                                for k, v in f.request.headers.items(multi=True)
-                            ],
-                            "postData": {
-                                "mimeType": f.request.headers.get("Content-Type", ""),
-                                "text": f.request.text or ""
-                            },
-                        },
-                        "response": {
-                            "status": f.response.status_code,
-                            "statusText": f.response.reason,
-                            "httpVersion": "HTTP/1.1",
-                            "headers": [
-                                {"name": k, "value": v}
-                                for k, v in f.response.headers.items(multi=True)
-                            ],
-                            "content": {
-                                "mimeType": f.response.headers.get("Content-Type", ""),
-                                "text": f.response.text or ""
-                            },
-                        },
-                    }
-
-                    har["log"]["entries"].append(entry)
-
-                path = ctx.options.har_dump_path
-                with open(path, "w", encoding="utf-8") as f:
-                    json.dump(har, f, indent=2)
-
-        addons = [Hardump()]
-        ```
-
-    2. Dare questo comando:
-
-        ```bash
-        mitmdump -r ~/Desktop/serra_ALL.mitm \
-          -s ~/.mitmproxy/har_dump.py \
-          --set har_dump_path=~/Desktop/serra_ALL_OK.har
-        ```
-
-    3. Viene generato il file serra_ALL_OK.har.
-
-
-### 3) Risultati
-
-Dal file HAR si vede chiaramente che:
-
-- la serra mantiene una **connessione persistente verso il cloud**
-- usa:
-    - WebSocket **oppure**
-    - HTTPS long-polling
-- con:
-    - token statico per dispositivo
-    - device_id
-- Il **bottom è solo uno slave,** il **top è il cervello e comanda pompe e luci**
-- il bottom **NON decide nulla,** riceve: segnali, enable/disable, PWM / on-off
-- ESISTE codice locale che comanda i componenti (es. luci e pompe), NON è esposto via HTTP come API, è chiamabile internamente dal firmware
+Le note del [dump del modulo](accesso-e-dump.md#cosa-si-deduce-dal-dump) riportano invece il codice locale di controllo e due seriali interne verso l'elettronica della serra. Le funzioni dei singoli componenti e il ruolo delle schede derivano da quel dump e dalle prove hardware, **non** dal solo HAR del browser. Se ripeti l'analisi, separa sempre osservazioni dirette e ipotesi.
 
 ---
 

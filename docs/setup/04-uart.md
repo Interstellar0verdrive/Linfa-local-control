@@ -40,7 +40,7 @@ Durante il boot della serra dovresti vedere:
 - inizializzazione BusyBox
 - messaggio finale simile a: `Welcome to Buildroot`
 
-Se vedi il boot, la UART è **correttamente cablata e funzionante**.
+Se vedi il boot, hai verificato la **ricezione** dal VoCore verso il Raspberry. Il solo log non prova che il VoCore riceva i tuoi caratteri: il login e i comandi di verifica qui sotto controllano anche il percorso di **trasmissione**.
 
 ---
 
@@ -57,7 +57,7 @@ Comportamento atteso:
     - user: `root`
     - password: quella di default dovrebbe essere vuota, oppure: `vocore`
 
-⚠️ Nota: più avanti nella guida cambiamo la password della serra con una custom, nel mio caso: `<DEVICE_PASSWORD>`
+Più avanti imposterai una password scelta da te per la serra. Qui `<DEVICE_PASSWORD>` indica quella password se è già stata cambiata.
 
 Alla richiesta di login, inserire `root`
 
@@ -137,7 +137,7 @@ Se la console non risponde:
 
 ## Stato atteso al termine
 
-- ✅ UART funzionante
+- ✅ Ricezione e trasmissione UART verificate tramite login e comandi
 - ✅ Accesso root verificato
 - ✅ Nessuna modifica persistente sulla serra
 - ✅ Pronti per il controllo esterno via Raspberry

@@ -1,5 +1,8 @@
 Questa guida accompagna la preparazione di una serra Robonica Linfa per il controllo locale con Raspberry Pi, UART, MQTT e Home Assistant. **Per replicare il sistema, segui i capitoli 01–09 nell'ordine:** ogni passo termina con una verifica e il collegamento al successivo.
 
+> [!WARNING] Limite di verifica del percorso
+> Sul prototipo, il servizio originale `robocontrol/rcc` era già fermo quando sono stati provati i comandi del controller. Un log successivo documenta che la sua voce `respawn` in `/etc/inittab` fu commentata, `init` ricaricato e il processo fermato, ma non conserva i comandi esatti né una prova di persistenza dopo il riavvio. **L'uso del controller mentre il servizio originale è attivo non è stato verificato:** prima dei test sui componenti, leggi il [controllo nel passo 06](setup/06-controller-cli.md#verifica-del-servizio-originale). Non considerare ancora il percorso come una procedura verificata da una serra nello stato originale fino alla conferma di questo punto.
+
 > [!IMPORTANT] Compatibilità e responsabilità
 > La procedura è stata provata su **Linfa Weezy**. La compatibilità con la Linfa standard è da verificare. Il progetto è indipendente da Robonica S.r.l.; [leggi il disclaimer completo](https://github.com/Interstellar0verdrive/Linfa-local-control#linfa-local-control) prima di aprire il dispositivo.
 

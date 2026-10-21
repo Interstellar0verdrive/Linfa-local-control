@@ -18,7 +18,7 @@ INFORMAZIONI IMPORTANTI
     (internamente convertito in valore HEX)
   • Ventole: sotto ~40% possono bloccarsi; per "low/medium" lo script
     esegue un WAKE breve al 100% prima di scendere
-  • Nutrienti: il comando P#,X,Y usa solo il terzo valore (100 ≈ 1s, 500 ≈ 5s)
+  • Nutrienti: il controller invia P#,1,Y (100 unità ≈ 1s nel prototipo)
   • Pump main: W<N> = N secondi (intero), W0 = stop immediato
 
 ============================================================
@@ -104,7 +104,7 @@ MAPPATURA GOCCIOLATORI
 
 ESEMPI
   serra pump nutrient 0                              # 1s, 1 volta
-  serra pump nutrient 0 -s 0.5 -t 1 -i 2             # 0.5s, 1 volta, pausa 2s
+  serra pump nutrient 0 -s 0.5 -t 2 -i 2             # 0.5s, 2 volte, pausa 2s
   serra pump nutrient 1 -s 1 -t 3 -i 1               # 1s, 3 volte, pausa 1s
   serra pump nutrient 2 --seconds 5 --times 2        # 5s, 2 volte
 
@@ -116,7 +116,8 @@ OPZIONI
 NOTE:
   • La erogazione dipende da tenuta vasetti e livello liquido
   • Con ripetizioni multiple, il comando resta attivo fino al termine
-  • Interrompibile con Ctrl+C
+  • Ctrl+C ferma gli invii successivi, ma NON annulla un impulso già inviato
+  • Via MQTT il bridge termina la CLI dopo 120s per default (SERRA_CMD_TIMEOUT)
 
 ============================================================
 LED RING (ring)
@@ -145,7 +146,7 @@ OPZIONI
   -i, --interval   # Pausa OFF tra lampeggi (default: 1s, max: 10s)
 
 NOTE:
-  • Il blink resta attivo fino al termine dei cicli (Ctrl+C per interrompere)
+  • Il blink resta attivo fino al termine dei cicli; Ctrl+C può lasciare il ring acceso
   • Valori fade decimali vengono arrotondati (0.5 → 0, nessun fade)
 
 ============================================================
@@ -155,7 +156,8 @@ CHECKUP
 Esegue una sequenza di test per verificare il funzionamento dei componenti.
 
 ⚠️  ATTENZIONE: La routine è INTRUSIVA!
-    Sovrascrive tutti i valori attuali e termina con tutto SPENTO.
+    Sovrascrive i valori dei gruppi testati e, se termina normalmente, li spegne.
+    Se lo interrompi, controlla fisicamente i componenti: possono restare attivi.
 
 ESEMPI
   serra checkup                            # Checkup completo
@@ -186,7 +188,7 @@ RETE (net)
     Obiettivo: disabilitare cloud / ridurre instabilità Wi-Fi.
 
 COMANDI
-  serra net off              # Disabilita rete completamente
+  serra net off              # Prova a disabilitare la rete del VoCore
   serra net off --ntp on     # Rete giù ma NTP attivo (sconsigliato)
   serra net on               # Riattiva rete (fino al prossimo riavvio)
 
@@ -207,7 +209,7 @@ COMANDO
   serra state sync   # Ricalcola stati time-based e ripubblica su MQTT
 
 FUNZIONALITÀ
-  • Aggiorna running_now per pompe e fade in base al tempo corrente
+  • Aggiorna running_now e le transizioni in base al tempo corrente
   • Ripubblica tutti gli stati su /serra/state/*
   • Aggiorna last_seen
 
@@ -238,19 +240,23 @@ RIFERIMENTO RAPIDO
 ============================================================
 
 LUCI
-  serra lights on/off [-i 0..100] [-f secondi]
+  serra lights on [-i 0..100] [-f secondi]
+  serra lights off [-f secondi]
   serra lights set <A|G|B|R|D> [-i 0..100] [-f secondi]
 
 VENTOLE
-  serra fans on/off [-i off|low|medium|high]
+  serra fans on [-i off|low|medium|high]
+  serra fans off
   serra fans set <1|2|F|all> [-i off|low|medium|high]
 
 POMPE
-  serra pump main on/off [-s secondi]
+  serra pump main on [-s secondi]
+  serra pump main off
   serra pump nutrient <0|1|2> [-s secondi] [-t ripetizioni] [-i intervallo]
 
 RING
-  serra ring on/off [-c colore] [-f fade]
+  serra ring on [-c colore] [-f fade]
+  serra ring off [-f fade]
   serra ring blink [-c colore] [-t volte] [-f fade] [-d durata] [-i intervallo]
 
 ALTRO

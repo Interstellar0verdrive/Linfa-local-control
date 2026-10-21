@@ -16,14 +16,14 @@ Il modulo espone una console root via UART, usata per comunicare con il Raspberr
 </div>
 <div class="info-card" markdown="1">
 <span class="card-icon" aria-hidden="true">◇</span>
-**Firmware invariato**
+**Firmware non sostituito**
 
-Il progetto non modifica il firmware: i comandi sono eseguiti durante il funzionamento.
+Il progetto non installa un nuovo firmware; il percorso cambia però la password root della serra.
 </div>
 </div>
 
 > [!NOTE] Comportamento originale
-> Il funzionamento originale, cloud incluso, può essere ripristinato **ripristinando il token e i permessi di `/var/update`**. Quando il controllo locale è in uso, il Raspberry disabilita attivamente la Wi-Fi della serra: è una policy esterna, non una modifica permanente alla configurazione stock del VoCore.
+> Il percorso principale non cambia token o permessi di `/var/update`, ma **cambia la password root** e comporta saldature e un foro nella scocca. Per tornare alla configurazione precedente occorre ripristinare anche queste modifiche. La Wi-Fi della serra viene disabilitata da un comando esterno del Raspberry, non da una modifica permanente alla configurazione del VoCore; verifica il risultato dopo un riavvio della serra.
 
 Per i dettagli sul modulo: [specifiche VoCore2](https://vocore.io/v2.html).
 
@@ -144,7 +144,7 @@ ls -l /dev/ttyUSB* /dev/ttyACM*
 È normale che uno dei due pattern non trovi alcun dispositivo: l’altro deve mostrare una porta seriale, ad esempio `/dev/ttyUSB0`. Il nome può cambiare tra riavvii; lo script `serra` usa un percorso configurabile.
 
 > [!TIP] Note di compatibilità
-> FTDI e CP210x sono generalmente più stabili su Linux. CH340 funziona correttamente, ma può richiedere driver sui sistemi non Linux.
+> FTDI, CP210x e CH340 possono funzionare su Linux; controlla che il modello scelto esponga una porta seriale sul tuo sistema. Su altri sistemi potrebbe servire un driver del produttore.
 
 ## Continua il percorso
 

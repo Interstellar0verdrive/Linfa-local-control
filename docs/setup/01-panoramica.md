@@ -53,7 +53,7 @@ In sintesi:
 - Un **Raspberry Pi esterno** si collega alla serra tramite **console UART** e invia comandi “come se fossimo da terminale” (login `root`).
 - Un **bridge MQTT** sul Raspberry permette a **Home Assistant** (o qualunque client MQTT) di:
     - inviare comandi alla serra pubblicando su topic MQTT
-    - leggere lo stato corrente dei componenti tramite topic MQTT “retained”
+    - leggere l'ultimo stato **logico stimato** dei componenti tramite topic MQTT “retained”
 
 Perché farlo:
 
@@ -66,7 +66,7 @@ Obiettivo pratico del progetto:
 - Comandi affidabili da CLI (`serra ...`) sul Raspberry
 - Comandi equivalenti via MQTT (`serra/cmd`)
 - Stati consistenti e leggibili via MQTT (`serra/state/...`)
-- Policy di sicurezza per disabilitare la rete Wi-Fi della serra dopo il boot
+- Un timer sul Raspberry che prova a disabilitare la Wi-Fi della serra dopo l'avvio del Raspberry
 
 ---
 
@@ -91,11 +91,14 @@ Questa guida **presuppone esperienza di base con elettronica e saldatura**: devi
 | **Tre collegamenti isolati** | TX, RX e GND: cavetti Dupont per una prova su pin accessibili, oppure fili da fissare in modo stabile per l'installazione definitiva. |
 | **Cavo USB** | Serve se l'adattatore ha una presa USB; non serve un secondo cavo se l'adattatore è già un cavo USB → UART integrato. Scegli la lunghezza in base alla posizione del Raspberry. |
 | **Per il montaggio definitivo** | Attrezzi per aprire la serra, saldatore e materiale isolante se saldi i fili; protezione del bordo e fermacavo se fai passare i fili da un foro nella scocca. |
-| **Software e rete** | Raspberry Pi OS, un broker MQTT raggiungibile da Raspberry e Home Assistant, e l'integrazione MQTT di Home Assistant. Il controller e il bridge sono già nella repository. |
+| **Software e rete** | Raspberry Pi OS con Python 3.10 o successivo, un broker MQTT raggiungibile da Raspberry e Home Assistant, e l'integrazione MQTT di Home Assistant. Sul computer usato per copiare i file serve Git. Il controller e il bridge sono già nella repository. |
 
 La modifica fisica illustrata in questa guida è stata realizzata nella **parte superiore della serra, dove si trovano le luci e il VoCore**, con **fili saldati** e un **foro nella scocca per il passaggio dei fili del cavo seriale**. Il [passo 02](02-hardware.md#cablaggio-uart) descrive i collegamenti e mostra il foro. Non è disponibile una foto ravvicinata delle saldature: prima di richiudere verifica che i collegamenti siano saldi e isolati.
 
 Per ottenere lo stesso controllo locale **non devi ripetere l'analisi MITM, il dump del modulo o le prove delle API originali**: sono documentati negli approfondimenti. Anche la [modifica del token, della Wi-Fi e dei permessi degli aggiornamenti](../approfondimenti/configurazione-serra.md) è separata dal percorso essenziale, perché il controller comunica con la serra via UART.
+
+> [!WARNING] Servizio originale da verificare
+> Nel prototipo, `robocontrol/rcc` era già fermo durante i test dei comandi. Un log successivo registra la disattivazione della voce `respawn` in `/etc/inittab` e l'arresto del processo, ma non ne conserva i comandi esatti né la verifica dopo un riavvio. **Non è verificato** che il controller e il servizio originale possano comandare contemporaneamente gli stessi componenti. Il [passo 06](06-controller-cli.md#verifica-del-servizio-originale) spiega come controllarne la presenza prima di azionare luci, ventole o pompe.
 
 ---
 
@@ -106,8 +109,8 @@ Il percorso essenziale **non sostituisce il firmware** né richiede il dump del 
 Vincoli/assunzioni:
 
 - La password root della console viene impostata nel passo 05 perché il controller attuale la richiede.
-- La disattivazione di Wi-Fi/NTP viene comandata **dall'esterno**, tramite UART e un timer sul Raspberry; non serve riconfigurare la rete della serra per usare il bridge MQTT.
-- La sostituzione del token e il blocco degli aggiornamenti sono [modifiche facoltative documentate a parte](../approfondimenti/configurazione-serra.md), non prerequisiti dei passi 06–09.
+- La disattivazione di Wi-Fi/NTP viene comandata **dall'esterno**, tramite UART e un timer sul Raspberry; non serve riconfigurare la rete della serra per usare il bridge MQTT. Il timer non rileva un eventuale riavvio successivo della sola serra: controlla la rete dopo ogni riavvio della serra se vuoi mantenerla offline.
+- La sostituzione del token e il blocco degli aggiornamenti sono [modifiche facoltative documentate a parte](../approfondimenti/configurazione-serra.md), non prerequisiti dei passi 06–09. La gestione del servizio originale `rcc` è invece un **punto ancora da validare** prima di considerare riproducibile il percorso completo.
 - Conserva un modo sicuro per ripristinare le modifiche che scegli di applicare. Il collegamento saldato e il foro nella scocca richiedono anche un intervento fisico per tornare alla configurazione originale.
 
 Implicazioni:
@@ -165,8 +168,8 @@ Esempio di flusso dei comandi (due sorgenti possibili):
 
 Punti chiave:
 
-- Il Raspberry è il “punto di controllo” e “source of truth” per lo stato pubblicato su MQTT.
-- I topic MQTT sono “retained” per consentire ad HA di vedere subito l’ultimo stato anche dopo riavvii o riconnessioni.
+- Il Raspberry è il punto di controllo e conserva l'ultimo stato logico pubblicato su MQTT.
+- I topic di **stato e stato del bridge** sono pubblicati come “retained”; i topic di **comando e conferma** non lo sono. Gli stati restano stime logiche e possono essere superati dopo un riavvio o un comando non osservato.
 
 ---
 

@@ -21,7 +21,7 @@ Prosegui dopo aver verificato il controller CLI nel passo 06. Qui configuri il b
 
 Soluzioni tipiche:
 
-- App ufficiale Mosquitto Broker in Home Assistant, se usi Home Assistant OS o Supervised
+- App ufficiale Mosquitto Broker in Home Assistant, se usi Home Assistant OS
 - Broker MQTT esterno (NAS, server Linux)
 
 Requisiti minimi:
@@ -29,6 +29,14 @@ Requisiti minimi:
 - porta 1883
 - autenticazione user/password
 - supporto messaggi retained
+
+Se non hai ancora un broker e usi **Home Assistant OS**:
+
+1. Vai in **Impostazioni → App → Installa app**, installa **Mosquitto broker**, avvialo e controlla che il suo log non mostri errori.
+2. Crea un utente dedicato per il Raspberry in **Impostazioni → Persone → Utenti** (attiva la modalità avanzata nel profilo se la voce non compare). Non usare i nomi riservati `homeassistant` o `addons`. In alternativa puoi creare un login locale nelle opzioni dell'app Mosquitto.
+3. Verifica che la porta MQTT `1883/tcp` dell'app sia esposta alla rete locale. Come `<BROKER_IP>` usa l'indirizzo di rete di Home Assistant raggiungibile dal Raspberry, non il nome interno `core-mosquitto.local.hass.io`.
+
+Le [istruzioni ufficiali dell'app Mosquitto](https://github.com/home-assistant/addons/blob/master/mosquitto/DOCS.md) descrivono installazione, utenti e porte. Se usi Home Assistant con un metodo diverso da OS, installa un broker MQTT separato e usa il suo indirizzo e le sue credenziali.
 
 ---
 
@@ -59,9 +67,11 @@ SERRA_MQTT_PORT=1883
 SERRA_MQTT_USER=<MQTT_USER>
 SERRA_MQTT_PASS=<MQTT_PASSWORD>
 SERRA_MQTT_TOPIC=serra
-SERRA_CLI=serra
+SERRA_CLI=/usr/local/bin/serra
 SERRA_ROOT_PASSWORD=<DEVICE_ROOT_PASSWORD>
 ```
+
+Se la seriale non è `/dev/ttyUSB0`, aggiungi `SERRA_UART_PORT=/dev/ttyUSB1` sostituendo il percorso con quello trovato sul tuo Raspberry. Se una password contiene spazi, apici o barre inverse, scrivila secondo la [sintassi dei file `EnvironmentFile`](https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html#EnvironmentFile=): non copiare letteralmente i segnaposto tra `<` e `>`.
 
 Permessi:
 
@@ -168,6 +178,8 @@ mosquitto_sub -h <BROKER_IP> -u <MQTT_USER> -P '<MQTT_PASSWORD>' -t "serra/statu
 ```
 
 **Risposta attesa:** il topic `serra/status/last` seguito da un JSON con `"ok": true`, `"rc": 0` e `"cmd": ["lights", "off"]` se l'ultimo comando è stato quello di spegnimento. I timestamp e gli altri campi cambiano a ogni esecuzione.
+
+Controlla anche **le luci della serra**: `ok` conferma che il comando è stato accettato dalla console, non fornisce un riscontro hardware indipendente. Se l'esito è incerto, verifica lo stato fisico prima di ripetere un comando che aziona pompe o altri componenti.
 
 Per uscire: `CTRL + C`
 
