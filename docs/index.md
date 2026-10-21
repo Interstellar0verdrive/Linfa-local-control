@@ -1,7 +1,7 @@
 Questa guida accompagna la preparazione di una serra Robonica Linfa per il controllo locale con Raspberry Pi, UART, MQTT e Home Assistant. **Per replicare il sistema, segui i capitoli 01–09 nell'ordine:** ogni passo termina con una verifica e il collegamento al successivo.
 
 > [!WARNING] Limite di verifica del percorso
-> Sul prototipo, il servizio originale `robocontrol/rcc` era già fermo quando sono stati provati i comandi del controller. Un log successivo documenta che la sua voce `respawn` in `/etc/inittab` fu commentata, `init` ricaricato e il processo fermato, ma non conserva i comandi esatti né una prova di persistenza dopo il riavvio. **L'uso del controller mentre il servizio originale è attivo non è stato verificato:** prima dei test sui componenti, leggi il [controllo nel passo 06](setup/06-controller-cli.md#verifica-del-servizio-originale). Non considerare ancora il percorso come una procedura verificata da una serra nello stato originale fino alla conferma di questo punto.
+> Sul prototipo, `robocontrol/rcc` era già fermo quando sono stati provati i comandi del controller. Abbiamo ricostruito dai file reali come disattivarne l'avvio automatico, ma **la sequenza non è stata provata da zero su una seconda serra**. L'uso contemporaneo dei due sistemi non è verificato: prima di azionare i componenti, segui il [controllo e la procedura reversibile del passo 06](setup/06-controller-cli.md#verifica-del-servizio-originale), inclusa la verifica dopo il riavvio.
 
 > [!IMPORTANT] Compatibilità e responsabilità
 > La procedura è stata provata su **Linfa Weezy**. La compatibilità con la Linfa standard è da verificare. Il progetto è indipendente da Robonica S.r.l.; [leggi il disclaimer completo](https://github.com/Interstellar0verdrive/Linfa-local-control#linfa-local-control) prima di aprire il dispositivo.
@@ -25,7 +25,7 @@ Il software del controller e del bridge è già nella repository: non devi ripet
 - **03** [Preparare il Raspberry Pi](setup/03-raspberry.md)
   Installa il sistema, i pacchetti necessari e configura i permessi seriali.
 - **04** [Verificare la console UART](setup/04-uart.md)
-  Apri la console della serra ed esegui i primi comandi di controllo.
+  Apri la console della serra ed esegui i primi comandi di verifica.
 - **05** [Impostare la password root](setup/05-password-root.md)
   Proteggi l'accesso seriale e verifica la password richiesta dal controller.
 - **06** [Installare il controller CLI](setup/06-controller-cli.md)

@@ -9,7 +9,7 @@ In questo passo copi gli script sul Raspberry e verifichi il **controller CLI** 
 - Raspberry pronto, con UART funzionante
 - Nessun file serra_*.py ancora installato
 - Nessun servizio serra-* attivo
-- Il servizio originale `robocontrol/rcc` non deve comandare i componenti contemporaneamente: sul prototipo era già fermo quando i comandi sono stati provati.
+- Prima dei test sui componenti, il servizio originale `robocontrol/rcc` deve essere fermo. In questo capitolo verifichi e, se necessario, disattivi il suo avvio automatico.
 
 Questi sono i file coinvolti nei passi 06–08:
 
@@ -98,9 +98,70 @@ Prima di introdurre il bridge MQTT, verificare che la CLI funzioni **localmente*
 
 ### Verifica del servizio originale
 
-Nella console della **serra**, prima di avviare prove che azionano componenti, esegui `ps` e cerca un processo `rcc`, `robocontrol` o un processo Node avviato da `start-rcc`. Controlla di nuovo dopo ogni riavvio della serra. Nel prototipo questo servizio era già fermo durante le prove. Un [log successivo](../approfondimenti/accesso-e-dump.md#il-servizio-originale-rcc) registra il backup di `/etc/inittab`, la sua voce `respawn` commentata, il ricaricamento di `init` e l'arresto del processo; non conserva però i comandi esatti né conferma che l'arresto sopravviva al riavvio. Se `rcc` è in esecuzione, **non proseguire con i comandi di controllo** sulla base di questa guida: l'interazione simultanea con il controller non è stata verificata. Anche un processo assente non dimostra da solo che l'arresto sia persistente.
+Questi comandi vanno eseguiti nella **shell della serra** aperta con `picocom`, non nella shell del Raspberry. Sul prototipo esaminato, BusyBox `init` avvia `/usr/bin/start-rcc` tramite una voce `respawn` di `/etc/inittab`. Lo script lancia `/usr/bin/node rcc.js`. Il servizio era già fermo durante i primi test della CLI, quindi **la sequenza di arresto qui sotto è stata ricostruita e verificata sui file reali, ma non provata da zero su una seconda serra**. La convivenza tra `rcc` e il nostro controller non è stata verificata.
 
-Questo è un limite aperto della procedura per una serra nello stato originale. Non modificare `/etc/inittab` o terminare processi seguendo comandi trovati altrove senza comprendere l'effetto sul firmware e sul suo ripristino.
+Controlla versione, configurazione e processi prima di cambiare qualcosa:
+
+```sh
+busybox | head -1
+grep -n 'start-rcc' /etc/inittab
+ps -o pid,args
+```
+
+**Sul firmware esaminato** la prima riga indica BusyBox `v1.25.0`; la seconda mostra **una sola** voce `::respawn:/usr/bin/start-rcc` se l'avvio originale è ancora attivo, oppure `#::respawn:/usr/bin/start-rcc` se è già stato disattivato. Nell'elenco dei processi cerca `/usr/bin/node rcc.js` e `/usr/bin/start-rcc`. Se la versione, la voce di avvio o lo script sono diversi, fermati: la procedura seguente potrebbe non essere adatta al tuo firmware. Se la voce è già commentata e i processi sono assenti, passa alla verifica dopo il riavvio.
+
+#### Disattivare l'avvio automatico
+
+Esegui questa parte **solo** se hai trovato esattamente la voce attiva indicata sopra. Crea un backup dedicato senza sovrascriverne uno esistente:
+
+```sh
+test ! -e /etc/inittab.linfa.bak && cp -p /etc/inittab /etc/inittab.linfa.bak && echo 'OK: backup creato'
+ls -l /etc/inittab.linfa.bak
+```
+
+Deve comparire `OK: backup creato`. Se manca, **fermati**: conserva il backup già presente o chiarisci perché la copia è fallita. Prepara un nuovo file e controlla che l'unica modifica sia il `#` davanti a `start-rcc`:
+
+```sh
+sed 's@^::respawn:/usr/bin/start-rcc$@#::respawn:/usr/bin/start-rcc@' /etc/inittab.linfa.bak > /etc/inittab.linfa.new
+grep -n 'start-rcc' /etc/inittab.linfa.new
+sed 's@^#::respawn:/usr/bin/start-rcc$@::respawn:/usr/bin/start-rcc@' /etc/inittab.linfa.new | cmp - /etc/inittab.linfa.bak && echo 'OK: solo start-rcc è cambiato'
+```
+
+**Risposta attesa:** una sola riga commentata da `grep`, poi `OK: solo start-rcc è cambiato`. Se il messaggio `OK` non compare, **non installare il nuovo file**. Quando i controlli sono riusciti, sostituisci `inittab` e chiedi a BusyBox `init` di rileggerlo:
+
+```sh
+chmod 644 /etc/inittab.linfa.new
+mv /etc/inittab.linfa.new /etc/inittab
+sync
+kill -HUP 1
+grep -n 'start-rcc' /etc/inittab
+```
+
+La voce deve risultare commentata. Il segnale HUP **non garantisce da solo** che il processo già in esecuzione sia stato terminato: dipende da come BusyBox è stato compilato. Controlla di nuovo i processi:
+
+```sh
+ps -o pid,args
+```
+
+Se vedi ancora `/usr/bin/node rcc.js`, prendi **solo il PID di quella riga** e termina quel processo con `kill -TERM <PID_RCC>` (sostituisci `<PID_RCC>` con il numero letto, senza digitare le parentesi angolari). Non usare `killall node`: potrebbe fermare altri programmi. Lo script `start-rcc` attende la fine di Node e dovrebbe poi uscire. Se è in corso un aggiornamento tramite `start-rcc`, oppure non riesci a identificare con certezza il processo, fermati senza inviare comandi alla serra.
+
+Attendi almeno 15 secondi e ripeti `ps -o pid,args`: **non devono comparire né `rcc.js` né `start-rcc`**. Se ricompaiono, non eseguire i test di luci, ventole o pompe; verifica il file e il comportamento del tuo firmware.
+
+#### Verificare dopo il riavvio e ripristinare se serve
+
+Riavvia la serra, riapri la console e ripeti `grep -n 'start-rcc' /etc/inittab` e `ps -o pid,args`. La voce deve essere ancora commentata e i due processi assenti. Questa prova è necessaria prima di considerare conclusa la disattivazione. Sul prototipo attuale la voce è commentata e `rcc` assente, ma il registro originale non conserva un test completo eseguito subito dopo la modifica.
+
+Per tornare alla configurazione originale, **prima ferma il bridge e i timer della serra sul Raspberry**; evita che i due sistemi comandino i componenti insieme. Poi, nella shell della serra, controlla che `/etc/inittab.linfa.bak` sia il backup creato sopra e ripristinalo:
+
+```sh
+cp -p /etc/inittab.linfa.bak /etc/inittab.linfa.restore
+mv /etc/inittab.linfa.restore /etc/inittab
+sync
+kill -HUP 1
+grep -n 'start-rcc' /etc/inittab
+```
+
+La voce torna `::respawn:/usr/bin/start-rcc`. Dopo il riavvio, verifica con `ps -o pid,args` che il servizio originale parta. Non usare questo ripristino sul prototipo esaminato se hai soltanto `/etc/inittab.bak`: quel file è un backup precedente, non il backup dedicato creato dalla procedura qui sopra.
 
 Chiudi `picocom` con `Ctrl+A`, poi `Ctrl+X` prima di usare la CLI; altrimenti la porta resta occupata.
 

@@ -98,7 +98,7 @@ La modifica fisica illustrata in questa guida è stata realizzata nella **parte 
 Per ottenere lo stesso controllo locale **non devi ripetere l'analisi MITM, il dump del modulo o le prove delle API originali**: sono documentati negli approfondimenti. Anche la [modifica del token, della Wi-Fi e dei permessi degli aggiornamenti](../approfondimenti/configurazione-serra.md) è separata dal percorso essenziale, perché il controller comunica con la serra via UART.
 
 > [!WARNING] Servizio originale da verificare
-> Nel prototipo, `robocontrol/rcc` era già fermo durante i test dei comandi. Un log successivo registra la disattivazione della voce `respawn` in `/etc/inittab` e l'arresto del processo, ma non ne conserva i comandi esatti né la verifica dopo un riavvio. **Non è verificato** che il controller e il servizio originale possano comandare contemporaneamente gli stessi componenti. Il [passo 06](06-controller-cli.md#verifica-del-servizio-originale) spiega come controllarne la presenza prima di azionare luci, ventole o pompe.
+> Nel prototipo, `robocontrol/rcc` era già fermo durante i test dei comandi. I file attuali confermano che il suo avvio automatico è disattivato. **Non è verificato** che il controller e il servizio originale possano comandare contemporaneamente gli stessi componenti. Il [passo 06](06-controller-cli.md#verifica-del-servizio-originale) spiega come controllare, disattivare e ripristinare il servizio prima di azionare luci, ventole o pompe. La sequenza è stata ricostruita sul prototipo, ma non ancora provata da zero su una seconda serra.
 
 ---
 
@@ -110,7 +110,7 @@ Vincoli/assunzioni:
 
 - La password root della console viene impostata nel passo 05 perché il controller attuale la richiede.
 - La disattivazione di Wi-Fi/NTP viene comandata **dall'esterno**, tramite UART e un timer sul Raspberry; non serve riconfigurare la rete della serra per usare il bridge MQTT. Il timer non rileva un eventuale riavvio successivo della sola serra: controlla la rete dopo ogni riavvio della serra se vuoi mantenerla offline.
-- La sostituzione del token e il blocco degli aggiornamenti sono [modifiche facoltative documentate a parte](../approfondimenti/configurazione-serra.md), non prerequisiti dei passi 06–09. La gestione del servizio originale `rcc` è invece un **punto ancora da validare** prima di considerare riproducibile il percorso completo.
+- La sostituzione del token e il blocco degli aggiornamenti sono [modifiche facoltative documentate a parte](../approfondimenti/configurazione-serra.md), non prerequisiti dei passi 06–09. La gestione del servizio originale `rcc` richiede invece il controllo e, se attivo, la disattivazione descritta nel passo 06.
 - Conserva un modo sicuro per ripristinare le modifiche che scegli di applicare. Il collegamento saldato e il foro nella scocca richiedono anche un intervento fisico per tornare alla configurazione originale.
 
 Implicazioni:
