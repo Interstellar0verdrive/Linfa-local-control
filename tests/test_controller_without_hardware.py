@@ -4,6 +4,7 @@ import importlib.util
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 
@@ -47,6 +48,16 @@ class ControllerWithoutHardwareTests(unittest.TestCase):
         with patch.object(serra.os.path, "isfile", return_value=False):
             with self.assertRaisesRegex(serra.SerraCommandError, "Pipeline foto non installata"):
                 serra.do_foto()
+
+    def test_photo_does_not_start_when_preflight_fails(self):
+        with patch.object(serra.os.path, "isfile", return_value=True), \
+                patch.object(serra.os, "access", return_value=True), \
+                patch("subprocess.run", return_value=SimpleNamespace(
+                    returncode=1, stdout="configurazione foto incompleta", stderr="")), \
+                patch("subprocess.Popen") as launch:
+            with self.assertRaisesRegex(serra.SerraCommandError, "configurazione foto incompleta"):
+                serra.do_foto()
+        launch.assert_not_called()
 
     def test_disconnect_callback_accepts_both_paho_versions(self):
         manager = serra.MQTTManager()

@@ -9,6 +9,8 @@
 
 Il broker MQTT e le sue credenziali sono stati predisposti nel [passo 07](07-bridge-mqtt.md).
 
+La [funzione foto](../approfondimenti/fotocamera.md) è facoltativa e richiede una configurazione separata sul Raspberry. Non serve per completare questo capitolo o per controllare la serra tramite MQTT.
+
 ---
 
 ## Anteprima dell'app in test

@@ -1858,6 +1858,14 @@ def do_foto() -> bool:
     pipeline = "/usr/local/bin/serra-foto"
     if not os.path.isfile(pipeline) or not os.access(pipeline, os.X_OK):
         raise SerraCommandError(f"Pipeline foto non installata o non eseguibile: {pipeline}")
+    try:
+        check = subprocess.run([pipeline, "--check"], capture_output=True, text=True, timeout=15)
+    except subprocess.TimeoutExpired as exc:
+        raise SerraCommandError("Verifica della pipeline foto scaduta") from exc
+    if check.returncode != 0:
+        raise SerraCommandError(
+            "Pipeline foto non pronta: " + (check.stderr or check.stdout).strip()[-300:]
+        )
     with open("/tmp/serra-foto.log", "ab") as logf:
         subprocess.Popen([pipeline],
                          stdout=logf, stderr=logf, start_new_session=True)
