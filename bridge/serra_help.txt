@@ -3,6 +3,10 @@ SERRA CONTROLLER — GUIDA RAPIDA CLI
 
 SINTASSI GENERALE
   serra <categoria> <azione> [opzioni]
+  serra --port /dev/ttyUSB1 --baud 115200 <categoria> <azione> [opzioni]
+
+  --port e --baud sono opzioni globali: mettile PRIMA della categoria.
+  serra --help mostra questa guida.
 
 CATEGORIE DISPONIBILI
   lights     # Controllo pannello LED (full spectrum / canali colore)
@@ -12,6 +16,9 @@ CATEGORIE DISPONIBILI
   checkup    # Routine test componenti (smoke test)
   net        # Abilita/Disabilita rete della serra (Wi-Fi + DHCP + NTP)
   state      # Gestione stato e sincronizzazione MQTT
+  water      # Legge il magnetometro e calcola il livello dell'acqua
+  uptime     # Legge l'uptime della serra e del Raspberry
+  foto       # Avvia la pipeline foto esterna in background
 
 INFORMAZIONI IMPORTANTI
   • Luci e ring: il parametro "fade" è in secondi approssimati
@@ -20,6 +27,8 @@ INFORMAZIONI IMPORTANTI
     esegue un WAKE breve al 100% prima di scendere
   • Nutrienti: il controller invia P#,1,Y (100 unità ≈ 1s nel prototipo)
   • Pump main: W<N> = N secondi (intero), W0 = stop immediato
+  • state sync non interroga la serra: aggiorna solo lo stato logico locale.
+  • foto richiede il programma esterno /usr/local/bin/serra-foto.
 
 ============================================================
 LUCI (lights)
@@ -41,10 +50,25 @@ ESEMPI
   serra lights off --fade 120                # Spegne tutto con fade ~120s
   serra lights set G -i 100 -f 10            # Verdi 100% con fade ~10s
   serra lights set G -i 0                    # Spegne verdi (fade 0)
+  serra lights preset viola -i 60 -f 3       # Ricetta viola al 60%, fade ~3s
+  serra lights preset verde                   # Solo verde al 100%
+  serra lights mix -g 30 -r 70 -d 70 -f 2    # Mix completo; A e B spenti
 
 OPZIONI
   -i, --intensity   # Intensità 0..100 (default: 100)
   -f, --fade        # Durata fade in secondi (default: 0)
+
+PRESET E MIX
+  serra lights preset <viola|verde|bianco> [-i 0..100] [-f secondi]
+    viola: R=100%, D=100%, B=40% (ricetta al 100%)
+    verde: G=100% (ricetta al 100%)
+    bianco: A=100% (ricetta al 100%)
+    -i scala tutti i canali della ricetta; i canali non previsti si spengono.
+
+  serra lights mix [-a 0..100] [-g 0..100] [-b 0..100]
+                   [-r 0..100] [-d 0..100] [-f secondi]
+    Imposta insieme A/G/B/R/D. Ogni canale omesso vale 0 e viene spento.
+    mix e preset sostituiscono l'intera configurazione delle luci.
 
 ============================================================
 VENTOLE (fans)
@@ -109,7 +133,7 @@ ESEMPI
   serra pump nutrient 2 --seconds 5 --times 2        # 5s, 2 volte
 
 OPZIONI
-  -s, --seconds    # Durata erogazione in secondi (default: 1.0, max tecnico: 300)
+  -s, --seconds    # Durata erogazione in secondi (default: 1.0, max: 60)
   -t, --times      # Numero ripetizioni (default: 1, max: 100)
   -i, --interval   # Pausa tra ripetizioni in secondi (default: 1.0, max: 120)
 
@@ -118,6 +142,8 @@ NOTE:
   • Con ripetizioni multiple, il comando resta attivo fino al termine
   • Ctrl+C ferma gli invii successivi, ma NON annulla un impulso già inviato
   • Via MQTT il bridge termina la CLI dopo 120s per default (SERRA_CMD_TIMEOUT)
+  • Il controller può ridurre le ripetizioni per limitare la durata totale
+    della sequenza e non trattenere troppo a lungo la porta UART.
 
 ============================================================
 LED RING (ring)
@@ -210,14 +236,57 @@ COMANDO
 
 FUNZIONALITÀ
   • Aggiorna running_now e le transizioni in base al tempo corrente
-  • Ripubblica tutti gli stati su /serra/state/*
+  • Ripubblica gli stati noti su serra/state/* (o sul topic base configurato)
   • Aggiorna last_seen
 
 NOTE:
   • Non legge telemetria reale dalla serra (es. ventole attive)
   • Pubblica lo "stato atteso" basato sui comandi inviati
+  • Non apre la UART e non richiede che la serra sia accesa
   • Per aggiornamenti automatici, configurare un systemd timer
     che esegua 'serra state sync' periodicamente
+
+============================================================
+LIVELLO ACQUA (water)
+============================================================
+
+Il magnetometro della serra legge la posizione del galleggiante. La percentuale
+è una stima ottenuta confrontando la lettura con due riferimenti locali.
+Esegui le letture con la pompa ferma e l'acqua a riposo.
+
+COMANDI
+  serra water read             # Mostra la lettura grezza x/y/z
+  serra water calibrate empty  # Registra il riferimento con vasca vuota
+  serra water calibrate full   # Registra il riferimento con vasca piena
+  serra water calibrate earth  # Riferimento opzionale; non usato nel calcolo %
+  serra water level            # Stima 0..100% dopo empty + full
+
+La calibrazione è salvata nello stato locale del Raspberry. water level
+pubblica serra/state/water come messaggio retained se MQTT è configurato.
+water read e water calibrate non pubblicano il livello su MQTT.
+
+============================================================
+UPTIME (uptime)
+============================================================
+
+COMANDO
+  serra uptime  # Legge /proc/uptime della serra e l'uptime del Raspberry
+
+Pubblica serra/state/boot e serra/state/pi_boot come messaggi retained se MQTT
+è configurato. Il timestamp di avvio della serra cambia quando viene rilevato
+un suo riavvio; il comando non riavvia la serra e non spegne la sua rete.
+
+============================================================
+FOTO (foto)
+============================================================
+
+COMANDO
+  serra foto  # Avvia /usr/local/bin/serra-foto e ritorna subito
+
+La pipeline esterna lavora in background e scrive /tmp/serra-foto.log. Richiede
+che /usr/local/bin/serra-foto e la sua configurazione siano già installati.
+Durante lo scatto può accendere le luci e riattivare temporaneamente la rete
+della serra; attendi il completamento e verifica il ripristino nel log.
 
 ============================================================
 VARIABILI DI AMBIENTE
@@ -226,7 +295,7 @@ VARIABILI DI AMBIENTE
   SERRA_UART_PORT       # Porta UART (default: /dev/ttyUSB0)
   SERRA_UART_BAUD       # Baudrate (default: 115200)
   SERRA_ROOT_USER       # Utente console (default: root)
-  SERRA_ROOT_PASSWORD   # Password console (obbligatoria; nessun valore predefinito)
+  SERRA_ROOT_PASSWORD   # Password console; impostala localmente, non nel codice
   SERRA_STATE_FILE      # File stato JSON (default: ~/.serra_state.json)
   SERRA_MQTT_HOST       # Host MQTT (vuoto = MQTT disabilitato)
   SERRA_MQTT_PORT       # Porta MQTT (default: 1883)
@@ -243,6 +312,8 @@ LUCI
   serra lights on [-i 0..100] [-f secondi]
   serra lights off [-f secondi]
   serra lights set <A|G|B|R|D> [-i 0..100] [-f secondi]
+  serra lights preset <viola|verde|bianco> [-i 0..100] [-f secondi]
+  serra lights mix [-a %] [-g %] [-b %] [-r %] [-d %] [-f secondi]
 
 VENTOLE
   serra fans on [-i off|low|medium|high]
@@ -263,3 +334,8 @@ ALTRO
   serra checkup [-l on|off] [-f on|off] [-lr on|off] [-pm on|off] [-pn on|off]
   serra net on/off [-n on|off]
   serra state sync
+  serra water read
+  serra water level
+  serra water calibrate <empty|full|earth>
+  serra uptime
+  serra foto

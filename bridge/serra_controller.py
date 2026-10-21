@@ -5,8 +5,8 @@
 Serra Controller (CLI only) - UART console root -> comandi hardware via /dev/tty-local e /dev/tty-nebbia.
 
 Obiettivo:
-- Comandi "umani" (lights/fans/pump/ring/checkup/net)
-- Niente MQTT per ora (verrà dopo)
+- Comandi "umani" (lights/fans/pump/ring/checkup/net) + sottocomandi MQTT (state/uptime/foto)
+- MQTT integrato: bridge, publish QoS1, stati retained per HA
 - Robustezza: login root via console + marker di conferma per ogni comando
 
 Install alias "serra":
@@ -15,7 +15,7 @@ Install alias "serra":
 
 NOTA DOCUMENTAZIONE CLI:
 - La guida lunga all'uso della CLI è stata spostata in un file di testo esterno.
-- Per modificarla, edita il file `serra_help.txt` posizionato nella stessa directory di questo script.
+- Per modificarla, edita `serra_help.txt` accanto a questo script.
 """
 
 import argparse
@@ -29,8 +29,9 @@ from typing import Optional, Dict, Any, List
 
 import fcntl
 import json
-import tempfile
 import threading
+import socket
+import tempfile
 
 import serial
 from serial.serialutil import SerialException
@@ -49,22 +50,36 @@ except Exception:  # pragma: no cover
 DEFAULT_SERIAL_PORT = os.environ.get("SERRA_UART_PORT", "/dev/ttyUSB0")
 DEFAULT_BAUDRATE = int(os.environ.get("SERRA_UART_BAUD", "115200"))
 
+# Lockfile per serializzare gli accessi concorrenti alla UART tra invocazioni
+# `serra` (bridge MQTT, timer systemd, comandi manuali via SSH).
+UART_LOCK_PATH = os.environ.get("SERRA_UART_LOCK", "/tmp/serra-uart.lock")
+UART_LOCK_TIMEOUT_S = float(os.environ.get("SERRA_UART_LOCK_TIMEOUT", "20").strip() or "20")
+
 # Credenziali console serra (BusyBox login)
-# La password della console va fornita tramite variabile d'ambiente.
+# La password viene fornita solo tramite l'ambiente locale del Raspberry.
 DEFAULT_USER = os.environ.get("SERRA_ROOT_USER", "root")
 DEFAULT_PASSWORD = os.environ.get("SERRA_ROOT_PASSWORD", "")
 
 # Limiti e costanti "magiche" resi espliciti
 MAX_PUMP_DURATION_S = 300                   # secondi massimi pompa principale
-MAX_NUTRIENT_DURATION_S = 300.0             # secondi massimi pompa nutrienti
+MAX_NUTRIENT_DURATION_S = 60.0              # limite collaudato sul Raspberry
 MAX_NUTRIENT_TIMES = 100                    # ripetizioni massime pompa nutrienti
 MAX_NUTRIENT_INTERVAL_S = 120.0             # intervallo massimo tra ripetizioni nutrienti
+# La UART resta occupata per tutta la sequenza. Il limite dipende dal timeout
+# del lock, per lasciare tempo ai comandi concorrenti di acquisirlo.
+MAX_SEQUENCE_TOTAL_S = UART_LOCK_TIMEOUT_S * 0.6
+# Dead-man pompa principale (backstop lato Pi, INDIPENDENTE da HA): margine dopo
+# la fine prevista oltre cui un processo staccato forza 'pump main off'. Copre il
+# caso di pompa avviata mentre HA e' giu'/disconnessa E il tick di auto-spegnimento
+# del firmware VoCore si perde -> altrimenti pompa accesa a tempo indeterminato
+# (allagamento). E' l'analogo, lato controller, del "belt" gia' presente in HA.
+PUMP_DEADMAN_MARGIN_S = float(os.environ.get("SERRA_PUMP_DEADMAN_MARGIN", "20").strip() or "20")
 MIN_FAN_RELIABLE_PCT = 40                   # sotto questo %, la ventola può non partire
 MAX_LIGHT_FADE_UNITS = 0xFFF                # 12-bit fade luci
 MAX_RING_FADE_UNITS = 0xFF                  # 8-bit fade ring
 SERIAL_READ_CHUNK_SIZE = 4096               # dimensione lettura seriale
 STATE_SCHEMA_VERSION = 1                    # versione schema file stato
-HELP_FILE_NAME = "serra_help.txt"  # file esterno accanto al controller
+HELP_FILE_NAME = "serra_help.txt"
 
 
 # ---------------------------
@@ -113,6 +128,46 @@ def sleep_s(seconds: float) -> None:
 # ---------------------------
 
 STATE_FILE_DEFAULT = os.environ.get("SERRA_STATE_FILE", os.path.expanduser("~/.serra_state.json"))
+# Lock dedicato tenuto per l'INTERO read-modify-write di state.json
+# (load->modify->save), NON solo per il dump come il flock in _save_state:
+# serializza _record (durante un comando, con UART lock tenuto) e do_state_sync
+# (che NON prende la UART, es. dal timer/belt/fine-nutrient_run) -> niente
+# lost-update del record. Best-effort: su timeout prosegue (meglio scrivere che
+# bloccare per sempre).
+STATE_LOCK_PATH = STATE_FILE_DEFAULT + ".lock"
+
+
+class _StateLock:
+    def __init__(self, timeout: float = 10.0):
+        self._timeout = timeout
+        self._f = None
+
+    def __enter__(self):
+        try:
+            os.makedirs(os.path.dirname(STATE_LOCK_PATH) or ".", exist_ok=True)
+            self._f = open(STATE_LOCK_PATH, "w")
+        except Exception:
+            self._f = None
+            return self
+        end = time.time() + self._timeout
+        while True:
+            try:
+                fcntl.flock(self._f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                return self
+            except OSError:
+                if time.time() >= end:
+                    return self  # best-effort
+                time.sleep(0.05)
+
+    def __exit__(self, *exc):
+        if self._f is not None:
+            try:
+                fcntl.flock(self._f, fcntl.LOCK_UN)
+            finally:
+                self._f.close()
+        return False
+
+
 MQTT_HOST = os.environ.get("SERRA_MQTT_HOST", "").strip()
 MQTT_PORT = int(os.environ.get("SERRA_MQTT_PORT", "1883").strip() or "1883")
 MQTT_USER = os.environ.get("SERRA_MQTT_USER", "").strip()
@@ -120,9 +175,12 @@ MQTT_PASS = os.environ.get("SERRA_MQTT_PASS", "")
 SERRA_CLI = os.environ.get("SERRA_CLI", "serra")
 MQTT_TOPIC = os.environ.get("SERRA_MQTT_TOPIC", "serra").strip() or "serra"
 
-MQTT_CLIENT_ID = os.environ.get("SERRA_MQTT_CLIENT_ID", "").strip() or f"serra-controller-{os.getpid()}"
+MQTT_CLIENT_ID = os.environ.get("SERRA_MQTT_CLIENT_ID", "serra-controller").strip() or "serra-controller"
 MQTT_ENABLED = bool(MQTT_HOST)  # solo "host presente" (la libreria è verificata da _mqtt_enabled)
-COMMAND_FAILED = False
+
+# Timeout (secondi) per il connect al broker: evita che un broker irraggiungibile
+# blocchi il comando (e, a cascata, il bridge MQTT che è single-thread).
+MQTT_CONNECT_TIMEOUT = float(os.environ.get("SERRA_MQTT_CONNECT_TIMEOUT", "4").strip() or "4")
 
 ROME_TZ = ZoneInfo("Europe/Rome")
 
@@ -196,8 +254,8 @@ def _load_state(path: str = STATE_FILE_DEFAULT) -> Dict[str, Any]:
 
 def _save_state(state: Dict[str, Any], path: str = STATE_FILE_DEFAULT) -> None:
     """
-    Salva lo stato in modo atomico. Il lock della CLI serializza l'intera
-    operazione di lettura, modifica e scrittura tra processi del controller.
+    Salva lo stato in modo atomico. _StateLock protegge l'intero ciclo
+    lettura-modifica-scrittura tra processi.
     """
     dir_path = os.path.dirname(path)
     if dir_path:
@@ -237,6 +295,40 @@ def _mqtt_make_client(client_id: str):
         )
 
 
+def _broker_reachable(host: str, port: int, timeout: float) -> bool:
+    """Verifica rapida (TCP) che il broker sia raggiungibile, con timeout.
+
+    Evita che paho.connect() — bloccante e senza timeout — resti appeso per
+    minuti quando l'host MQTT è irraggiungibile (HA in reboot, box spento, rete
+    partizionata), congelando il comando e il bridge.
+    """
+    try:
+        with socket.create_connection((host, port), timeout=timeout):
+            return True
+    except OSError:
+        return False
+
+
+def _wait_published(info, timeout: float) -> None:
+    """Attende che un messaggio MQTT sia effettivamente uscito, con timeout,
+    in modo compatibile sia con paho-mqtt >= 2.0 sia < 2.0."""
+    try:
+        info.wait_for_publish(timeout)  # paho >= 2.0 (accetta timeout)
+    except TypeError:
+        # paho < 2.0: wait_for_publish() non accetta timeout -> poll su is_published()
+        end = time.time() + timeout
+        while time.time() < end:
+            try:
+                if info.is_published():
+                    return
+            except Exception:
+                return
+            time.sleep(0.02)
+    except Exception:
+        # RuntimeError se il publish fallisce (es. disconnesso): non bloccare.
+        return
+
+
 class MQTTManager:
     """
     Gestisce una singola connessione MQTT riutilizzata per tutte le pubblicazioni
@@ -248,6 +340,8 @@ class MQTTManager:
     def __init__(self) -> None:
         self._client = None
         self._connected = False
+        self._pending: List[Any] = []  # MQTTMessageInfo da flushare prima del disconnect
+        self._unreachable = False  # broker già rilevato irraggiungibile in questo processo
 
     @classmethod
     def get_instance(cls) -> "MQTTManager":
@@ -261,6 +355,19 @@ class MQTTManager:
         if not _mqtt_enabled():
             return
         if self._client is not None and self._connected:
+            return
+
+        # Se in questo processo il broker è già risultato irraggiungibile, non
+        # ripaghiamo il timeout del pre-flight a ogni publish (un comando ne fa ~13).
+        if self._unreachable:
+            return
+
+        # Pre-flight: se il broker non è raggiungibile non tentiamo il connect
+        # bloccante di paho. Il publish diventa un no-op (best-effort) e il
+        # comando hardware prosegue senza restare appeso.
+        if not _broker_reachable(MQTT_HOST, MQTT_PORT, MQTT_CONNECT_TIMEOUT):
+            self._unreachable = True
+            eprint(f"[mqtt] broker {MQTT_HOST}:{MQTT_PORT} non raggiungibile: publish saltato")
             return
 
         self._client = _mqtt_make_client(MQTT_CLIENT_ID)
@@ -279,21 +386,29 @@ class MQTTManager:
         if not _mqtt_enabled():
             return
         self._ensure_client()
-        if self._client is None:
+        if self._client is None or not self._connected:
             return
         data = json.dumps(payload, ensure_ascii=False)
+        # QoS 1: consegna garantita al broker, così lo stato arriva a HA anche se
+        # il processo si chiude subito dopo. Il flush effettivo è in close().
         info = self._client.publish(topic, data, qos=1, retain=retain)
-        info.wait_for_publish(timeout=5)
-        if not info.is_published():
-            raise SerraConnectionError(f"MQTT: pubblicazione non confermata per {topic}")
+        if info is not None:
+            self._pending.append(info)
 
     def close(self) -> None:
         if self._client and self._connected:
             try:
-                self._client.disconnect()
+                # Flush dei publish in sospeso PRIMA di disconnettere: senza questo,
+                # chiudere il socket subito dopo il publish può far perdere gli
+                # aggiornamenti di stato verso HA (era il difetto principale).
+                deadline = time.time() + 5.0
+                for info in self._pending:
+                    _wait_published(info, max(0.0, deadline - time.time()))
                 self._client.loop_stop()
+                self._client.disconnect()
             except Exception:
                 pass
+        self._pending = []
         self._client = None
         self._connected = False
 
@@ -303,20 +418,6 @@ def _mqtt_publish(topic: str, payload: Dict[str, Any], retain: bool = True) -> N
     if not _mqtt_enabled():
         return
     MQTTManager.get_instance().publish(topic, payload, retain=retain)
-
-
-def _mqtt_status(msg: str, ok: bool = True, **extra: Any) -> None:
-    """Pubblica un 'last seen' leggibile nel topic serra/status/last_seen."""
-    if not _mqtt_enabled():
-        return
-    payload: Dict[str, Any] = {
-        "ok": bool(ok),
-        "msg": str(msg),
-        **now_ts(),
-    }
-    if extra:
-        payload.update(extra)
-    _mqtt_publish(f"{MQTT_TOPIC.rstrip('/')}/status/last_seen", payload, retain=True)
 
 
 def _publish_state_all(state: dict) -> None:
@@ -376,7 +477,7 @@ def _derive_running_flags(state: Dict[str, Any]) -> None:
     def derive_until(obj: Dict[str, Any]) -> Dict[str, Any]:
         until = obj.get("until_ts")
         if isinstance(until, (int, float)):
-            running_now = now < float(until) and bool(obj.get("ok", True))
+            running_now = now < float(until)
             obj["running_now"] = running_now
             if "running" in obj:
                 obj["running"] = running_now
@@ -394,8 +495,7 @@ def _derive_running_flags(state: Dict[str, Any]) -> None:
     rg = state.get("ring", {}).get("state", {})
     if isinstance(rg, dict):
         if rg.get("mode") == "on":
-            # Il fade termina, ma il ring resta acceso: until_ts nelle vecchie
-            # versioni descriveva il fade e non lo spegnimento del LED.
+            # Il fade termina, ma il ring resta acceso.
             rg["running_now"] = bool(rg.get("running"))
             transition_until = rg.get("transition_until_ts", rg.get("until_ts"))
             if isinstance(transition_until, (int, float)) and now >= transition_until:
@@ -445,18 +545,58 @@ class SerraConsole:
     def __init__(self, cfg: ConsoleConfig):
         self.cfg = cfg
         self.ser: Optional[serial.Serial] = None
+        self._lock_fd = None  # fd del lockfile UART (flock)
+
+    def _acquire_lock(self) -> None:
+        """Acquisisce un lock esclusivo (flock) per serializzare gli accessi alla
+        UART tra invocazioni concorrenti di `serra` (bridge, timer, SSH manuale).
+        Se la porta è occupata, attende fino a UART_LOCK_TIMEOUT_S e poi fallisce
+        in modo pulito, invece di corrompere lo stream seriale."""
+        try:
+            self._lock_fd = open(UART_LOCK_PATH, "w")
+        except Exception as ex:
+            # Se non riusciamo nemmeno ad aprire il lockfile proseguiamo senza
+            # lock (meglio funzionare che bloccare), segnalandolo.
+            eprint(f"[uart] warning: impossibile aprire lockfile {UART_LOCK_PATH}: {ex}")
+            self._lock_fd = None
+            return
+        end = time.time() + UART_LOCK_TIMEOUT_S
+        while True:
+            try:
+                fcntl.flock(self._lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                return
+            except OSError:
+                if time.time() >= end:
+                    self._release_lock()
+                    raise SerraConnectionError(
+                        f"UART occupata: un altro comando serra sta usando {self.cfg.port} "
+                        f"(atteso {UART_LOCK_TIMEOUT_S:.0f}s sul lock {UART_LOCK_PATH})"
+                    )
+                time.sleep(0.1)
+
+    def _release_lock(self) -> None:
+        if self._lock_fd is not None:
+            try:
+                fcntl.flock(self._lock_fd, fcntl.LOCK_UN)
+                self._lock_fd.close()
+            except Exception:
+                pass
+            self._lock_fd = None
 
     def open(self) -> None:
+        self._acquire_lock()
         try:
             self.ser = serial.Serial(
                 self.cfg.port,
                 self.cfg.baudrate,
                 timeout=self.cfg.timeout,
                 write_timeout=self.cfg.write_timeout,
+                exclusive=True,  # TIOCEXCL: seconda difesa contro aperture concorrenti
             )
             self.ser.reset_input_buffer()
             self.ser.reset_output_buffer()
         except Exception as ex:
+            self._release_lock()
             raise SerraConnectionError(f"Impossibile aprire {self.cfg.port} a {self.cfg.baudrate}: {ex}")
 
     def close(self) -> None:
@@ -466,6 +606,7 @@ class SerraConsole:
             except Exception:
                 pass
         self.ser = None
+        self._release_lock()
 
     def _write_line(self, s: str) -> None:
         assert self.ser is not None
@@ -541,20 +682,52 @@ class SerraConsole:
 
     def run_checked(self, cmd: str, timeout: float = 4.0) -> bool:
         """
-        Conferma il completamento con successo del comando nella shell.
-        Il marker non compare per intero nella riga inviata, così l'eco
-        della console non può essere scambiata per la risposta.
+        Esegue cmd e conferma che la shell l'ha eseguito CON SUCCESSO.
+        Ritorna True se il marker compare nell'OUTPUT reale.
         """
         assert self.ser is not None
-        nonce = f"{now_ms()}_{os.getpid()}"
-        marker = f"__SERRA_OK_{nonce}__"
-        full = f"{cmd} && printf '\\n__SERRA_OK_%s__\\n' '{nonce}'"
-        self._write_line(full)
+        # Come run_capture: il marker e' assemblato A RUNTIME dalla shell da una
+        # variabile (M_), cosi' la riga ECHEGGIATA dal tty contiene "${M_}OK"
+        # NON espanso e il match scatta SOLO sull'output vero.
+        # (Bug precedente: marker LETTERALE dentro il comando -> compariva
+        # identico nell'eco della riga di comando -> marker_re.search matchava
+        # l'eco, non l'output -> run_checked tornava ~sempre True e il
+        # rilevamento errori/timeout era di fatto spento.)
+        # '&&' invece di ';' -> il marker esce SOLO se cmd termina con exit 0.
+        # Niente PROMPT_RE/LOGIN_RE tra i pattern: come run_capture aspettiamo il
+        # marker vero (un comando fallito non lo emette -> timeout -> False).
+        tag = f"RC{now_ms()}"
+        self._write_line(f'M_={tag}; {cmd} && echo "${{M_}}OK"')
 
-        marker_re = re.compile(rb"(?:^|[\r\n])" + re.escape(marker.encode("ascii")) + rb"(?:[\r\n]|$)")
+        expanded = f"{tag}OK".encode("utf-8")
+        marker_re = re.compile(re.escape(expanded))
         out = self._read_until([marker_re], timeout=timeout)
 
         return bool(marker_re.search(out))
+
+    def run_capture(self, cmd: str, timeout: float = 6.0) -> str:
+        """
+        Esegue cmd sulla console e ritorna il suo stdout (tra due marker).
+        Usato per LEGGERE risposte dei micro-controller (es. magnetometro Nebbia),
+        non solo per confermare l'esecuzione come run_checked.
+        """
+        assert self.ser is not None
+        # Marker assemblati a runtime dalla shell: la riga ECHEGGIATA contiene
+        # "${M_}B"/"${M_}E" (non espansi), quindi il match scatta solo sull'OUTPUT.
+        tag = f"CAP{now_ms()}"
+        self._write_line(f'M_={tag}; echo "${{M_}}B"; {cmd}; echo "${{M_}}E"')
+        beg = f"{tag}B".encode("utf-8")
+        end = f"{tag}E".encode("utf-8")
+        out = self._read_until([re.compile(re.escape(end))], timeout=timeout)
+        bi = out.find(beg)
+        if bi >= 0:
+            nl = out.find(b"\n", bi)
+            start = nl + 1 if nl >= 0 else bi + len(beg)
+        else:
+            start = 0
+        ei = out.find(end, start)
+        chunk = out[start:ei] if ei >= 0 else out[start:]
+        return chunk.decode("utf-8", "replace")
 
 
 # ---------------------------
@@ -596,6 +769,69 @@ def light_cmd(channel: str, intensity_pct: int, fade_s: float) -> str:
     ii = _pct_to_hex2(intensity_pct)
     fff = _fade_seconds_to_hex3(fade_s)
     return f"echo 0{ch}{ii}{fff} > /dev/tty-local"
+
+
+# Preset luce verificati sulla serra.
+#   A = full spectrum (bianco pieno)   -> foto
+#   G = verde (~520nm)                 -> luce di servizio, non disturba la fioritura
+#   B = blu+bianco (azzurrino-lilla)
+#   R = arancio/amber (~610-630nm)     -] R e D sono complementari (LED distinti):
+#   D = rosso scuro/deep-red (~660nm)  -] insieme = copertura rossa totale
+# I canali NON elencati in una ricetta vengono spenti.
+# La ricetta viola esatta era profile-driven (persa col cloud): questi sono
+# default ragionevoli, tarabili dal vivo (rossi dominanti + blu = viola da grow).
+LIGHT_PRESETS: Dict[str, Dict[str, int]] = {
+    # Viola/crescita: valori tarati tramite il banco luci di Home Assistant.
+    # D+R=100 (tutti i LED rossi, copertura uniforme, max fotoni utili),
+    # B=40 (blu per morfologia compatta; porta anche i bianchi = spettro largo).
+    # G/A=0. A piena potenza = PPFD max (fioritura); per plantule scalare con -i.
+    "viola": {"D": 100, "R": 100, "B": 40},
+    "verde": {"G": 100},                     # servizio/notte (non disturba la fioritura)
+    "bianco": {"A": 100},                    # full spectrum per le foto
+}
+
+
+# Micro-pausa tra i comandi canale: il microcontrollore ("Cirronembo") non
+# digerisce i 5 echo sparati in burst (il primo comando, che accende, puo'
+# corrompersi -> pannello spento). 0.15s da' tempo al MCU. busybox sleep
+# frazionario verificato sulla serra.
+_MIX_INTERCMD_SLEEP = "0.25"
+
+
+def _channels_to_cmd(eff: Dict[str, int], fade_s: float) -> str:
+    """
+    Costruisce il comando composto per i 5 canali A/G/B/R/D.
+    - canali da SPEGNERE (0) per primi, quelli da ACCENDERE per ultimi: cosi'
+      un eventuale glitch di burst non spegne un canale appena acceso;
+    - micro-pausa tra un comando e l'altro per non intasare il MCU.
+    """
+    order = sorted(("A", "G", "B", "R", "D"), key=lambda c: eff.get(c, 0) > 0)
+    parts = [light_cmd(c, int(eff.get(c, 0)), fade_s) for c in order]
+    # B-c: separatore '&&' (non ';') cosi' run_checked verifica TUTTI i canali.
+    # Con ';' il '&& echo marker' di run_checked proteggeva solo l'ULTIMO echo
+    # (un canale intermedio fallito passava come 'ok'); con '&&' il marker esce
+    # solo se OGNI canale (e ogni sleep) va a buon fine -> fallimento propagato
+    # (e con M3 do_lights_mix solleva -> serra-foto/banco-luci lo vedono).
+    return f" && sleep {_MIX_INTERCMD_SLEEP} && ".join(parts)
+
+
+def light_preset_cmd(preset: str, master_pct: int, fade_s: float) -> tuple[str, Dict[str, int]]:
+    """
+    Costruisce UN comando composto (tutti i canali A/G/B/R/D) per il preset.
+    master_pct = scala uniforme 0..100 applicata alla ricetta (100 = ricetta piena).
+    Ritorna (comando_shell, mappa_canale->pct_effettivo).
+    """
+    key = preset.lower().strip()
+    recipe = LIGHT_PRESETS.get(key)
+    if recipe is None:
+        valid = "|".join(sorted(LIGHT_PRESETS))
+        raise SerraCommandError(f"Preset luci non valido: {preset} (usa {valid})")
+    master = int(clamp(int(master_pct), 0, 100))
+    effective: Dict[str, int] = {}
+    for ch in ("A", "G", "B", "R", "D"):
+        base = int(recipe.get(ch, 0))
+        effective[ch] = int(round(base * master / 100)) if base else 0
+    return _channels_to_cmd(effective, fade_s), effective
 
 
 # VENTOLE
@@ -667,17 +903,6 @@ RING_COLORS: Dict[str, str] = {
 }
 
 
-def _ring_color_to_hex(color: str) -> str:
-    c = color.strip()
-    key = c.lower()
-    if key in RING_COLORS:
-        return RING_COLORS[key]
-    # HEX custom (6 chars)
-    if re.fullmatch(r"[0-9a-fA-F]{6}", c):
-        return c.upper()
-    raise SerraCommandError("Colore ring: nome (white/red/green/yellow/orange/blue/purple) oppure HEX RRGGBB")
-
-
 def _fade_seconds_to_hex2(seconds: float) -> str:
     """
     Fade ring: HEX a 2 cifre (00..FF).
@@ -735,17 +960,16 @@ def _record(
     last_update: dict che va in <component>.last
     existing_state: stato già caricato da riutilizzare (per evitare doppio _load_state)
     """
-    global COMMAND_FAILED
-    if not ok:
-        COMMAND_FAILED = True
     try:
-        st = existing_state if existing_state is not None else (_load_state() or {})
-        _bump_last_seen(st)
-        comp = st.setdefault(component, {"state": {}, "last": None})
-        comp["state"] = state_update
-        comp["last"] = last_update
-        _derive_running_flags(st)
-        _save_state(st)
+        # state.json race: lock esclusivo per l'INTERO read-modify-write
+        with _StateLock():
+            st = existing_state if existing_state is not None else (_load_state() or {})
+            _bump_last_seen(st)
+            comp = st.setdefault(component, {"state": {}, "last": None})
+            comp["state"] = state_update
+            comp["last"] = last_update
+            _derive_running_flags(st)
+            _save_state(st)
         _publish_state_all(st)
 
         # Pubblica anche status/last e status/last_seen (se MQTT è configurato)
@@ -783,7 +1007,6 @@ def _record(
             eprint(f"[mqtt] warning status publish failed: {_ex}")
     except Exception as ex:
         # Non bloccare mai i comandi hardware per colpa di logging/MQTT
-        COMMAND_FAILED = True
         eprint(f"[state] warning: {ex}")
 
 
@@ -859,6 +1082,100 @@ def do_lights(
     )
 
 
+def do_lights_preset(
+    console: SerraConsole,
+    preset: str,
+    intensity: int,
+    fade: float,
+) -> None:
+    """
+    Applica un preset luce (viola/verde/bianco): accende i canali della ricetta
+    e spegne tutti gli altri, in un unico comando composto.
+    intensity = scala uniforme 0..100 sulla ricetta (default 100).
+    """
+    intensity = int(clamp(intensity, 0, 100))
+    fade = float(max(0.0, fade))
+    key = preset.lower().strip()
+    cmd, eff = light_preset_cmd(key, intensity, fade)
+    on_channels = {c: p for c, p in eff.items() if p > 0}
+    label = ", ".join(f"{c} {p}%" for c, p in on_channels.items()) or "tutto spento"
+    ok = step(console, f"LIGHTS PRESET {key} ({label}, fade ~{fade}s)", cmd, timeout=6.0)
+
+    t = now_ts()
+    state: Dict[str, Any] = {
+        "preset": key,
+        "channels": eff,
+        "master_pct": intensity,
+        "fade_s": fade,
+        "on": any(p > 0 for p in eff.values()),
+        **t,
+    }
+    if fade and fade > 0:
+        state.update({"transition": "fading"})
+        state.update(make_until_timestamps(fade))
+    _record(
+        "lights",
+        ok,
+        state,
+        {"ok": ok, "action": "preset", "preset": key, "cmd": cmd, **t},
+    )
+
+
+def light_mix_cmd(chmap: Dict[str, int], fade_s: float) -> tuple[str, Dict[str, int]]:
+    """
+    Comando composto che imposta TUTTI i canali A/G/B/R/D ai valori dati
+    (mancanti -> 0), in una sola sessione UART. Ritorna (cmd, mappa effettiva).
+    """
+    eff: Dict[str, int] = {}
+    for ch in ("A", "G", "B", "R", "D"):
+        eff[ch] = int(clamp(int(chmap.get(ch, 0)), 0, 100))
+    return _channels_to_cmd(eff, fade_s), eff
+
+
+def do_lights_mix(
+    console: SerraConsole,
+    a: int, g: int, b: int, r: int, d: int,
+    fade: float,
+) -> None:
+    """
+    Imposta l'intero mix luci (5 canali) atomicamente in un'unica sessione UART.
+    Usato dal "banco luci" HA: applica sempre lo stato COMPLETO corrente, quindi
+    non ci sono race/sovrascritture tra comandi per-canale.
+    """
+    fade = float(max(0.0, fade))
+    cmd, eff = light_mix_cmd({"A": a, "G": g, "B": b, "R": r, "D": d}, fade)
+    on_ch = {c: p for c, p in eff.items() if p > 0}
+    label = ", ".join(f"{c} {p}%" for c, p in on_ch.items()) or "tutto spento"
+    ok = step(console, f"LIGHTS MIX ({label}, fade ~{fade}s)", cmd, timeout=6.0)
+
+    t = now_ts()
+    state: Dict[str, Any] = {
+        "mix": True,
+        "channels": eff,
+        "fade_s": fade,
+        "on": any(p > 0 for p in eff.values()),
+        **t,
+    }
+    if fade and fade > 0:
+        state.update({"transition": "fading"})
+        state.update(make_until_timestamps(fade))
+    _record(
+        "lights",
+        ok,
+        state,
+        {"ok": ok, "action": "mix", "cmd": cmd, **t},
+    )
+    # M3: propaga il fallimento all'EXIT CODE. Prima do_lights_mix usciva 0 anche
+    # con ok=False (marker perso/timeout): serra-foto (lights_mix -> returncode)
+    # credeva riuscito il ripristino e lasciava le luci sul FLASH in silenzio, e
+    # il banco-luci HA non vedeva il comando fallito. Sollevo SerraCommandError
+    # (main -> sys.exit(2)) DOPO aver registrato lo stato con ok=False. NB e' una
+    # ECCEZIONE, non sys.exit: il finally all-off di do_checkup (except Exception)
+    # la cattura e prosegue best-effort.
+    if not ok:
+        raise SerraCommandError("LIGHTS MIX non confermato (marker perso/timeout)")
+
+
 def do_fans(console: SerraConsole, action: str, target: Optional[str], intensity_label: str):
     """
     fans on/off/set
@@ -894,14 +1211,38 @@ def do_fans(console: SerraConsole, action: str, target: Optional[str], intensity
         fan_proto = FAN_TARGETS.get(fan_id, fan_id)
         cmd = fan_cmd(fan_proto, pct_val)
         ok = step(console, f"FAN {fan_id} {pct_val}% ({level})", cmd)
-        if level in ("low", "medium"):
-            ok = ok and wake_used
+
+        # Retry unico su QUALSIASI fallimento del set. Prima ritentava SOLO il
+        # ramo col wake (low/medium): off e high — che non fanno il wake —
+        # restavano SENZA retry, quindi un "fans off" perso lasciava la ventola
+        # FISICAMENTE in moto mentre lo stato la dava spenta (dashboard che mente
+        # + ventola non ferma, e nessun reconcile perche' running=False).
+        eff_level, eff_pct = level, pct_val
+        if not ok:
+            ok = step(console, f"FAN {fan_id} {pct_val}% ({level}) RETRY", cmd)
+        if not ok:
+            if wake_used:
+                # col wake la ventola e' gia' a 100%; se il set fallisce ancora
+                # resta FISICAMENTE a 100% -> registro lo stato REALE (100%): una
+                # ventola a 100% e' innocua e il reconcile/HA riallineera'.
+                eff_level, eff_pct = "high", 100
+                print(f"⚠️ FAN {fan_id}: set {level} fallito dopo il wake, resta a 100% (registro 100%)")
+            else:
+                # off/high senza wake: comando NON confermato, esito UART incerto.
+                # NON dichiaro la ventola spenta: tengo lo stato PRECEDENTE (potrebbe
+                # girare ancora) con ok=False, cosi' HA vede il fallimento e il
+                # reconcile ritenta l'off al giro dopo (meglio "forse accesa" che
+                # "creduta spenta e invece gira").
+                prev_one = prev.get(fan_id, {}) or {}
+                eff_level = prev_one.get("level", level)
+                eff_pct = int(prev_one.get("pct", pct_val) or 0)
+                print(f"⚠️ FAN {fan_id}: {level} ({pct_val}%) fallito dopo retry; mantengo {eff_level}/{eff_pct}% (ok=False)")
 
         ts = now_ts()
         state_now[fan_id] = {
-            "level": level,
-            "pct": pct_val,
-            "running": bool(pct_val > 0),
+            "level": eff_level,
+            "pct": eff_pct,
+            "running": bool(eff_pct > 0),
             "wake_used": wake_used,
             "ok": ok,
             "cmd": cmd,
@@ -911,8 +1252,8 @@ def do_fans(console: SerraConsole, action: str, target: Optional[str], intensity
                 "ok": ok,
                 "action": action,
                 "target": fan_id,
-                "level": level,
-                "pct": pct_val,
+                "level": eff_level,
+                "pct": eff_pct,
                 "cmd": cmd,
                 **ts,
             },
@@ -954,6 +1295,41 @@ def do_fans(console: SerraConsole, action: str, target: Optional[str], intensity
     _record("fans", ok_all, state_now, {"ok": ok_all, "action": "set", "target": tgt, **now_ts()})
 
 
+def _spawn_pump_deadman(expected_until: float, margin: float = PUMP_DEADMAN_MARGIN_S) -> None:
+    """Backstop DEAD-MAN per la pompa principale, INDIPENDENTE da HA.
+
+    A ogni 'pump main on' spawna un processo STACCATO che dorme fino a
+    (expected_until + margin) e poi forza 'pump main off' — MA solo se nel
+    frattempo non e' partito un nuovo pump-on con until piu' avanti (guardia
+    sul until_ts corrente in state.json, per non tagliare un ricircolo nuovo).
+    Non tiene la UART durante l'attesa; alla scadenza apre la seriale via la
+    CLI 'serra pump main off'. Se lo state file non e' leggibile -> spegne
+    comunque (fail-safe). Copre la pompa avviata con HA giu' + tick firmware
+    perso (allagamento)."""
+    import subprocess
+    code = (
+        "import time, json, subprocess, sys\n"
+        "exp = float(sys.argv[1]); margin = float(sys.argv[2]); sp = sys.argv[3]\n"
+        "time.sleep(max(1.0, (exp + margin) - time.time()))\n"
+        "u = None\n"
+        "try:\n"
+        "    u = json.load(open(sp)).get('pump_main', {}).get('state', {}).get('until_ts')\n"
+        "except Exception:\n"
+        "    u = None\n"
+        "if u is None or float(u) <= exp + 1.0:\n"
+        "    subprocess.run(['serra', 'pump', 'main', 'off'])\n"
+    )
+    try:
+        subprocess.Popen(
+            [sys.executable, "-c", code, repr(float(expected_until)), repr(float(margin)), STATE_FILE_DEFAULT],
+            start_new_session=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except Exception as ex:
+        eprint(f"[pump] warning: impossibile avviare il dead-man pompa: {ex}")
+
+
 def do_pump_main(console: SerraConsole, action: str, seconds: float) -> None:
     action = action.lower().strip()
     if action not in ("on", "off"):
@@ -975,13 +1351,14 @@ def do_pump_main(console: SerraConsole, action: str, seconds: float) -> None:
     cmd = pump_main_cmd(sec)
     ok = step(console, f"PUMP MAIN ON ({sec}s)", cmd)
 
+    until_info = make_until_timestamps(sec)
     st: Dict[str, Any] = {
-        "running": bool(ok),
+        "running": True,
         "seconds": sec,
         "cmd": cmd,
         **now_ts(),
     }
-    st.update(make_until_timestamps(sec))
+    st.update(until_info)
 
     _record(
         "pump_main",
@@ -989,6 +1366,11 @@ def do_pump_main(console: SerraConsole, action: str, seconds: float) -> None:
         st,
         {"ok": ok, "action": "on", "cmd": cmd, **now_ts()},
     )
+
+    # Dead-man backstop (indipendente da HA): a until_ts + margine forza off se
+    # il firmware non ha spento. Spawnato SEMPRE (anche con 'ok' dubbio): un off
+    # ridondante e' innocuo, ma se la pompa e' partita il backstop dev'esserci.
+    _spawn_pump_deadman(until_info["until_ts"])
 
 
 def do_pump_nutrient(console: SerraConsole, nid: int, seconds: float, times: int, interval: float):
@@ -998,7 +1380,23 @@ def do_pump_nutrient(console: SerraConsole, nid: int, seconds: float, times: int
 
     times = clamp(int(times), 1, 100)
     interval = clamp(float(interval), 0.0, 120.0)
-    seconds = clamp(float(seconds), 0.1, 300.0)
+    seconds = clamp(float(seconds), 0.1, MAX_NUTRIENT_DURATION_S)  # B-e: allineato al cap HW (pump_nutrient_cmd) -> total/until_ts non sovrastimati
+
+    # B: la sequenza tiene il lock UART per tutto il loop (il wall-clock e'
+    # dominato dalle pause 'interval'). Se supera UART_LOCK_TIMEOUT_S un comando
+    # concorrente andrebbe in timeout. Limitiamo il numero di cicli cosi' che la
+    # durata totale resti <= MAX_SEQUENCE_TOTAL_S. Le sequenze legittime (pochi
+    # cicli con pause brevi) non vengono toccate.
+    # M2: il per-ciclo include la pausa 'interval' E un margine per lo step
+    # (invio comando + attesa marker); vale ANCHE con interval=0 (prima il guard
+    # 'interval>0' saltava del tutto il cap -> times x step_time illimitato).
+    if times > 1:
+        per_cycle = float(interval) + 2.0  # 2s = margine step (comando + marker)
+        max_times = max(1, int(MAX_SEQUENCE_TOTAL_S / per_cycle))
+        if times > max_times:
+            print(f"⚠️ NUTRIENT-{nid}: times {times} → {max_times} "
+                  f"(cap sequenza {MAX_SEQUENCE_TOTAL_S:.0f}s per non tenere la UART oltre il lock-timeout)")
+            times = max_times
 
     # esegui loop (command P<id>,1,<ticks>)
     ok_all = True
@@ -1006,19 +1404,14 @@ def do_pump_nutrient(console: SerraConsole, nid: int, seconds: float, times: int
         cmd = pump_nutrient_cmd(nid, seconds)
         ok = step(console, f"PUMP NUTRIENT-{nid} ON ({seconds:.2f}s) [{i+1}/{times}]", cmd)
         ok_all = ok_all and ok
-        if not ok:
-            break
         if i < times - 1:
-            # L'MCU esegue l'impulso in autonomia: aspetta che finisca prima
-            # di iniziare la pausa richiesta e inviare l'impulso successivo.
-            time.sleep(seconds + interval)
+            time.sleep(interval)
 
-    # All'uscita dal ciclo resta soltanto l'ultimo impulso da completare.
+    # Stato: best-effort. Consideriamo "running" fino a fine sequenza.
     total = (times * float(seconds)) + ((times - 1) * float(interval))
-    until = time.time() + max(0.0, float(seconds))
-
-    dt_utc = datetime.fromtimestamp(until, tz=timezone.utc)
-    dt_local = dt_utc.astimezone(ROME_TZ)
+    # H: usa l'helper standard (come do_pump_main) invece di ricalcolare a mano
+    # until_ts/iso/local -> un solo formato ISO/timezone per tutte le pompe.
+    until_info = make_until_timestamps(max(0.0, total))
 
     ts = now_ts()
 
@@ -1042,14 +1435,12 @@ def do_pump_nutrient(console: SerraConsole, nid: int, seconds: float, times: int
     }
 
     state_now[str(nid)] = {
-        "running": bool(ok_all),
+        "running": True,
         "seconds": float(seconds),
         "times": int(times),
         "interval": float(interval),
         "total_s": float(total),
-        "until_ts": until,
-        "until_iso": dt_utc.isoformat().replace("+00:00", "Z"),
-        "until_local": dt_local.isoformat(),
+        **until_info,
         "ok": ok_all,
         **ts,
         # last incluso dentro lo stato di questa pompa
@@ -1113,8 +1504,7 @@ def do_ring(
         extra: Dict[str, Any] = {"cmd": cmd}
         if fade and fade > 0:
             extra["transition"] = "fading"
-            transition_until = make_until_timestamps(fade)
-            extra.update({f"transition_{key}": value for key, value in transition_until.items()})
+            extra.update(make_until_timestamps(fade))
 
         _record(
             "ring",
@@ -1133,8 +1523,19 @@ def do_ring(
     duration = float(clamp(duration, 0.1, 60.0))
     interval = float(clamp(interval, 0.0, 10.0))
 
+    # B: come per i nutrienti, il blink tiene il lock UART per tutta la sequenza.
+    # Limitiamo il numero di lampeggi cosi' che la durata totale resti sotto
+    # MAX_SEQUENCE_TOTAL_S (< lock-timeout) e uno stop concorrente non fallisca.
+    per_cycle = (fade + duration) + (fade + interval)
+    if per_cycle > 0:
+        max_t = max(1, int(MAX_SEQUENCE_TOTAL_S / per_cycle))
+        if t > max_t:
+            print(f"⚠️ RING blink: times {t} → {max_t} "
+                  f"(cap sequenza {MAX_SEQUENCE_TOTAL_S:.0f}s per non bloccare la UART)")
+            t = max_t
+
     # publish "running" all'inizio, con until
-    total = (t * duration) + ((t - 1) * interval) + (2 * fade * t)
+    total = (t * (duration + interval)) + (2 * fade * t)
     until_info = make_until_timestamps(max(0.0, total))
     _record(
         "ring",
@@ -1219,6 +1620,8 @@ def do_net(console: SerraConsole, action: str, ntp: Optional[str]) -> bool:
 
         ok &= step(console, "NET: apcli0 down", "ifconfig apcli0 down 2>/dev/null || true")
         ok &= step(console, "NET: ra0 down", "ifconfig ra0 down 2>/dev/null || true")
+        # Scarica il driver wifi: stesso stato del boot (wifi disabilitata di default)
+        ok &= step(console, "NET: unload mt_wifi", "rmmod mt_wifi 2>/dev/null || true")
 
         if ntp_effective is False:
             ok &= step(console, "NTP: kill ntpd", "killall ntpd 2>/dev/null || true")
@@ -1228,8 +1631,19 @@ def do_net(console: SerraConsole, action: str, ntp: Optional[str]) -> bool:
         print("✅ NET OFF (vale fino al prossimo reboot)")
 
     else:
-        # action == on
-        ok &= step(console, "NET: start (S45net start)", "/etc/init.d/S45net start")
+        # action == on — risolve lo script rete comunque si chiami (S45net o,
+        # se il wifi è disabilitato di default al boot, OFF_S45net).
+        ok &= step(
+            console,
+            "NET: start (S45net/OFF_S45net start)",
+            "S=$(ls /etc/init.d/S45net /etc/init.d/OFF_S45net 2>/dev/null | head -1); "
+            "[ -n \"$S\" ] && sh \"$S\" start || echo no-net-script",
+            # B-c: lo start rete (sh S45net start) puo' impiegare 5-8s; col
+            # timeout default 4s run_checked scadeva -> falso ❌ e DESYNC (il
+            # comando NTP successivo veniva scritto mentre lo start era ancora
+            # in corso sulla console). 20s coprono l'avvio con margine.
+            timeout=20,
+        )
         if ntp_effective is True:
             ok &= step(
                 console,
@@ -1258,79 +1672,237 @@ def do_net(console: SerraConsole, action: str, ntp: Optional[str]) -> bool:
     return bool(ok)
 
 
+# ---------------------------
+# WATER LEVEL (magnetometro via Nebbia)
+# ---------------------------
+# Il livello acqua e' dato da un galleggiante magnetico letto da un magnetometro
+# sul controller Nebbia. Si interroga inviando "M\r\n" a /dev/tty-nebbia; risponde
+# con una o piu' triplette esadecimali "xxxx,yyyy,zzzz" (16-bit con segno).
+# Il livello si ottiene per CALIBRAZIONE (vasca vuota + piena) proiettando la
+# lettura corrente sul vettore vuoto->pieno (robusto: indipendente dall'asse).
+# NB: leggere sempre a POMPA SPENTA / vasca a riposo (il motore pompa disturba il campo).
+
+_MAG_READ_SHELL = (
+    "(cat /dev/tty-nebbia > /tmp/serra_mag.raw & __MP=$!; "
+    "sleep 0.4; printf 'M\\r\\n' > /dev/tty-nebbia; sleep 1.2; "
+    "kill $__MP 2>/dev/null); cat /tmp/serra_mag.raw"
+)
+_MAG_TRIPLET_RE = re.compile(r"([0-9a-fA-F]{4}),([0-9a-fA-F]{4}),([0-9a-fA-F]{4})")
+
+
+def _s16(h: str) -> int:
+    v = int(h, 16)
+    return v - 0x10000 if v >= 0x8000 else v
+
+
+def read_magnetometer(console: SerraConsole, retries: int = 3) -> Optional[List[float]]:
+    """Legge il magnetometro. Ritorna [x, y, z] (media delle triplette) o None."""
+    for _ in range(max(1, retries)):
+        raw = console.run_capture(_MAG_READ_SHELL, timeout=6.0)
+        trips = _MAG_TRIPLET_RE.findall(raw or "")
+        if trips:
+            n = len(trips)
+            return [
+                sum(_s16(t[0]) for t in trips) / n,
+                sum(_s16(t[1]) for t in trips) / n,
+                sum(_s16(t[2]) for t in trips) / n,
+            ]
+        time.sleep(0.3)
+    return None
+
+
+def _water_level_pct(cur: List[float], empty: List[float], full: List[float]) -> Optional[float]:
+    """Proiezione di (cur-empty) sul vettore (full-empty) -> 0..100%."""
+    d = [full[i] - empty[i] for i in range(3)]
+    denom = sum(x * x for x in d)
+    if denom <= 0:
+        return None
+    num = sum((cur[i] - empty[i]) * d[i] for i in range(3))
+    return round(max(0.0, min(1.0, num / denom)) * 100.0, 1)
+
+
+def do_water(console: SerraConsole, action: str, point: Optional[str] = None) -> None:
+    """
+    water read                          -> stampa la lettura grezza [x,y,z]
+    water calibrate <empty|full|earth>  -> salva la lettura come riferimento
+    water level                         -> 0..100% (serve calibrazione empty+full) + MQTT
+    """
+    action = (action or "").lower().strip()
+    cur = read_magnetometer(console)
+    if cur is None:
+        raise SerraConnectionError("Magnetometro: nessuna risposta dal controller Nebbia (comando M).")
+
+    if action == "read":
+        print(f"MAG raw: x={cur[0]:.1f} y={cur[1]:.1f} z={cur[2]:.1f}")
+        return
+
+    st = _load_state()
+    water = st.setdefault("water", {"cal": {}, "state": {}, "last": None})
+    cal = water.setdefault("cal", {})
+
+    if action == "calibrate":
+        pt = (point or "").lower().strip()
+        if pt not in ("empty", "full", "earth"):
+            raise SerraCommandError("Uso: serra water calibrate <empty|full|earth>")
+        cal[pt] = {"xyz": cur, **now_ts()}
+        _save_state(st)
+        print(f"✅ WATER CALIBRATE {pt.upper()}: x={cur[0]:.1f} y={cur[1]:.1f} z={cur[2]:.1f}")
+        return
+
+    if action == "level":
+        empty = (cal.get("empty") or {}).get("xyz")
+        full = (cal.get("full") or {}).get("xyz")
+        if not empty or not full:
+            raise SerraCommandError(
+                "Calibrazione mancante: esegui prima 'serra water calibrate empty' e '... full'."
+            )
+        pct = _water_level_pct(cur, empty, full)
+        state_now = {
+            "level_pct": pct,
+            "raw": {"x": round(cur[0], 1), "y": round(cur[1], 1), "z": round(cur[2], 1)},
+            "calibrated": True,
+            **now_ts(),
+        }
+        water["state"] = state_now
+        water["last"] = {"ok": True, "action": "level", "level_pct": pct, **now_ts()}
+        _save_state(st)
+        if _mqtt_enabled():
+            base = MQTT_TOPIC.rstrip("/")
+            _mqtt_publish(f"{base}/state/water", {"state": state_now, "last": water["last"]}, retain=True)
+        print(f"✅ WATER LEVEL: {pct}%  (raw x={cur[0]:.1f} y={cur[1]:.1f} z={cur[2]:.1f})")
+        return
+
+    raise SerraCommandError("Uso: serra water <read|level|calibrate <empty|full|earth>>")
+
+
+def do_uptime(console: SerraConsole) -> None:
+    """Legge /proc/uptime della serra via console e pubblica il boot timestamp.
+
+    Serve a RILEVARE I RIAVVII della serra senza falsi positivi: il topic
+    serra/state/boot (retained) cambia SOLO quando il boot_ts cambia davvero.
+    Anti-jitter: la lettura oscilla di qualche secondo tra un check e l'altro,
+    quindi se il nuovo boot_ts dista <30s da quello memorizzato si ripubblica
+    QUELLO. HA usa il cambio di stato come trigger del reconcile fisico
+    (re-assert di luci/ventole/ring solo a riavvio vero, niente lampeggi
+    periodici).
+    """
+    out = console.run_capture("cat /proc/uptime", timeout=6.0)
+    up_s = None
+    for tok in out.split():
+        try:
+            up_s = float(tok)
+            break
+        except ValueError:
+            continue
+    if up_s is None:
+        raise SerraConnectionError(f"uptime: risposta console non interpretabile ({out[:80]!r})")
+
+    boot_ts = time.time() - up_s
+    st = _load_state()
+    boot = st.setdefault("boot", {})
+    prev = boot.get("boot_ts")
+    riavvio = prev is not None and abs(boot_ts - float(prev)) > 30.0
+    if prev is None or riavvio:
+        boot["boot_ts"] = boot_ts
+        boot["detected"] = now_ts()
+        _save_state(st)
+        canonical = boot_ts
+    else:
+        canonical = float(prev)
+
+    payload = {
+        "boot_ts": round(canonical, 1),
+        "boot_iso": datetime.fromtimestamp(canonical, timezone.utc).isoformat(),
+        "uptime_s": int(up_s),
+        **now_ts(),
+    }
+    if _mqtt_enabled():
+        base = MQTT_TOPIC.rstrip("/")
+        _mqtt_publish(f"{base}/state/boot", payload, retain=True)
+    # Anche l'uptime del PI stesso (locale), stessa logica anti-jitter,
+    # per la riga "Raspberry Pi acceso da" in dashboard (serra/state/pi_boot).
+    try:
+        with open("/proc/uptime") as _f:
+            pi_up = float(_f.read().split()[0])
+        pi_boot_ts = time.time() - pi_up
+        pboot = st.setdefault("pi_boot", {})
+        pprev = pboot.get("boot_ts")
+        if pprev is None or abs(pi_boot_ts - float(pprev)) > 30.0:
+            pboot["boot_ts"] = pi_boot_ts
+            _save_state(st)
+            pi_canonical = pi_boot_ts
+        else:
+            pi_canonical = float(pprev)
+        if _mqtt_enabled():
+            base = MQTT_TOPIC.rstrip("/")
+            _mqtt_publish(f"{base}/state/pi_boot", {
+                "boot_ts": round(pi_canonical, 1),
+                "boot_iso": datetime.fromtimestamp(pi_canonical, timezone.utc).isoformat(),
+                "uptime_s": int(pi_up),
+                **now_ts(),
+            }, retain=True)
+    except Exception:
+        pass
+    extra = " — RIAVVIO RILEVATO" if riavvio else ""
+    print(f"UPTIME: {int(up_s)}s (boot {payload['boot_iso']}){extra}")
+
+
+def do_foto() -> bool:
+    """Lancia la pipeline foto (/usr/local/bin/serra-foto) in background.
+
+    Il comando torna subito: la pipeline (net on, flash, scatto, ripristino,
+    net off, publish MQTT) dura ~1-2 minuti e scrive su /tmp/serra-foto.log.
+    Non tocca la UART direttamente: e' serra-foto a farlo coi suoi comandi.
+    """
+    import subprocess
+    pipeline = "/usr/local/bin/serra-foto"
+    if not os.path.isfile(pipeline) or not os.access(pipeline, os.X_OK):
+        raise SerraCommandError(f"Pipeline foto non installata o non eseguibile: {pipeline}")
+    with open("/tmp/serra-foto.log", "ab") as logf:
+        subprocess.Popen([pipeline],
+                         stdout=logf, stderr=logf, start_new_session=True)
+    print("foto: pipeline avviata in background (log /tmp/serra-foto.log)")
+    return True
+
+
 def do_state_sync() -> bool:
     """
     Ricalcola gli stati time-based (es. pompe con durata) in base al tempo corrente.
     Non legge telemetrie reali: si limita a interpretare until_ts e a spegnere i flag 'running'
     quando il tempo è scaduto, aggiornando MQTT/state.json.
     """
-    st = (_load_state() or {})
-    _bump_last_seen(st)
-    _derive_running_flags(st)
+    # state.json race: lock esclusivo per l'INTERO read-modify-write (serializza
+    # con _record dei comandi, che gira con la UART tenuta ma non protegge state.json)
+    with _StateLock():
+        st = (_load_state() or {})
+        _bump_last_seen(st)
+        _derive_running_flags(st)
 
-    now = time.time()
+        # G: rimosso il blocco _expire_running(pump_main) + loop nutrienti che era
+        # dead-code — _derive_running_flags(st) (chiamata qui sopra e di nuovo prima
+        # del save) ri-deriva running/running_now da until_ts per TUTTI i componenti
+        # (pump_main, ring, lights, nutrient 0/1/2), sovrascrivendo qualunque cosa
+        # facesse quel blocco. Restano il refresh NET e il publish.
 
-    def _expire_running(comp_key: str) -> None:
-        comp = st.get(comp_key)
-        if not isinstance(comp, dict):
-            return
-        state = comp.get("state") if isinstance(comp.get("state"), dict) else None
-        if not state:
-            return
-        until_ts = state.get("until_ts")
-        if until_ts is None:
-            return
-        try:
-            until = float(until_ts)
-        except Exception:
-            return
-        if now >= until:
-            if state.get("running") is True:
-                state["running"] = False
-            state["running_now"] = False
+        # Refresh logico NET: non leggiamo lo stato reale, aggiorniamo solo i timestamp
+        net = st.get("net")
+        if isinstance(net, dict):
+            nst = net.get("state") if isinstance(net.get("state"), dict) else {}
+            enabled = bool(nst.get("enabled")) if "enabled" in nst else None
+            ntp_val = bool(nst.get("ntp")) if "ntp" in nst else None
 
-    _expire_running("pump_main")
+            new_state: Dict[str, Any] = {}
+            if enabled is not None:
+                new_state["enabled"] = enabled
+            if ntp_val is not None:
+                new_state["ntp"] = ntp_val
+            new_state.update(now_ts())
 
-    # nutrient pumps: chiavi "0","1","2" dentro pump_nutrients.state
-    pn = st.get("pump_nutrients")
-    if isinstance(pn, dict):
-        pn_state = pn.get("state")
-        if isinstance(pn_state, dict):
-            for k in ("0", "1", "2"):
-                state = pn_state.get(k)
-                if not isinstance(state, dict):
-                    continue
-                until_ts = state.get("until_ts")
-                if until_ts is None:
-                    continue
-                try:
-                    until = float(until_ts)
-                except Exception:
-                    continue
-                if now >= until:
-                    if state.get("running") is True:
-                        state["running"] = False
-                    state["running_now"] = False
+            st["net"] = st.get("net") or {"state": {}, "last": None}
+            st["net"]["state"] = new_state
 
-    # Refresh logico NET: non leggiamo lo stato reale, aggiorniamo solo i timestamp
-    net = st.get("net")
-    if isinstance(net, dict):
-        nst = net.get("state") if isinstance(net.get("state"), dict) else {}
-        enabled = bool(nst.get("enabled")) if "enabled" in nst else None
-        ntp_val = bool(nst.get("ntp")) if "ntp" in nst else None
-
-        new_state: Dict[str, Any] = {}
-        if enabled is not None:
-            new_state["enabled"] = enabled
-        if ntp_val is not None:
-            new_state["ntp"] = ntp_val
-        new_state.update(now_ts())
-
-        st["net"] = st.get("net") or {"state": {}, "last": None}
-        st["net"]["state"] = new_state
-
-    _derive_running_flags(st)
-    _save_state(st)
+        _derive_running_flags(st)
+        _save_state(st)
     _publish_state_all(st)
 
     # Un heartbeat pulito
@@ -1370,44 +1942,62 @@ def do_checkup(
     """
     print("=== CHECKUP START ===")
 
-    # --- LUCI ---
-    if do_l:
-        # Colori singoli: G, B, R, D (2s ciascuno + 2s pausa)
-        for ch in ["G", "B", "R", "D"]:
-            do_lights(console, action="set", channel=ch, intensity=100, fade=0.0)
-            sleep_s(2)
-            do_lights(console, action="set", channel=ch, intensity=0, fade=0.0)
-            sleep_s(2)
+    try:
+        # --- LUCI ---
+        if do_l:
+            # Colori singoli: G, B, R, D (2s ciascuno + 2s pausa)
+            for ch in ["G", "B", "R", "D"]:
+                do_lights(console, action="set", channel=ch, intensity=100, fade=0.0)
+                sleep_s(2)
+                do_lights(console, action="set", channel=ch, intensity=0, fade=0.0)
+                sleep_s(2)
 
-        # Full spectrum 5s
-        do_lights(console, action="on", channel="A", intensity=100, fade=0.0)
-        sleep_s(5)
-        do_lights(console, action="off", channel="A", intensity=0, fade=0.0)
-
-    # --- VENTOLE ---
-    if do_f:
-        # Singole: 1, 2, F al 100% (wake + 5s + off) con 3s pausa tra una e l'altra
-        for which in ["1", "2", "F"]:
-            do_fans(console, action="set", target=which, intensity_label="high")
+            # Full spectrum 5s
+            do_lights(console, action="on", channel="A", intensity=100, fade=0.0)
             sleep_s(5)
-            do_fans(console, action="set", target=which, intensity_label="off")
-            sleep_s(3)
+            do_lights(console, action="off", channel="A", intensity=0, fade=0.0)
 
-    # --- RING ---
-    if do_lr:
-        # Ring rosso: 3 blink, 1s on / 1s off, fade 1s
-        do_ring(console, action="blink", color="red", fade=1, times=3, duration=1.0, interval=1.0)
+        # --- VENTOLE ---
+        if do_f:
+            # Singole: 1, 2, F al 100% (wake + 5s + off) con 3s pausa tra una e l'altra
+            for which in ["1", "2", "F"]:
+                do_fans(console, action="set", target=which, intensity_label="high")
+                sleep_s(5)
+                do_fans(console, action="set", target=which, intensity_label="off")
+                sleep_s(3)
 
-    # --- NUTRIENTI ---
-    if do_pn:
-        for nid in [0, 1, 2]:
-            do_pump_nutrient(console, nid=nid, seconds=1.0, times=1, interval=1.0)
-            sleep_s(3)
+        # --- RING ---
+        if do_lr:
+            # Ring rosso: 3 blink, 1s on / 1s off, fade 1s
+            do_ring(console, action="blink", color="red", fade=1, times=3, duration=1.0, interval=1.0)
 
-    # --- POMPA PRINCIPALE ---
-    if do_pm:
-        do_pump_main(console, action="on", seconds=3.0)
-        # il comando gestisce la durata; lo stato verrà normalizzato da state sync
+        # --- NUTRIENTI ---
+        if do_pn:
+            for nid in [0, 1, 2]:
+                do_pump_nutrient(console, nid=nid, seconds=1.0, times=1, interval=1.0)
+                sleep_s(3)
+
+        # --- POMPA PRINCIPALE ---
+        if do_pm:
+            do_pump_main(console, action="on", seconds=3.0)
+            # il comando gestisce la durata; lo stato verrà normalizzato da state sync
+    finally:
+        # F: stato finale OFF garantito anche se un comando solleva a meta'
+        # (prima, senza try/finally, una ventola/luce poteva restare accesa).
+        # Best-effort: ogni off e' indipendente e NON deve mascherare l'eccezione
+        # originale, quindi ne inghiottiamo gli errori qui. (Le pompe si
+        # auto-spengono via firmware; il main ha anche il failsafe HA.)
+        print("--- CHECKUP: spegnimento finale di sicurezza ---")
+
+        def _off(desc, fn):
+            try:
+                fn()
+            except Exception as e:
+                print(f"⚠️ checkup off {desc} fallito: {e}")
+
+        _off("luci", lambda: do_lights_mix(console, 0, 0, 0, 0, 0, 0.0))
+        _off("ventole", lambda: do_fans(console, action="set", target="all", intensity_label="off"))
+        _off("ring", lambda: do_ring(console, action="off", color="white", fade=0, times=None, duration=0.0, interval=0.0))
 
     # --- STATE SYNC FINALE ---
     try:
@@ -1415,8 +2005,6 @@ def do_checkup(
         do_state_sync()
         print("✅ STATE SYNC OK (post-checkup)")
     except Exception as e:
-        global COMMAND_FAILED
-        COMMAND_FAILED = True
         print(f"⚠️ STATE SYNC FAILED (post-checkup): {e}")
 
     print("=== CHECKUP END ===")
@@ -1430,12 +2018,9 @@ def _load_help_text() -> str:
     """
     Carica il testo di help esteso dalla documentazione esterna.
 
-    Per modificare la guida CLI, edita il file `serra_help.txt`
-    posizionato nella stessa directory di questo script.
+    Per modificare la guida CLI, edita `serra_help.txt` accanto a questo script.
     """
-    # Il comando /usr/local/bin/serra è un symlink: risolvi il file reale.
-    base_dir = os.path.dirname(os.path.realpath(__file__))
-    help_path = os.path.join(base_dir, HELP_FILE_NAME)
+    help_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), HELP_FILE_NAME)
     try:
         with open(help_path, "r", encoding="utf-8") as f:
             return f.read()
@@ -1480,6 +2065,20 @@ def build_parser() -> argparse.ArgumentParser:
     pl_set.add_argument("-i", "--intensity", type=int, default=100, help="0..100 (default 100)")
     pl_set.add_argument("-f", "--fade", type=float, default=0, help="secondi (approx) (default 0)")
 
+    pl_preset = pl_sub.add_parser("preset", help="Preset luce (viola/verde/bianco)")
+    pl_preset.add_argument("preset", type=str, help="viola|verde|bianco")
+    pl_preset.add_argument("-i", "--intensity", type=int, default=100,
+                           help="scala 0..100 sulla ricetta (default 100)")
+    pl_preset.add_argument("-f", "--fade", type=float, default=0, help="secondi (approx) (default 0)")
+
+    pl_mix = pl_sub.add_parser("mix", help="Imposta tutti i canali insieme (atomico)")
+    pl_mix.add_argument("-a", type=int, default=0, help="canale A %% (0..100)")
+    pl_mix.add_argument("-g", type=int, default=0, help="canale G %% (0..100)")
+    pl_mix.add_argument("-b", type=int, default=0, help="canale B %% (0..100)")
+    pl_mix.add_argument("-r", type=int, default=0, help="canale R %% (0..100)")
+    pl_mix.add_argument("-d", type=int, default=0, help="canale D %% (0..100)")
+    pl_mix.add_argument("-f", "--fade", type=float, default=0, help="secondi (approx) (default 0)")
+
     # fans
     pf = sub.add_parser("fans", help="Controllo ventole")
     pf_sub = pf.add_subparsers(dest="action", required=True)
@@ -1505,7 +2104,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     ppn = pp_sub.add_parser("nutrient", help="Pompe nutrienti (0/1/2)")
     ppn.add_argument("nid", type=int, help="0|1|2")
-    ppn.add_argument("-s", "--seconds", type=float, default=1.0, help="secondi (default 1, max 300)")
+    ppn.add_argument("-s", "--seconds", type=float, default=1.0, help=f"secondi (default 1, max {int(MAX_NUTRIENT_DURATION_S)})")
     ppn.add_argument("-t", "--times", type=int, default=1, help="ripetizioni (default 1, max 100)")
     ppn.add_argument("-i", "--interval", type=float, default=1.0, help="intervallo tra ripetizioni (default 1, max 120)")
 
@@ -1545,16 +2144,26 @@ def build_parser() -> argparse.ArgumentParser:
     ps_sub = ps.add_subparsers(dest="state_cmd", required=True)
     ps_sub.add_parser("sync", help="Ricalcola running_now e ripubblica /serra/state/*")
 
+    # WATER (livello vasca via magnetometro)
+    pw = sub.add_parser("water", help="Livello acqua (magnetometro) + calibrazione")
+    pw_sub = pw.add_subparsers(dest="water_cmd", required=True)
+    pw_sub.add_parser("read", help="Legge il magnetometro grezzo [x,y,z]")
+    pw_sub.add_parser("level", help="Calcola livello 0..100%% (serve calibrazione) + MQTT")
+    pw_cal = pw_sub.add_parser("calibrate", help="Salva un riferimento di calibrazione")
+    pw_cal.add_argument("point", choices=["empty", "full", "earth"], help="quale riferimento salvare")
+
+    sub.add_parser("uptime", help="Legge uptime/boot della serra e pubblica serra/state/boot (rilevazione riavvii)")
+    sub.add_parser("foto", help="Scatta la foto della serra (pipeline completa, in background)")
+
     return p
 
 
 def main() -> None:
-    global COMMAND_FAILED
-    COMMAND_FAILED = False
     parser = build_parser()
     args = parser.parse_args()
 
-    if not DEFAULT_PASSWORD:
+    needs_console = not (args.cmd == "state" and getattr(args, "state_cmd", None) == "sync") and args.cmd != "foto"
+    if needs_console and not DEFAULT_PASSWORD:
         parser.error("Set SERRA_ROOT_PASSWORD in the environment before connecting to the device")
 
     cfg = ConsoleConfig(
@@ -1564,17 +2173,14 @@ def main() -> None:
         password=DEFAULT_PASSWORD,
     )
 
-    # Un solo processo alla volta può usare la console e aggiornare lo stato.
-    # Include i comandi MQTT e i due timer systemd.
-    lock_path = STATE_FILE_DEFAULT + ".lock"
-    os.makedirs(os.path.dirname(lock_path) or ".", exist_ok=True)
-    lock_file = open(lock_path, "a+")
-    fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
-
     console = SerraConsole(cfg)
+    # `state sync` è puramente logico (ricalcolo timestamp + publish MQTT): non
+    # tocca la UART. Evitiamo di aprire la seriale e fare login inutilmente — e
+    # soprattutto di contendere la porta col resto ogni 30 minuti (timer).
     try:
-        console.open()
-        console.ensure_root_prompt()
+        if needs_console:
+            console.open()
+            console.ensure_root_prompt()
 
         if args.cmd == "lights":
             if args.action == "on":
@@ -1583,6 +2189,10 @@ def main() -> None:
                 do_lights(console, "off", None, 0, args.fade)
             elif args.action == "set":
                 do_lights(console, "set", args.channel, args.intensity, args.fade)
+            elif args.action == "preset":
+                do_lights_preset(console, args.preset, args.intensity, args.fade)
+            elif args.action == "mix":
+                do_lights_mix(console, args.a, args.g, args.b, args.r, args.d, args.fade)
 
         elif args.cmd == "fans":
             if args.action == "on":
@@ -1626,11 +2236,22 @@ def main() -> None:
             if args.state_cmd == "sync":
                 do_state_sync()
 
+        elif args.cmd == "water":
+            if args.water_cmd == "read":
+                do_water(console, "read")
+            elif args.water_cmd == "level":
+                do_water(console, "level")
+            elif args.water_cmd == "calibrate":
+                do_water(console, "calibrate", args.point)
+
+        elif args.cmd == "uptime":
+            do_uptime(console)
+
+        elif args.cmd == "foto":
+            do_foto()
+
         else:
             raise SerraError("Comando non riconosciuto (bug parser).")
-
-        if COMMAND_FAILED:
-            raise SerraError("Uno o piu comandi non sono stati confermati dalla console; controlla i messaggi sopra.")
 
     except SerraCommandError as ex:
         eprint(f"ERRORE COMANDO: {ex}")
@@ -1652,8 +2273,6 @@ def main() -> None:
             except Exception:
                 pass
         console.close()
-        fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
-        lock_file.close()
 
 
 if __name__ == "__main__":
