@@ -1,0 +1,8 @@
+[Unit]
+Description=Serra: check riavvio 2 volte l ora (:10 e :40)
+[Timer]
+OnCalendar=*-*-* *:10,40:00
+AccuracySec=60s
+Persistent=false
+[Install]
+WantedBy=timers.target

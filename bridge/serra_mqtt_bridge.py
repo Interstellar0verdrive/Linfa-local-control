@@ -30,6 +30,7 @@ Config via ENV:
   SERRA_MQTT_QOS    (default 0)
   SERRA_CLI         (default "serra")  # wrapper CLI
   SERRA_CMD_TIMEOUT (default 120)
+  SERRA_MQTT_CONNECT_TIMEOUT (default 4)
 """
 
 from __future__ import annotations
@@ -37,6 +38,7 @@ from __future__ import annotations
 import json
 import os
 import shlex
+import socket
 import subprocess
 import sys
 import time
@@ -99,6 +101,7 @@ class BridgeConfig:
     qos: int = field(default_factory=lambda: _env_int("SERRA_MQTT_QOS", 0))
     cli: str = field(default_factory=lambda: _env_str("SERRA_CLI", "serra"))
     timeout_s: int = field(default_factory=lambda: _env_int("SERRA_CMD_TIMEOUT", 120))
+    connect_timeout_s: int = field(default_factory=lambda: _env_int("SERRA_MQTT_CONNECT_TIMEOUT", 4))
     client_id: str = field(
         default_factory=lambda: _env_str(
             "SERRA_MQTT_CLIENT_ID",
@@ -114,6 +117,15 @@ class BridgeConfig:
 def eprint(*args: Any, **kwargs: Any) -> None:
     """Print to stderr."""
     print(*args, file=sys.stderr, **kwargs)
+
+
+def broker_reachable(host: str, port: int, timeout: float) -> bool:
+    """Check broker TCP reachability before paho's blocking connect call."""
+    try:
+        with socket.create_connection((host, port), timeout=timeout):
+            return True
+    except OSError:
+        return False
 
 
 def topic_join(base: str, *parts: str) -> str:
@@ -419,6 +431,7 @@ class SerraMqttBridge:
         subscriptions = [
             topic_join(self.cfg.base_topic, "cmd"),
             topic_join(self.cfg.base_topic, "cmd", "+"),
+            topic_join(self.cfg.base_topic, "cmd", "json"),
             topic_join(self.cfg.base_topic, "cmd", "json", "+"),
         ]
 
@@ -475,6 +488,10 @@ class SerraMqttBridge:
         """Run the bridge (blocking, with auto-reconnect)."""
         while True:
             try:
+                if not broker_reachable(self.cfg.host, self.cfg.port, self.cfg.connect_timeout_s):
+                    eprint(f"[mqtt] broker {self.cfg.host}:{self.cfg.port} non raggiungibile (retry in 5s)")
+                    time.sleep(5)
+                    continue
                 # on_message esegue la CLI in modo sincrono: il keepalive deve
                 # superare il timeout del comando per non perdere l'ack.
                 keepalive = min(max(60, self.cfg.timeout_s + 30), 65535)

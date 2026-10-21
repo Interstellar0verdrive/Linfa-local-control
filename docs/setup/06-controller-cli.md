@@ -16,13 +16,15 @@ Questi sono i file coinvolti nei passi 06–08:
 | FILE | DESCRIZIONE | NOTE |
 | --- | --- | --- |
 | /home/pi/serra_help.txt | **Help CLI**: è usato dal comando `serra --help` e deve stare accanto a `serra_controller.py`. | Va copiato sul Raspberry al primo setup. |
-| /home/pi/serra_controller.py | **Controller**: cuore logico del sistema (CLI, UART, stato, MQTT publish) | Va copiato a mano nel Raspberry al primo setup. |
-| /home/pi/serra_mqtt_bridge.py | **MQTT Bridge**: si occupa di fare la traduzione MQTT → CLI | Va copiato a mano nel Raspberry al primo setup. |
+| /home/pi/serra_controller.py | **Controller**: cuore logico del sistema (CLI, UART, stato, MQTT publish) | Va copiato sul Raspberry al primo setup. |
+| /home/pi/serra_mqtt_bridge.py | **MQTT Bridge**: si occupa di fare la traduzione MQTT → CLI | Va copiato sul Raspberry al primo setup. |
 | /home/pi/.serra_state.json | **Stato runtime (source of truth logica):** cache JSON con ultimo stato noto dei componenti + ultimi comandi. Viene aggiornata dalla CLI ad ogni comando e usata per pubblicare serra/state/... su MQTT (retained). | Viene creata/aggiornata automaticamente dal controller al primo comando (serra ...). Non va caricata manualmente al primo setup.  |
 | /etc/serra-mqtt.env | **Configurazione MQTT**: contiene segreti + parametri runtime | Va creato “a mano” nel Raspberry al primo setup. |
-| /etc/systemd/system/serra-mqtt-bridge.service | **Service systemd del MQTT Bridge:** avvia e mantiene in esecuzione serra_mqtt_bridge.py (subscriber su serra/cmd → invoca CLI serra ... → pubblica serra/status/* + stati via controller). | Va creato “a mano” nel Raspberry al primo setup (insieme a /etc/serra-mqtt.env). Poi: daemon-reload + enable --now. È configurato con Restart=always per resilienza. |
-| /etc/systemd/system/serra-netoff.service e .timer | Il service spegne la rete della serra; il timer lo richiama dopo il boot. | Vanno creati sul Raspberry. |
-| /etc/systemd/system/serra-state-sync.service e .timer | Il service sincronizza lo stato; il timer lo richiama periodicamente. | Vanno creati sul Raspberry. |
+| /etc/systemd/system/serra-mqtt-bridge.service | Avvia e mantiene attivo il bridge MQTT. | File pronto in `bridge/systemd/`, da installare nel passo 07. |
+| /etc/systemd/system/serra-netoff.service e .timer | Spengono la rete della serra dopo il boot del Raspberry. | File pronti in `bridge/systemd/`, da installare nel passo 08. |
+| /etc/systemd/system/serra-state-sync.service e .timer | Ripubblicano periodicamente lo stato logico. | File pronti in `bridge/systemd/`, da installare nel passo 08. |
+| /etc/systemd/system/serra-uptime.service e .timer | Controllano i riavvii della serra. | File pronti in `bridge/systemd/`, da installare nel passo 08. |
+| /etc/systemd/system/serra-water-level.service | Pubblica il livello acqua su richiesta, dopo la calibrazione. | File pronto in `bridge/systemd/`, da installare nel passo 08. |
 
 File della repository: [controller CLI](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/serra_controller.py), [bridge MQTT](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/serra_mqtt_bridge.py) e [help CLI](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/serra_help.txt).
 
@@ -30,12 +32,13 @@ File della repository: [controller CLI](https://github.com/Interstellar0verdrive
 
 ## Copia dei file Python sul Raspberry
 
-Copia sul Raspberry i tre file principali. Sul computer da cui esegui la copia, clona la repository e usa i file della cartella `bridge/`:
+Copia sul Raspberry i tre file principali e le unità systemd già pronte. Sul computer da cui esegui la copia, clona la repository:
 
 ```bash
 git clone https://github.com/Interstellar0verdrive/Linfa-local-control.git
 cd Linfa-local-control
 scp bridge/serra_controller.py bridge/serra_mqtt_bridge.py bridge/serra_help.txt pi@<RASPBERRY_IP>:/home/pi/
+scp bridge/systemd/serra-*.service bridge/systemd/serra-*.timer pi@<RASPBERRY_IP>:/home/pi/
 ```
 
 Sostituisci `<RASPBERRY_IP>` prima di eseguire il comando. Per verificare, accedi al Raspberry:
@@ -126,15 +129,21 @@ serra --help
 
 Per cercare un'azione senza scorrere l'help nel terminale, consulta il [riferimento completo dei comandi](../riferimento-comandi.md): mostra anche il payload equivalente per Home Assistant.
 
-Test di apertura della console e login via UART (non aziona i componenti):
+Test di apertura della console e login via UART, senza azionare i componenti:
+
+```bash
+serra uptime
+```
+
+**Risposta attesa:** una riga `UPTIME: ...` con i secondi trascorsi dall'avvio della serra. Se fallisce, verifica porta, permessi e password prima di inviare comandi ai componenti.
+
+Per verificare separatamente il file di stato locale:
 
 ```bash
 serra state sync
 ```
 
-**Risposta attesa:** `STATE SYNC OK`.
-
-`state sync` ricalcola solo lo stato **logico** registrato: l'esito conferma l'accesso alla console, ma non misura lo stato fisico né prova ancora i comandi verso luci e ventole. In questo passo non hai configurato il broker MQTT, quindi non aspettarti nuovi topic finché non completi il passo 07.
+**Risposta attesa:** `STATE SYNC OK`. Questo comando **non apre la UART**: ricalcola solo lo stato logico registrato, perciò non verifica il login alla serra. In questo passo non hai configurato il broker MQTT, quindi non aspettarti nuovi topic finché non completi il passo 07.
 
 Esegui questi comandi di prova **uno alla volta**, osservando il risultato dopo ciascuno.
 
@@ -192,7 +201,7 @@ cat /home/pi/.serra_state.json | jq .
 ## Continua il percorso
 
 > [!TIP] Controllo
-> **Verifica prima di proseguire:** Il comando `serra state sync` funziona dal Raspberry tramite UART.
+> **Verifica prima di proseguire:** `serra uptime` riesce a leggere la console via UART e `serra state sync` aggiorna lo stato locale.
 
 <table width="100%" class="step-nav">
   <tr>

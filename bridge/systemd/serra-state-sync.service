@@ -1,0 +1,8 @@
+[Unit]
+Description=Serra: MQTT state sync
+
+[Service]
+Type=oneshot
+User=pi
+EnvironmentFile=/etc/serra-mqtt.env
+ExecStart=/usr/local/bin/serra state sync

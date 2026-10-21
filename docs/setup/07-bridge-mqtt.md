@@ -56,6 +56,7 @@ Nel seguito, `<BROKER_IP>`, `<MQTT_USER>` e `<MQTT_PASSWORD>` indicano l'indiriz
 Puoi partire dal [modello senza credenziali](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/serra-mqtt.env.example).
 
 ```bash
+if [ ! -e /etc/serra-mqtt.env ]; then sudo install -m 600 /dev/null /etc/serra-mqtt.env; fi
 sudo nano /etc/serra-mqtt.env
 ```
 
@@ -69,9 +70,12 @@ SERRA_MQTT_PASS=<MQTT_PASSWORD>
 SERRA_MQTT_TOPIC=serra
 SERRA_CLI=/usr/local/bin/serra
 SERRA_ROOT_PASSWORD=<DEVICE_ROOT_PASSWORD>
+SERRA_UART_LOCK_TIMEOUT=60
+SERRA_CMD_TIMEOUT=120
+SERRA_MQTT_CONNECT_TIMEOUT=4
 ```
 
-Se la seriale non è `/dev/ttyUSB0`, aggiungi `SERRA_UART_PORT=/dev/ttyUSB1` sostituendo il percorso con quello trovato sul tuo Raspberry. Se una password contiene spazi, apici o barre inverse, scrivila secondo la [sintassi dei file `EnvironmentFile`](https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html#EnvironmentFile=): non copiare letteralmente i segnaposto tra `<` e `>`.
+Se la seriale non è `/dev/ttyUSB0`, aggiungi `SERRA_UART_PORT=/dev/ttyUSB1` sostituendo il percorso con quello trovato sul tuo Raspberry. `SERRA_UART_LOCK_TIMEOUT=60` è il valore usato sul prototipo: lascia tempo ai comandi concorrenti di aspettare la UART. Il bridge interrompe i comandi dopo `SERRA_CMD_TIMEOUT` secondi e limita a `SERRA_MQTT_CONNECT_TIMEOUT` secondi la verifica di raggiungibilità del broker. Se una password contiene spazi, apici o barre inverse, scrivila secondo la [sintassi dei file `EnvironmentFile`](https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html#EnvironmentFile=): non copiare letteralmente i segnaposto tra `<` e `>`.
 
 Permessi:
 
@@ -92,11 +96,13 @@ Avvia e mantiene in esecuzione serra_mqtt_bridge.py (subscriber su serra/cmd →
 
 ### File service
 
+Nel passo 06 hai già copiato il [file pronto del servizio](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/systemd/serra-mqtt-bridge.service) in `/home/pi/`. Installalo:
+
 ```bash
-sudo nano /etc/systemd/system/serra-mqtt-bridge.service
+sudo install -m 644 /home/pi/serra-mqtt-bridge.service /etc/systemd/system/
 ```
 
-Contenuto:
+Il contenuto del file è:
 
 ```ini {.file-content}
 [Unit]

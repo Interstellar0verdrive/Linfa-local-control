@@ -1,0 +1,11 @@
+[Unit]
+Description=Serra: run state sync every 30 minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=30min
+AccuracySec=10s
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,7 @@
+[Unit]
+Description=Serra: check boot timestamp (rilevazione riavvii)
+[Service]
+Type=oneshot
+User=pi
+EnvironmentFile=/etc/serra-mqtt.env
+ExecStart=/usr/local/bin/serra uptime

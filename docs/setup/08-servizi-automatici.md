@@ -2,7 +2,7 @@
 
 **Percorso guidato:** [Indice dei capitoli](../index.md)
 
-Con il bridge già funzionante, configura i timer per spegnere la rete del VoCore dopo l'avvio e sincronizzare periodicamente lo stato.
+Con il bridge già funzionante, installa i servizi copiati nel passo 06. I timer spengono la rete del VoCore dopo l'avvio, ripubblicano lo stato logico e controllano se la serra è stata riavviata. Un servizio separato può leggere il livello dell'acqua su richiesta.
 
 ## Service + timer: spegnimento rete VoCore dopo boot
 
@@ -12,9 +12,13 @@ La serra deve essere già accesa e raggiungibile via UART quando il timer scatta
 
 ### Service one-shot
 
+Installa il [file del servizio](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/systemd/serra-netoff.service) già copiato sul Raspberry:
+
 ```bash
-sudo nano /etc/systemd/system/serra-netoff.service
+sudo install -m 644 /home/pi/serra-netoff.service /etc/systemd/system/
 ```
+
+Contenuto del file:
 
 ```ini {.file-content}
 [Unit]
@@ -30,9 +34,13 @@ ExecStart=/usr/local/bin/serra net off
 
 ### Timer
 
+Installa il [file del timer](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/systemd/serra-netoff.timer):
+
 ```bash
-sudo nano /etc/systemd/system/serra-netoff.timer
+sudo install -m 644 /home/pi/serra-netoff.timer /etc/systemd/system/
 ```
+
+Contenuto del file:
 
 ```ini {.file-content}
 [Unit]
@@ -41,6 +49,7 @@ Description=Serra: run net off once after boot (60s)
 [Timer]
 OnBootSec=60
 AccuracySec=1s
+Persistent=false
 
 [Install]
 WantedBy=timers.target
@@ -67,14 +76,17 @@ journalctl -u serra-netoff.service -n 30 --no-pager
 
 ## Service + timer: state sync periodico
 
-Questo service fa un sync dello stato della serra (comando `serra state sync`)
-Il timer ripete questa azione ogni 30 minuti
+Questo servizio esegue `serra state sync` senza aprire la UART. Ricalcola gli stati logici e li pubblica sul broker configurato in `/etc/serra-mqtt.env`; il timer lo ripete ogni 30 minuti.
 
 ### Service
 
+Installa il [file del servizio](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/systemd/serra-state-sync.service):
+
 ```bash
-sudo nano /etc/systemd/system/serra-state-sync.service
+sudo install -m 644 /home/pi/serra-state-sync.service /etc/systemd/system/
 ```
+
+Contenuto del file:
 
 ```ini {.file-content}
 [Unit]
@@ -92,9 +104,13 @@ ExecStart=/usr/local/bin/serra state sync
 > [!NOTE] Nota
 > Il timer usa `OnBootSec` e `OnUnitActiveSec`: la sincronizzazione parte circa 2 minuti dopo il boot e si ripete ogni 30 minuti.
 
+Installa il [file del timer](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/systemd/serra-state-sync.timer):
+
 ```bash
-sudo nano /etc/systemd/system/serra-state-sync.timer
+sudo install -m 644 /home/pi/serra-state-sync.timer /etc/systemd/system/
 ```
+
+Contenuto del file:
 
 ```ini {.file-content}
 [Unit]
@@ -104,6 +120,7 @@ Description=Serra: run state sync every 30 minutes
 OnBootSec=2min
 OnUnitActiveSec=30min
 AccuracySec=10s
+Persistent=true
 
 [Install]
 WantedBy=timers.target
@@ -124,6 +141,50 @@ journalctl -u serra-state-sync.service -n 50 --no-pager
 ```
 
 **Risposta attesa:** nell'elenco compaiono `serra-state-sync.timer` associato a `serra-state-sync.service` e `serra-netoff.timer` associato a `serra-netoff.service`. Il log del servizio di sincronizzazione deve contenere `STATE SYNC OK` e una conclusione senza errori. Date e intervalli sono variabili. Questo sync ricalcola gli stati registrati, **non legge lo stato fisico** della serra.
+
+---
+
+## Service + timer: rilevare i riavvii della serra
+
+`serra uptime` legge via UART il tempo trascorso dall'avvio della serra e pubblica `serra/state/boot` e `serra/state/pi_boot`. Il timer presente sul Raspberry di riferimento lo esegue ai minuti **:10 e :40 di ogni ora**. È una lettura: non riavvia la serra e non modifica luci, ventole o pompe. Richiede che la serra sia accesa quando parte; se la lettura fallisce, consulta il log e riprova dopo aver verificato il collegamento.
+
+Installa i file pronti [service](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/systemd/serra-uptime.service) e [timer](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/systemd/serra-uptime.timer):
+
+```bash
+sudo install -m 644 /home/pi/serra-uptime.service /home/pi/serra-uptime.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now serra-uptime.timer
+```
+
+Verifica senza attendere il prossimo intervallo:
+
+```bash
+sudo systemctl start serra-uptime.service
+systemctl show serra-uptime.service -p Result -p ExecMainStatus
+journalctl -u serra-uptime.service -n 20 --no-pager
+```
+
+**Risposta attesa:** `Result=success`, `ExecMainStatus=0` e una riga `UPTIME: ...` nel log. Controlla anche i topic MQTT se vuoi verificare la pubblicazione: l'esito del servizio da solo non dimostra che Home Assistant abbia ricevuto i messaggi.
+
+---
+
+## Service su richiesta: livello dell'acqua
+
+Il [servizio del livello acqua](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/systemd/serra-water-level.service) esegue `serra water level` e pubblica `serra/state/water`. È installato **senza timer**: avvialo quando serve, con la pompa ferma e l'acqua a riposo. Prima occorrono i due riferimenti `serra water calibrate empty` e `serra water calibrate full`; la [sintassi completa](../riferimento-comandi.md#livello-dellacqua) è nella pagina dei comandi.
+
+```bash
+sudo install -m 644 /home/pi/serra-water-level.service /etc/systemd/system/
+sudo systemctl daemon-reload
+```
+
+Se hai già calibrato il sensore e la pompa è ferma:
+
+```bash
+sudo systemctl start serra-water-level.service
+systemctl show serra-water-level.service -p Result -p ExecMainStatus
+```
+
+**Risposta attesa:** `Result=success` e `ExecMainStatus=0`. Se non hai ancora calibrato, lascia il servizio installato e prova la lettura solo dopo la calibrazione. Il suo stato `inactive (dead)` a fine esecuzione è normale per un servizio `oneshot`.
 
 ### Comandi utili per verificare i timer e services
 
@@ -170,6 +231,8 @@ A questo punto questo dovrebbe essere lo stato attuale:
 - ✅ topic di stato MQTT pubblicati; coerenza logica da verificare dopo riavvii o comandi non osservati
 - ✅ tentativo di spegnimento della rete VoCore dopo l'avvio del Raspberry, con esito da verificare
 - ✅ state sync periodico attivo
+- ✅ timer di controllo dei riavvii attivo
+- ✅ servizio livello acqua disponibile su richiesta (dopo la calibrazione)
 
 Da qui in poi:
 
@@ -200,7 +263,7 @@ Sostituisci `<RASPBERRY_IP>` prima di eseguire i comandi. Il file `/etc/serra-mq
 ## Continua il percorso
 
 > [!TIP] Controllo
-> **Verifica prima di proseguire:** I timer sono attivi e i relativi servizi risultano verificati.
+> **Verifica prima di proseguire:** I timer necessari sono attivi; il servizio del livello acqua è installato, ma non va eseguito prima della calibrazione.
 
 <table width="100%" class="step-nav">
   <tr>
