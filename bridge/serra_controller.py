@@ -19,11 +19,13 @@ NOTA DOCUMENTAZIONE CLI:
 """
 
 import argparse
+import getpass
 import os
 import re
+import stat
 import sys
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Optional, Dict, Any, List
 
@@ -56,9 +58,9 @@ UART_LOCK_PATH = os.environ.get("SERRA_UART_LOCK", "/tmp/serra-uart.lock")
 UART_LOCK_TIMEOUT_S = float(os.environ.get("SERRA_UART_LOCK_TIMEOUT", "20").strip() or "20")
 
 # Credenziali console serra (BusyBox login)
-# La password viene fornita solo tramite l'ambiente locale del Raspberry.
+# I servizi usano l'ambiente; la CLI manuale può usare un file privato di pi.
 DEFAULT_USER = os.environ.get("SERRA_ROOT_USER", "root")
-DEFAULT_PASSWORD = os.environ.get("SERRA_ROOT_PASSWORD", "")
+LOCAL_PASSWORD_FILE = os.path.expanduser("~/.config/serra/root-password")
 
 # Limiti e costanti "magiche" resi espliciti
 MAX_PUMP_DURATION_S = 300                   # secondi massimi pompa principale
@@ -99,6 +101,59 @@ class SerraCommandError(SerraError):
 class SerraConnectionError(SerraError):
     """Errore di connessione/seriale/MQTT."""
     pass
+
+
+def _resolve_console_password() -> str:
+    """Preferisce la variabile dei servizi, poi il file privato della CLI."""
+    password = os.environ.get("SERRA_ROOT_PASSWORD", "")
+    if password:
+        return password
+    try:
+        fd = os.open(LOCAL_PASSWORD_FILE, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+    except FileNotFoundError:
+        return ""
+    except OSError as exc:
+        raise SerraCommandError(f"Impossibile leggere {LOCAL_PASSWORD_FILE}: {exc}") from exc
+    with os.fdopen(fd, "r", encoding="utf-8") as source:
+        info = os.fstat(source.fileno())
+        if not stat.S_ISREG(info.st_mode) or info.st_uid != os.geteuid() or info.st_mode & 0o077:
+            raise SerraCommandError(
+                f"{LOCAL_PASSWORD_FILE} deve essere un file tuo, leggibile solo da te (chmod 600)"
+            )
+        return source.read().rstrip("\r\n")
+
+
+def _save_console_password(password: str) -> None:
+    if not password:
+        raise SerraCommandError("Password vuota: nessun file salvato")
+    directory = os.path.dirname(LOCAL_PASSWORD_FILE)
+    os.makedirs(directory, mode=0o700, exist_ok=True)
+    info = os.lstat(directory)
+    if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.geteuid():
+        raise SerraCommandError(f"La cartella {directory} deve appartenere all'utente corrente")
+    os.chmod(directory, 0o700)
+    fd, temporary = tempfile.mkstemp(prefix=".root-password-", dir=directory)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as target:
+            target.write(password + "\n")
+        os.replace(temporary, LOCAL_PASSWORD_FILE)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+
+
+def do_auth_save() -> None:
+    password = os.environ.get("SERRA_ROOT_PASSWORD", "")
+    if not password:
+        try:
+            password = getpass.getpass("Password della console della serra: ")
+            repeated = getpass.getpass("Ripeti la password: ")
+        except (EOFError, KeyboardInterrupt) as exc:
+            raise SerraCommandError("Inserimento password interrotto") from exc
+        if password != repeated:
+            raise SerraCommandError("Le password non coincidono; nessun file salvato")
+    _save_console_password(password)
+    print(f"Credenziale salvata in {LOCAL_PASSWORD_FILE} (accessibile solo a questo utente)")
 
 
 # ---------------------------
@@ -525,7 +580,7 @@ class ConsoleConfig:
     port: str = DEFAULT_SERIAL_PORT
     baudrate: int = DEFAULT_BAUDRATE
     user: str = DEFAULT_USER
-    password: str = DEFAULT_PASSWORD
+    password: str = field(default_factory=_resolve_console_password)
     timeout: float = 0.2  # read timeout
     write_timeout: float = 1.0
 
@@ -2056,6 +2111,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub = p.add_subparsers(dest="cmd", required=True)
 
+    auth = sub.add_parser("auth", help="Salva la password console in un file privato per la CLI manuale")
+    auth_sub = auth.add_subparsers(dest="auth_cmd", required=True)
+    auth_sub.add_parser("save", help="Chiede la password una volta e la salva per l'utente corrente")
+
     # lights
     pl = sub.add_parser("lights", help="Controllo luci")
     pl_sub = pl.add_subparsers(dest="action", required=True)
@@ -2169,15 +2228,26 @@ def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
 
+    if args.cmd == "auth":
+        try:
+            do_auth_save()
+        except SerraError as exc:
+            parser.error(str(exc))
+        return
+
     needs_console = not (args.cmd == "state" and getattr(args, "state_cmd", None) == "sync") and args.cmd != "foto"
-    if needs_console and not DEFAULT_PASSWORD:
-        parser.error("Set SERRA_ROOT_PASSWORD in the environment before connecting to the device")
+    try:
+        password = _resolve_console_password() if needs_console else ""
+    except SerraError as exc:
+        parser.error(str(exc))
+    if needs_console and not password:
+        parser.error("Esegui 'serra auth save' oppure imposta SERRA_ROOT_PASSWORD prima di collegarti")
 
     cfg = ConsoleConfig(
         port=args.port,
         baudrate=args.baud,
         user=DEFAULT_USER,
-        password=DEFAULT_PASSWORD,
+        password=password,
     )
 
     console = SerraConsole(cfg)

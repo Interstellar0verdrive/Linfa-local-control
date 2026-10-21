@@ -165,12 +165,13 @@ La voce torna `::respawn:/usr/bin/start-rcc`. Dopo il riavvio, verifica con `ps 
 
 Chiudi `picocom` con `Ctrl+A`, poi `Ctrl+X` prima di usare la CLI; altrimenti la porta resta occupata.
 
-Il controller non contiene una password root predefinita. In questa sessione di terminale imposta la password della console della **tua** serra senza scriverla nella cronologia della shell:
+Il controller non contiene una password root predefinita. Salva **una volta sola** la password della console della tua serra in un file privato sul Raspberry, senza scriverla nella cronologia della shell:
 
 ```bash
-read -rsp 'Password della console della serra: ' SERRA_ROOT_PASSWORD; echo
-export SERRA_ROOT_PASSWORD
+serra auth save
 ```
+
+Il comando la chiede due volte senza mostrarla e crea `~/.config/serra/root-password` con accesso limitato al tuo utente (`600`; cartella `700`). Da quel momento puoi lanciare `serra uptime` e gli altri comandi manuali da nuove sessioni SSH senza reinserirla. Se cambi la password sulla serra, esegui di nuovo `serra auth save`. Non mettere questo file nella repository e non eseguire il comando con `sudo`, altrimenti la credenziale viene salvata per l'utente root del Raspberry.
 
 Se la porta individuata nel passo 03 non è `/dev/ttyUSB0`, imposta anche il percorso reale **nella stessa sessione** (esempio):
 
@@ -180,7 +181,7 @@ export SERRA_UART_PORT=/dev/ttyUSB1
 
 Nel passo 07 riporterai l'eventuale `SERRA_UART_PORT` anche nel file usato dai servizi.
 
-Per i servizi automatici, la stessa variabile sarà inserita nel file locale `/etc/serra-mqtt.env`, che non deve essere caricato su GitHub.
+Per i servizi automatici, la password sarà inserita anche nel file locale `/etc/serra-mqtt.env` al passo 07. I servizi continueranno a usare quel file; la credenziale privata salvata sopra serve ai comandi manuali. Nessuno dei due file va caricato su GitHub.
 
 ```bash
 serra --help

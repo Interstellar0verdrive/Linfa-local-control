@@ -10,6 +10,8 @@ Sul Raspberry, dopo aver installato il controller, puoi leggere l'help completo 
 serra --help
 ```
 
+Per i comandi manuali via SSH, `serra auth save` chiede una volta la password della console della serra e la conserva in un file privato dell'utente sul Raspberry. È un comando **solo locale**: non si invia via MQTT e non modifica la serra. I servizi automatici usano invece la credenziale nel proprio file di configurazione; vedi il [passo 06](setup/06-controller-cli.md).
+
 ## Dove fare le prove MQTT
 
 Puoi pubblicare i comandi dall'[integrazione MQTT di Home Assistant](setup/09-home-assistant.md#alternativa-usare-gli-strumenti-mqtt-integrati), ma per esplorare i topic e osservare le risposte **MQTT Explorer** è più comodo:

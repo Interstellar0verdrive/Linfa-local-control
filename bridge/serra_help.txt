@@ -19,6 +19,7 @@ CATEGORIE DISPONIBILI
   water      # Legge il magnetometro e calcola il livello dell'acqua
   uptime     # Legge l'uptime della serra e del Raspberry
   foto       # Avvia la pipeline foto esterna in background
+  auth       # Salva localmente la password console per la CLI manuale
 
 INFORMAZIONI IMPORTANTI
   • Luci e ring: il parametro "fade" è in secondi approssimati
@@ -29,6 +30,13 @@ INFORMAZIONI IMPORTANTI
   • Pump main: W<N> = N secondi (intero), W0 = stop immediato
   • state sync non interroga la serra: aggiorna solo lo stato logico locale.
   • foto richiede il programma esterno /usr/local/bin/serra-foto.
+  • auth save si esegue una volta per utente sul Raspberry; non usa la UART.
+
+PASSWORD PER I COMANDI MANUALI
+  serra auth save  # Chiede la password due volte, senza mostrarla
+
+La credenziale resta in ~/.config/serra/root-password (file 600, cartella 700).
+I servizi systemd continuano a usare SERRA_ROOT_PASSWORD dal proprio file privato.
 
 ============================================================
 LUCI (lights)
@@ -296,7 +304,7 @@ VARIABILI DI AMBIENTE
   SERRA_UART_PORT       # Porta UART (default: /dev/ttyUSB0)
   SERRA_UART_BAUD       # Baudrate (default: 115200)
   SERRA_ROOT_USER       # Utente console (default: root)
-  SERRA_ROOT_PASSWORD   # Password console; impostala localmente, non nel codice
+  SERRA_ROOT_PASSWORD   # Password console dei servizi; per la CLI usa serra auth save
   SERRA_STATE_FILE      # File stato JSON (default: ~/.serra_state.json)
   SERRA_MQTT_HOST       # Host MQTT (vuoto = MQTT disabilitato)
   SERRA_MQTT_PORT       # Porta MQTT (default: 1883)
@@ -332,6 +340,7 @@ RING
   serra ring blink [-c colore] [-t volte] [-f fade] [-d durata] [-i intervallo]
 
 ALTRO
+  serra auth save
   serra checkup [-l on|off] [-f on|off] [-lr on|off] [-pm on|off] [-pn on|off]
   serra net on/off [-n on|off]
   serra state sync

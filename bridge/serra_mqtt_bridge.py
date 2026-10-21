@@ -264,6 +264,10 @@ def run_serra_command(cli: str, tokens: list[str], timeout_s: int) -> CommandRes
     Returns:
         CommandResult with execution status and output
     """
+    # La gestione della credenziale è consentita solo nella sessione locale del Pi.
+    if "auth" in tokens:
+        return CommandResult(False, 2, "", "serra auth save è disponibile solo sul Raspberry")
+
     cmd = [cli] + tokens
 
     try:

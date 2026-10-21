@@ -1,6 +1,8 @@
 """Controlli della CLI che non aprono la porta seriale né comandano la serra."""
 
 import importlib.util
+import os
+import stat
 import tempfile
 import unittest
 from pathlib import Path
@@ -15,6 +17,21 @@ spec.loader.exec_module(serra)
 
 
 class ControllerWithoutHardwareTests(unittest.TestCase):
+    def test_manual_password_is_saved_privately_and_services_keep_env_priority(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "serra" / "root-password"
+            with patch.object(serra, "LOCAL_PASSWORD_FILE", str(path)), \
+                    patch.dict(os.environ, {"SERRA_ROOT_PASSWORD": ""}):
+                serra._save_console_password("local-example")
+                self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o600)
+                self.assertEqual(stat.S_IMODE(path.parent.stat().st_mode), 0o700)
+                self.assertEqual(serra.ConsoleConfig().password, "local-example")
+                os.chmod(path, 0o644)
+                with self.assertRaisesRegex(serra.SerraCommandError, "chmod 600"):
+                    serra._resolve_console_password()
+                os.environ["SERRA_ROOT_PASSWORD"] = "service-example"
+                self.assertEqual(serra.ConsoleConfig().password, "service-example")
+
     def test_preset_scales_recipe_and_switches_unused_channels_off(self):
         command, channels = serra.light_preset_cmd("viola", 60, 2)
         self.assertEqual(channels, {"A": 0, "G": 0, "B": 24, "R": 60, "D": 60})

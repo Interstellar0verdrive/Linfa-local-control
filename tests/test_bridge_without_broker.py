@@ -15,6 +15,12 @@ spec.loader.exec_module(bridge_module)
 
 
 class BridgeWithoutBrokerTests(unittest.TestCase):
+    def test_password_save_cannot_be_requested_over_mqtt(self):
+        with patch.object(bridge_module.subprocess, "run") as run:
+            result = bridge_module.run_serra_command("serra", ["auth", "save"], 120)
+        self.assertFalse(result.ok)
+        run.assert_not_called()
+
     def make_bridge(self):
         bridge = object.__new__(bridge_module.SerraMqttBridge)
         bridge.cfg = bridge_module.BridgeConfig(host="127.0.0.1", timeout_s=120)
