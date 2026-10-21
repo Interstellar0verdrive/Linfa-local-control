@@ -285,8 +285,9 @@ COMANDO
 
 La pipeline esterna lavora in background e scrive /tmp/serra-foto.log. Richiede
 che /usr/local/bin/serra-foto e la sua configurazione siano già installati.
-Durante lo scatto può accendere le luci e riattivare temporaneamente la rete
-della serra; attendi il completamento e verifica il ripristino nel log.
+Accende temporaneamente le sezioni LED B2 e B5, poi ripristina le luci e
+trasferisce il JPEG via UART. La Wi-Fi della serra rimane spenta.
+Attendi il completamento e verifica il ripristino nel log.
 
 ============================================================
 VARIABILI DI AMBIENTE

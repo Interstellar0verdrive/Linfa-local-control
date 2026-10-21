@@ -772,7 +772,7 @@ def light_cmd(channel: str, intensity_pct: int, fade_s: float) -> str:
 
 
 # Preset luce verificati sulla serra.
-#   A = full spectrum (bianco pieno)   -> foto
+#   A = full spectrum (bianco pieno)
 #   G = verde (~520nm)                 -> luce di servizio, non disturba la fioritura
 #   B = blu+bianco (azzurrino-lilla)
 #   R = arancio/amber (~610-630nm)     -] R e D sono complementari (LED distinti):
@@ -787,7 +787,7 @@ LIGHT_PRESETS: Dict[str, Dict[str, int]] = {
     # G/A=0. A piena potenza = PPFD max (fioritura); per plantule scalare con -i.
     "viola": {"D": 100, "R": 100, "B": 40},
     "verde": {"G": 100},                     # servizio/notte (non disturba la fioritura)
-    "bianco": {"A": 100},                    # full spectrum per le foto
+    "bianco": {"A": 100},                    # full spectrum manuale
 }
 
 
@@ -1166,9 +1166,8 @@ def do_lights_mix(
         {"ok": ok, "action": "mix", "cmd": cmd, **t},
     )
     # M3: propaga il fallimento all'EXIT CODE. Prima do_lights_mix usciva 0 anche
-    # con ok=False (marker perso/timeout): serra-foto (lights_mix -> returncode)
-    # credeva riuscito il ripristino e lasciava le luci sul FLASH in silenzio, e
-    # il banco-luci HA non vedeva il comando fallito. Sollevo SerraCommandError
+    # con ok=False (marker perso/timeout): i chiamanti potevano credere riuscito
+    # il ripristino e lasciare le luci accese in silenzio. Sollevo SerraCommandError
     # (main -> sys.exit(2)) DOPO aver registrato lo stato con ok=False. NB e' una
     # ECCEZIONE, non sys.exit: il finally all-off di do_checkup (except Exception)
     # la cattura e prosegue best-effort.
@@ -1848,11 +1847,11 @@ def do_uptime(console: SerraConsole) -> None:
 
 
 def do_foto() -> bool:
-    """Lancia la pipeline foto (/usr/local/bin/serra-foto) in background.
+    """Lancia in background la pipeline foto UART /usr/local/bin/serra-foto.
 
-    Il comando torna subito: la pipeline (net on, flash, scatto, ripristino,
-    net off, publish MQTT) dura ~1-2 minuti e scrive su /tmp/serra-foto.log.
-    Non tocca la UART direttamente: e' serra-foto a farlo coi suoi comandi.
+    Il comando torna subito. La pipeline cambia temporaneamente i LED,
+    scatta sul VoCore, ripristina le luci, trasferisce il JPEG via UART
+    e lo pubblica su MQTT. Il log va in /tmp/serra-foto.log.
     """
     import subprocess
     pipeline = "/usr/local/bin/serra-foto"

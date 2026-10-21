@@ -1,16 +1,11 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""Scatta una foto via SSH e pubblicala su MQTT, ripristinando luci e rete.
-
-Richiede SERRA_FOTO_DEVICE_IP, SERRA_ROOT_PASSWORD e SERRA_MQTT_HOST
-nell'ambiente del processo (nel servizio bridge: /etc/serra-mqtt.env).
-"""
+"""Fotografia Linfa via UART: profilo LED originale, JPEG integrale, Wi-Fi serra spenta."""
+import base64
 import fcntl
-import io
+import hashlib
 import json
 import os
-import shutil
-import subprocess
+import re
 import sys
 import threading
 import time
@@ -18,124 +13,62 @@ from datetime import datetime
 
 import paho.mqtt.client as mqtt
 
-SERRA_IP = os.environ.get("SERRA_FOTO_DEVICE_IP", "").strip()
-SERRA_PASS = os.environ.get("SERRA_ROOT_PASSWORD", "")
-SSH_OPTS = [
-    "-o", "StrictHostKeyChecking=accept-new",
-    "-o", "HostKeyAlgorithms=+ssh-rsa",
-    "-o", "PubkeyAcceptedAlgorithms=+ssh-rsa",
-    "-o", "ConnectTimeout=10",
-]
-# Impostazioni camera DEFAULT (gain/saturazione/WB auto): sono le piu' NITIDE
-# (gain forzato basso = AE lunga = mosso/soft; saturazione ridotta = slavato).
-# Sharpness 10 (default 5) recupera dettaglio. -F 16 media il banding PWM,
-# -S 20 lascia assestare l'autoesposizione. La dominante colore NON si
-# corregge qui: ci pensa il flat-field (vedi correggi()).
-# WB BLOCCATO a 4400K: in auto ogni scatto atterra su un punto colore diverso
-# dal riferimento flat-field e la correzione non cancella piu' esattamente.
-FSWEBCAM = ('fswebcam -r 640x480 -S 20 -F 16 --jpeg 95 --rotate 180 '
-            '-s "Sharpness=10" '
-            '-s "White Balance Temperature, Auto=False" '
-            '-s "White Balance Temperature=4400" --no-banner /tmp/foto.jpg')
-# Flat-field di riferimento: scatto della serra VUOTA (pareti bianche) con lo
-# STESSO mix flash e le STESSE impostazioni camera (2026-07-13). La correzione
-# divide ogni foto per la mappa di illuminazione (blur del riferimento) =
-# uniforma cast e vignettatura punto per punto. Se cambi il mix flash o le
-# impostazioni camera, va RICATTURATO (serra vuota o quasi).
-FLATFIELD = os.environ.get("SERRA_FOTO_FLATFIELD", "/home/pi/serra/flatfield.jpg")
-# Flash: mix "quasi bianco" tarato sul prototipo (2026-07-13) — molto
-# piu' neutro del canale A pieno (che vira rosa): la correzione parte vicina.
-FLASH_MIX = {"d": 25, "r": 30, "b": 100, "g": 65}
-ARCHIVIO = os.environ.get("SERRA_FOTO_ARCHIVE", "/home/pi/serra/foto")
-TOPIC_BASE = os.environ.get("SERRA_MQTT_TOPIC", "serra").rstrip("/")
-TOPIC_IMG = f"{TOPIC_BASE}/camera/latest"
-TOPIC_TS = f"{TOPIC_BASE}/camera/latest_ts"
-# Lock esclusivo: due pipeline foto concorrenti (giornaliera + scatto manuale)
-# si combatterebbero su rete/luci (una fa 'net off' mentre l'altra scatta).
-LOCKFILE = "/tmp/serra-foto.lock"
+sys.path.insert(0, '/home/pi')
+from serra_controller import ConsoleConfig, SerraConsole, _channels_to_cmd
 
-MQTT_HOST = os.environ.get("SERRA_MQTT_HOST", "").strip()
-
-# I comandi interni serra (net/lights) non pubblicano singolarmente
-# serra/status/last: la pipeline pubblica l'esito complessivo.
-SERRA_ENV = {k: v for k, v in os.environ.items() if k != "SERRA_MQTT_HOST"}
-MQTT_PORT = int(os.environ.get("SERRA_MQTT_PORT", "1883"))
-MQTT_USER = os.environ.get("SERRA_MQTT_USER", "")
-MQTT_PASS = os.environ.get("SERRA_MQTT_PASS", "")
+HOST = os.environ.get('SERRA_MQTT_HOST', '').strip()
+PORT = int(os.environ.get('SERRA_MQTT_PORT', '1883'))
+USER = os.environ.get('SERRA_MQTT_USER', '')
+PASS = os.environ.get('SERRA_MQTT_PASS', '')
+BASE = os.environ.get('SERRA_MQTT_TOPIC', 'serra').rstrip('/')
+ARCHIVE = os.environ.get('SERRA_FOTO_ARCHIVE', '/home/pi/serra/foto')
+REMOTE = '/tmp/serra-photo-uart.jpg'
+LOCK = '/tmp/serra-foto.lock'
+CHUNK = 16384
+CHANNELS = ('a', 'g', 'b', 'r', 'd')
 
 
-def log(msg):
-    print("[serra-foto] %s" % msg, flush=True)
+def log(s):
+    print('[serra-foto] ' + str(s), flush=True)
 
 
 def check_config():
-    missing = [name for name, value in (
-        ("SERRA_FOTO_DEVICE_IP", SERRA_IP),
-        ("SERRA_ROOT_PASSWORD", SERRA_PASS),
-        ("SERRA_MQTT_HOST", MQTT_HOST),
-    ) if not value or value.startswith("REPLACE_")]
-    if missing:
-        raise RuntimeError("configurazione foto incompleta: " + ", ".join(missing))
-    if not TOPIC_BASE:
-        raise RuntimeError("SERRA_MQTT_TOPIC non può essere vuoto")
-    for command in ("serra", "ssh", "sshpass"):
-        if not shutil.which(command):
-            raise RuntimeError(f"comando richiesto non trovato: {command}")
-    try:
-        from PIL import Image  # noqa: F401
-    except ImportError as exc:
-        raise RuntimeError("installa Pillow nel Python del Raspberry") from exc
-    if not os.path.isfile(FLATFIELD):
-        log("flat-field assente: userò la correzione gray-world")
-    log("configurazione foto pronta (senza prova di scatto)")
-
-
-def run(cmd, timeout=90, **kw):
-    return subprocess.run(cmd, timeout=timeout, **kw)
-
-
-def serra_ssh(remote_cmd, timeout=90, binary=False):
-    cmd = ["sshpass", "-e", "ssh"] + SSH_OPTS + [
-        "root@%s" % SERRA_IP, remote_cmd]
-    env = dict(os.environ, SSHPASS=SERRA_PASS)
-    return run(cmd, timeout=timeout, capture_output=True,
-               text=not binary, env=env)
-
-
-def ping_ok():
-    return run(["ping", "-c1", "-W2", SERRA_IP],
-               capture_output=True).returncode == 0
+    if not os.environ.get('SERRA_ROOT_PASSWORD'):
+        raise RuntimeError('SERRA_ROOT_PASSWORD mancante')
+    if not HOST or HOST.startswith('REPLACE_'):
+        raise RuntimeError('SERRA_MQTT_HOST mancante')
+    if not BASE:
+        raise RuntimeError('SERRA_MQTT_TOPIC vuoto')
+    if not os.path.isfile('/home/pi/serra_controller.py'):
+        raise RuntimeError('controller Raspberry non trovato')
 
 
 def mqtt_client():
-    if hasattr(mqtt, "CallbackAPIVersion"):
+    if hasattr(mqtt, 'CallbackAPIVersion'):
         client = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION2)
     else:
         client = mqtt.Client()
-    if MQTT_USER:
-        client.username_pw_set(MQTT_USER, MQTT_PASS)
+    if USER:
+        client.username_pw_set(USER, PASS)
     return client
 
 
 def mqtt_receive(topic, timeout=5):
-    received = []
-    event = threading.Event()
     client = mqtt_client()
-
+    event = threading.Event()
+    values = []
     def on_connect(client, userdata, flags, reason_code, properties=None):
-        if not getattr(reason_code, "is_failure", reason_code != 0):
+        if not getattr(reason_code, 'is_failure', reason_code != 0):
             client.subscribe(topic)
-
     def on_message(client, userdata, message):
-        received.append(message.payload)
+        values.append(message.payload)
         event.set()
-
     client.on_connect = on_connect
     client.on_message = on_message
-    client.connect(MQTT_HOST, MQTT_PORT, keepalive=30)
+    client.connect(HOST, PORT, keepalive=30)
     client.loop_start()
     try:
-        return received[0] if event.wait(timeout) else None
+        return values[0] if event.wait(timeout) else None
     finally:
         client.disconnect()
         client.loop_stop()
@@ -143,258 +76,209 @@ def mqtt_receive(topic, timeout=5):
 
 def mqtt_publish(topic, payload):
     client = mqtt_client()
-    client.connect(MQTT_HOST, MQTT_PORT, keepalive=30)
+    client.connect(HOST, PORT, keepalive=30)
     client.loop_start()
     try:
         info = client.publish(topic, payload, qos=1, retain=True)
         info.wait_for_publish(timeout=10)
         if not info.is_published():
-            raise RuntimeError(f"pubblicazione MQTT non confermata: {topic}")
+            raise RuntimeError('pubblicazione MQTT non confermata: ' + topic)
     finally:
         client.disconnect()
         client.loop_stop()
 
 
-def pubblica_errore(msg):
-    """Rende visibile su MQTT un guasto, incluso un ripristino fallito."""
-    payload = json.dumps({
-        "ok": False, "component": "camera", "action": "foto",
-        "cmd": str(msg)[:120], "ts": time.time(),
-    })
+def publish_error(message):
     try:
-        mqtt_publish(f"{TOPIC_BASE}/status/last", payload)
-        log("errore pubblicato su HA (serra/status/last -> latch errore)")
-    except Exception as e:
-        log("pubblica_errore fallita: %s" % e)
-
-
-def leggi_mix_luci():
-    """Mix corrente dal topic retained serra/state/lights.
-
-    Ritorna il dict {canale: valore} (anche tutti 0 se le luci sono spente),
-    oppure None se lo stato NON e' leggibile dopo alcuni tentativi (retained
-    vuoto / broker lento / timeout / payload senza canali). None != "spente":
-    il chiamante, se il mix e' ignoto, ANNULLA la foto invece di toccare le luci
-    alla cieca — cosi' non si rischia di alterare una fase di luce o buio.
-    (Retained: MQTT lo consegna subito se esiste; un vuoto = davvero
-    assente o broker in singhiozzo -> ritentiamo.)
-    """
-    for tentativo in range(3):
-        try:
-            raw = mqtt_receive(f"{TOPIC_BASE}/state/lights", timeout=5)
-            out = (raw or b"").decode("utf-8", "replace").strip()
-            if out:
-                d = json.loads(out) or {}
-                # il retained ha forma {"state": {"channels": {...}}}
-                ch = (d.get("state") or d).get("channels", {})
-                if ch:
-                    return {k.lower(): int(v) for k, v in ch.items()}
-        except Exception as e:
-            log("lettura stato luci fallita (tentativo %d: %s)" % (tentativo + 1, e))
-        time.sleep(2)
-    log("stato luci non determinabile dopo 3 tentativi: mix ignoto")
-    return None
-
-
-def lights_mix(ch):
-    args = []
-    for c in ("a", "g", "b", "r", "d"):
-        args += ["-%s" % c, str(int(ch.get(c, 0)))]
-    try:
-        r = run(["serra", "lights", "mix"] + args, timeout=60,
-                capture_output=True, text=True, env=SERRA_ENV)
+        mqtt_publish(BASE + '/status/last', json.dumps({
+            'ok': False, 'component': 'camera', 'action': 'foto',
+            'cmd': str(message)[:120], 'ts': time.time()}))
     except Exception as exc:
-        log("lights mix fallito: %s" % exc)
-        return False
-    if r.returncode != 0:
-        log("lights mix fallito: %s" % (r.stderr or r.stdout).strip()[-200:])
-    return r.returncode == 0
+        log('pubblicazione errore fallita: ' + str(exc))
 
 
-def correggi(raw):
-    """Flat-field: divide per la mappa di illuminazione del riferimento.
+def read_lights():
+    for attempt in range(3):
+        raw = mqtt_receive(BASE + '/state/lights')
+        if raw:
+            try:
+                data = json.loads(raw)
+                channels = (data.get('state') or data)['channels']
+                mix = {ch: int(channels[ch.upper()]) for ch in CHANNELS}
+                if all(0 <= v <= 100 for v in mix.values()):
+                    return mix
+            except (ValueError, TypeError, KeyError, AttributeError):
+                pass
+        log('stato luci incompleto (%d/3)' % (attempt + 1))
+        time.sleep(1)
+    raise RuntimeError('mix luci ignoto: scatto annullato prima di cambiare i LED')
 
-    illum = blur pesante del flat-field (resta solo l'illuminazione, la
-    struttura fine si dissolve); out = raw * 235/illum, per canale e per
-    pixel. Corregge cast NON uniformi (centro caldo, bordi blu) che un
-    bilanciamento globale non puo' sistemare. Fallback: gray-world.
-    """
-    from PIL import Image, ImageFilter
-    img = Image.open(io.BytesIO(raw)).convert("RGB")
-    out = io.BytesIO()
+
+def checked(console, command, timeout=15):
+    if not console.run_checked(command, timeout=timeout):
+        raise RuntimeError('comando UART non confermato: ' + command[:80])
+
+
+def connect_console():
+    console = SerraConsole(ConsoleConfig())
+    console.open()
     try:
-        import numpy as np
-        flat = Image.open(FLATFIELD).convert("RGB")
-        illum = np.asarray(flat.filter(ImageFilter.GaussianBlur(radius=80)),
-                           dtype="float32") + 1.0
-        arr = np.asarray(img, dtype="float32") * (235.0 / illum)
-        # Normalizza l'esposizione: l'AE della camera atterra dove vuole
-        # (scatti piu' chiari/scuri del riferimento); il p95 = livello
-        # pareti viene riportato sempre a 238 -> esposizione costante.
-        p95 = float(np.percentile(arr, 95))
-        if p95 > 1:
-            arr *= 238.0 / p95
-        img = Image.fromarray(np.clip(arr, 0, 255).astype("uint8"))
-    except Exception as e:
-        log("flat-field non disponibile (%s), fallback gray-world" % e)
-        hist = img.histogram()
-        n = img.width * img.height
-        means = [sum(v * hist[c * 256 + v] for v in range(256)) / n
-                 for c in range(3)]
-        gray = sum(means) / 3
-        k = [gray / m if m else 1.0 for m in means]
-        peak = max(means[c] * k[c] for c in range(3))
-        boost = min(220.0 / peak, 1.4) if peak else 1.0
-        lut = []
-        for c in range(3):
-            lut += [min(255, int(v * k[c] * boost)) for v in range(256)]
-        img = img.point(lut)
-    img.save(out, "JPEG", quality=92)
-    return out.getvalue()
+        console.ensure_root_prompt()
+        return console
+    except Exception:
+        console.close()
+        raise
 
 
-def luminosita_media(raw):
-    from PIL import Image
-    img = Image.open(io.BytesIO(raw)).convert("L")
-    hist = img.histogram()
-    n = img.width * img.height
-    return sum(v * hist[v] for v in range(256)) / n
+def capture():
+    console = connect_console()
+    before = None
+    changed = False
+    restore_ok = True
+    try:
+        before = read_lights()
+        log('mix precedente: ' + json.dumps(before, sort_keys=True))
+        changed = True
+        checked(console, _channels_to_cmd({ch.upper(): 0 for ch in CHANNELS}, 0))
+        checked(console, 'echo 2Bff000 > /dev/tty-local && sleep 0.25 && '
+                         'echo 5Bff000 > /dev/tty-local')
+        time.sleep(1)
+        # Il vecchio prototipo impostava WB manuale: reset esplicito ad Auto.
+        # Nessun crop, flat-field, sharpening o media artificiale dei frame.
+        checked(console, 'rm -f ' + REMOTE + ' && '
+                'fswebcam -D 0 -r 640x480 --jpeg 95 --rotate 180 '
+                '-s "White Balance Temperature, Auto=True" '
+                '--no-banner --save ' + REMOTE + ' >/dev/null 2>&1 && test -s ' + REMOTE,
+                timeout=35)
+        log('scatto eseguito sul VoCore')
+    finally:
+        if changed and before is not None:
+            # B2/B5 si spengono singolarmente prima del ripristino del gruppo B.
+            restore = ('echo 2B00000 > /dev/tty-local && sleep 0.25 && '
+                       'echo 5B00000 > /dev/tty-local && sleep 0.25 && ' +
+                       _channels_to_cmd({ch.upper(): before[ch] for ch in CHANNELS}, 0))
+            restore_ok = False
+            for attempt in range(2):
+                try:
+                    checked(console, restore)
+                    restore_ok = True
+                    log('mix luci ripristinato')
+                    break
+                except Exception as exc:
+                    log('ripristino luci %d/2 fallito: %s' % (attempt + 1, exc))
+                    time.sleep(1)
+        console.close()
+        if not restore_ok:
+            publish_error('ripristino luci dopo foto fallito')
+            raise RuntimeError('ripristino luci dopo foto fallito')
 
 
-def scatta():
-    remote_cmd = ("rm -f /tmp/foto.jpg; " + FSWEBCAM +
-                  " 2>/dev/null && cat /tmp/foto.jpg; rc=$?; "
-                  "rm -f /tmp/foto.jpg; exit $rc")
-    r = serra_ssh(remote_cmd,
-                  timeout=120, binary=True)
-    raw = r.stdout
-    if r.returncode != 0 or not raw or len(raw) < 5000 or raw[:2] != b"\xff\xd8":
-        raise RuntimeError("scatto fallito (%d byte)" % len(raw or b""))
+def metadata():
+    console = connect_console()
+    try:
+        out = console.run_capture('wc -c < ' + REMOTE + '; sha256sum ' + REMOTE, timeout=8)
+    finally:
+        console.close()
+    m = re.search(r'(?m)^\s*(\d+)\s*\r?\n([0-9a-f]{64})\s', out)
+    if not m:
+        raise RuntimeError('metadati JPEG non leggibili')
+    size, digest = int(m.group(1)), m.group(2)
+    if not 5000 <= size <= 2_000_000:
+        raise RuntimeError('dimensione JPEG inattesa: %d' % size)
+    return size, digest
+
+
+def read_chunk(i):
+    console = connect_console()
+    try:
+        out = console.run_capture('dd if=' + REMOTE + ' bs=' + str(CHUNK) +
+                                  ' skip=' + str(i) + ' count=1 2>/dev/null | uuencode -m chunk',
+                                  timeout=25)
+    finally:
+        console.close()
+    m = re.search(r'begin-base64 644 chunk\s+([A-Za-z0-9+/=\s]+?)\s+====', out)
+    if not m:
+        raise RuntimeError('blocco UART %d incompleto' % i)
+    return base64.b64decode(''.join(m.group(1).split()), validate=True)
+
+
+def transfer():
+    size, digest = metadata()
+    blocks = []
+    for i in range((size + CHUNK - 1) // CHUNK):
+        expected = min(CHUNK, size - i * CHUNK)
+        for attempt in range(3):
+            try:
+                block = read_chunk(i)
+                if len(block) != expected:
+                    raise RuntimeError('blocco %d: ricevuti %d/%d byte' % (i, len(block), expected))
+                blocks.append(block)
+                break
+            except Exception as exc:
+                if attempt == 2:
+                    raise
+                log('ritento blocco %d: %s' % (i, exc))
+                time.sleep(0.3)
+        # Il lock UART viene lasciato dopo ogni blocco per i comandi concorrenti.
+        time.sleep(0.15)
+    raw = b''.join(blocks)
+    if hashlib.sha256(raw).hexdigest() != digest:
+        raise RuntimeError('checksum JPEG diverso da quello sul VoCore')
+    if not raw.startswith(b'\xff\xd8') or not raw.endswith(b'\xff\xd9'):
+        raise RuntimeError('JPEG incompleto')
     return raw
 
 
-def main():
-    # Lock esclusivo non-bloccante: se un'altra pipeline foto e' gia' in
-    # corso esco subito (niente conflitti su rete/luci). Si rilascia da solo
-    # alla fine del processo, anche su crash (fd chiuso dall'OS).
-    with open(LOCKFILE, "w") as lock_fd:
+def cleanup():
+    try:
+        console = connect_console()
         try:
-            fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError:
-            log("un'altra pipeline foto e' gia' in corso: esco")
-            return
-        _run_locked()
-
-
-def _run_locked():
-    net_accesa_da_noi = False
-    mix_prima = None
-    flash_tentato = False
-    try:
-        # 1. rete
-        if not ping_ok():
-            log("wifi serra spenta, la accendo")
-            # Flag PRIMA di 'net on': se 'net on' va in timeout/eccezione,
-            # il finally deve comunque tentare 'net off' (postura wifi-off).
-            net_accesa_da_noi = True
-            run(["serra", "net", "on"], timeout=90, capture_output=True, env=SERRA_ENV)
-            for _ in range(20):
-                if ping_ok():
-                    break
-                time.sleep(3)
-            else:
-                raise RuntimeError("serra non raggiungibile dopo net on")
-        log("serra raggiungibile")
-
-        # 2. luci: salva il mix corrente; se e' IGNOTO annulla la foto senza
-        #    toccare le luci (il finally fara' comunque net off). Meglio una
-        #    foto persa che ripristinare le luci alla cieca.
-        mix_prima = leggi_mix_luci()
-        if mix_prima is None:
-            raise RuntimeError("mix luci ignoto: foto annullata senza toccare le luci")
-        flash_tentato = True
-        if not lights_mix(FLASH_MIX):
-            raise RuntimeError("flash non applicato")
-        time.sleep(3)
-
-        # 3. scatto (retry singolo se viene buio: comando luci perso)
-        raw = scatta()
-        if luminosita_media(raw) < 25:
-            log("scatto buio, riapplico il flash e riprovo")
-            lights_mix(FLASH_MIX)
-            time.sleep(3)
-            raw = scatta()
-            if luminosita_media(raw) < 25:
-                raise RuntimeError("scatto ancora buio dopo retry")
-        log("scatto ok (%d byte)" % len(raw))
-    finally:
-        # 4. ripristino SEMPRE luci e rete, anche su errore
-        if flash_tentato:
-            # mix_prima e' garantito noto qui (se era ignoto abbiamo saltato la
-            # foto prima di accendere il flash). Il ripristino puo' fallire
-            # con UART occupata -> la serra resterebbe sul flash bianco per ore
-            # senza che HA lo sappia. Controllo l'esito e ritento con backoff.
-            if not lights_mix(mix_prima):
-                time.sleep(3)
-                if not lights_mix(mix_prima):
-                    log("ATTENZIONE: ripristino mix luci FALLITO 2x, luci lasciate sul FLASH bianco")
-                    pubblica_errore("ripristino luci post-foto fallito: luci lasciate sul flash bianco")
-        if net_accesa_da_noi:
-            for tentativo in range(2):
-                try:
-                    result = run(["serra", "net", "off"], timeout=90,
-                                 capture_output=True, env=SERRA_ENV)
-                    if result.returncode == 0:
-                        log("wifi serra rispenta")
-                        break
-                except Exception as exc:
-                    log("net off fallito: %s" % exc)
-                if tentativo == 0:
-                    time.sleep(3)
-            else:
-                log("ATTENZIONE: impossibile spegnere la wifi della serra")
-                pubblica_errore("ripristino rete post-foto fallito")
-
-    # 5. correzione colore + archivio + publish
-    foto = correggi(raw)
-    ts = datetime.now().astimezone()
-    os.makedirs(ARCHIVIO, exist_ok=True)
-    path = os.path.join(ARCHIVIO, ts.strftime("%Y-%m-%d_%H%M") + ".jpg")
-    with open(path, "wb") as f:
-        f.write(foto)
-    latest = os.path.join(ARCHIVIO, "latest.jpg")
-    with open(latest, "wb") as f:
-        f.write(foto)
-    log("salvata %s (%d byte)" % (path, len(foto)))
-
-    try:
-        mqtt_publish(TOPIC_IMG, foto)
-        mqtt_publish(TOPIC_TS, ts.strftime("%Y-%m-%dT%H:%M:%S%z"))
+            checked(console, 'rm -f ' + REMOTE)
+        finally:
+            console.close()
     except Exception as exc:
-        log("publish fallito: tengo %s (%s)" % (path, exc))
-        raise
-    # L'archivio vero e' in HA (camera.snapshot -> /config/www/serra/archivio):
-    # qui si tiene solo latest.jpg (sovrascritto, zero crescita). Il file
-    # datato resta SOLO se il publish fallisce (paracadute per non perdere
-    # la foto del giorno).
-    os.remove(path)
-    log("pubblicata su MQTT; copia locale rimossa (resta latest.jpg)")
+        log('pulizia temporaneo VoCore fallita: ' + str(exc))
 
 
-if __name__ == "__main__":
-    try:
-        check_config()
-    except Exception as e:
-        log("ERRORE: %s" % e)
-        sys.exit(1)
-    if sys.argv[1:] == ["--check"]:
-        sys.exit(0)
+def publish_photo(raw):
+    ts = datetime.now().astimezone()
+    os.makedirs(ARCHIVE, exist_ok=True)
+    dated = os.path.join(ARCHIVE, ts.strftime('%Y-%m-%d_%H%M') + '.jpg')
+    latest = os.path.join(ARCHIVE, 'latest.jpg')
+    with open(dated, 'wb') as f:
+        f.write(raw)
+    with open(latest, 'wb') as f:
+        f.write(raw)
+    mqtt_publish(BASE + '/camera/latest', raw)
+    mqtt_publish(BASE + '/camera/latest_ts', ts.strftime('%Y-%m-%dT%H:%M:%S%z'))
+    os.remove(dated)  # Archivio definitivo in HA tramite camera.snapshot.
+    log('JPEG integrale pubblicato (%d byte); Wi-Fi VoCore non usata' % len(raw))
+
+
+def main():
+    check_config()
+    if sys.argv[1:] == ['--check']:
+        log('pipeline UART pronta')
+        return
     if len(sys.argv) != 1:
-        log("ERRORE: uso: serra-foto [--check]")
-        sys.exit(2)
+        raise RuntimeError('uso: serra-foto [--check]')
+    with open(LOCK, 'w') as fd:
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            log('uno scatto è già in corso')
+            return
+        try:
+            capture()
+            publish_photo(transfer())
+        finally:
+            cleanup()
+
+
+if __name__ == '__main__':
     try:
         main()
-    except Exception as e:
-        log("ERRORE: %s" % e)
-        pubblica_errore(str(e))
+    except Exception as exc:
+        log('ERRORE: ' + str(exc))
+        publish_error(str(exc))
         sys.exit(1)

@@ -1,88 +1,83 @@
-"""I casi critici di ripristino della pipeline foto, senza rete o hardware."""
+"""Safety checks for the UART photo pipeline without touching hardware or MQTT."""
 
 import importlib.machinery
 import importlib.util
-import tempfile
+import sys
+import types
 import unittest
 from pathlib import Path
-from types import SimpleNamespace
-from unittest.mock import call, patch
+from unittest.mock import Mock, patch
 
 
-PHOTO = Path(__file__).resolve().parents[1] / "bridge" / "serra-foto"
-loader = importlib.machinery.SourceFileLoader("serra_foto", str(PHOTO))
+PHOTO = Path(__file__).resolve().parents[1] / 'bridge' / 'serra-foto'
+controller = types.ModuleType('serra_controller')
+controller.ConsoleConfig = type('ConsoleConfig', (), {})
+controller.SerraConsole = Mock()
+controller._channels_to_cmd = lambda channels, fade: 'restore-all-groups'
+paho = types.ModuleType('paho')
+paho_mqtt = types.ModuleType('paho.mqtt')
+paho_client = types.ModuleType('paho.mqtt.client')
+paho.mqtt = paho_mqtt
+paho_mqtt.client = paho_client
+loader = importlib.machinery.SourceFileLoader('serra_foto_uart_test', str(PHOTO))
 spec = importlib.util.spec_from_loader(loader.name, loader)
 photo = importlib.util.module_from_spec(spec)
-loader.exec_module(photo)
+with patch.dict(sys.modules, {
+    'serra_controller': controller,
+    'paho': paho, 'paho.mqtt': paho_mqtt, 'paho.mqtt.client': paho_client,
+}):
+    loader.exec_module(photo)
 
 
 class PhotoPipelineWithoutHardwareTests(unittest.TestCase):
-    def test_failed_flash_still_restores_lights_and_network(self):
+    def test_camera_failure_restores_leds_before_releasing_uart(self):
+        console = Mock()
+        mix = {ch: 0 for ch in photo.CHANNELS}
         commands = []
 
-        def fake_run(cmd, **kwargs):
-            commands.append(cmd)
-            return SimpleNamespace(returncode=0)
+        def run(console_arg, command, timeout=15):
+            commands.append(command)
+            if 'fswebcam' in command:
+                raise RuntimeError('camera failure')
 
-        with tempfile.TemporaryDirectory() as directory, \
-                patch.object(photo, "LOCKFILE", str(Path(directory) / "photo.lock")), \
-                patch.object(photo, "ping_ok", side_effect=[False, True]), \
-                patch.object(photo, "leggi_mix_luci", return_value={"a": 20}), \
-                patch.object(photo, "lights_mix", side_effect=[False, True]) as lights, \
-                patch.object(photo, "scatta") as scatta, \
-                patch.object(photo.time, "sleep"), \
-                patch.object(photo, "run", side_effect=fake_run):
-            with self.assertRaisesRegex(RuntimeError, "flash non applicato"):
-                photo.main()
-        self.assertEqual(lights.call_args_list, [call(photo.FLASH_MIX), call({"a": 20})])
-        self.assertIn(["serra", "net", "on"], commands)
-        self.assertIn(["serra", "net", "off"], commands)
-        scatta.assert_not_called()
+        with patch.object(photo, 'connect_console', return_value=console), \
+                patch.object(photo, 'read_lights', return_value=mix), \
+                patch.object(photo, 'checked', side_effect=run), \
+                patch.object(photo.time, 'sleep'):
+            with self.assertRaisesRegex(RuntimeError, 'camera failure'):
+                photo.capture()
+        self.assertTrue(any('2Bff000' in cmd and '5Bff000' in cmd for cmd in commands))
+        self.assertIn('2B00000', commands[-1])
+        self.assertIn('5B00000', commands[-1])
+        self.assertIn('restore-all-groups', commands[-1])
+        console.close.assert_called_once()
 
-    def test_unknown_mix_leaves_lights_untouched_and_turns_network_off(self):
-        commands = []
+    def test_missing_light_state_never_changes_leds(self):
+        console = Mock()
+        with patch.object(photo, 'connect_console', return_value=console), \
+                patch.object(photo, 'read_lights', side_effect=RuntimeError('mix luci ignoto')), \
+                patch.object(photo, 'checked') as checked:
+            with self.assertRaisesRegex(RuntimeError, 'mix luci ignoto'):
+                photo.capture()
+        checked.assert_not_called()
+        console.close.assert_called_once()
 
-        def fake_run(cmd, **kwargs):
-            commands.append(cmd)
-            return SimpleNamespace(returncode=0)
+    def test_transfer_rejects_corrupted_jpeg(self):
+        raw = b'\xff\xd8' + b'x' * 6000 + b'\xff\xd9'
+        with patch.object(photo, 'metadata', return_value=(len(raw), '0' * 64)), \
+                patch.object(photo, 'read_chunk', return_value=raw), \
+                patch.object(photo.time, 'sleep'):
+            with self.assertRaisesRegex(RuntimeError, 'checksum JPEG diverso'):
+                photo.transfer()
 
-        with tempfile.TemporaryDirectory() as directory, \
-                patch.object(photo, "LOCKFILE", str(Path(directory) / "photo.lock")), \
-                patch.object(photo, "ping_ok", side_effect=[False, True]), \
-                patch.object(photo, "leggi_mix_luci", return_value=None), \
-                patch.object(photo, "lights_mix") as lights, \
-                patch.object(photo.time, "sleep"), \
-                patch.object(photo, "run", side_effect=fake_run):
-            with self.assertRaisesRegex(RuntimeError, "mix luci ignoto"):
-                photo.main()
-        lights.assert_not_called()
-        self.assertIn(["serra", "net", "off"], commands)
-
-    def test_failed_network_restore_is_reported_after_retry(self):
-        def fake_run(cmd, **kwargs):
-            return SimpleNamespace(returncode=1 if cmd[-1] == "off" else 0)
-
-        with tempfile.TemporaryDirectory() as directory, \
-                patch.object(photo, "LOCKFILE", str(Path(directory) / "photo.lock")), \
-                patch.object(photo, "ping_ok", side_effect=[False, True]), \
-                patch.object(photo, "leggi_mix_luci", return_value=None), \
-                patch.object(photo, "pubblica_errore") as report, \
-                patch.object(photo.time, "sleep"), \
-                patch.object(photo, "run", side_effect=fake_run) as run:
-            with self.assertRaisesRegex(RuntimeError, "mix luci ignoto"):
-                photo.main()
-        self.assertEqual(sum(c.args[0] == ["serra", "net", "off"] for c in run.call_args_list), 2)
-        report.assert_called_once_with("ripristino rete post-foto fallito")
-
-    def test_capture_rejects_a_stale_image_after_camera_error(self):
-        old_image = b"\xff\xd8" + b"x" * 6000
-        with patch.object(photo, "serra_ssh", return_value=SimpleNamespace(
-                returncode=1, stdout=old_image)) as ssh:
-            with self.assertRaisesRegex(RuntimeError, "scatto fallito"):
-                photo.scatta()
-        command = ssh.call_args.args[0]
-        self.assertTrue(command.startswith("rm -f /tmp/foto.jpg; fswebcam"))
+    def test_truncated_uart_block_is_rejected(self):
+        console = Mock()
+        console.run_capture.return_value = 'begin-base64 644 chunk\nYQ==\n'
+        with patch.object(photo, 'connect_console', return_value=console):
+            with self.assertRaisesRegex(RuntimeError, 'blocco UART 0 incompleto'):
+                photo.read_chunk(0)
+        console.close.assert_called_once()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

@@ -1,76 +1,61 @@
-# Foto della serra (facoltativo)
+# Foto della serra via UART
 
-Il controllo locale di luci, ventole e pompe **non richiede la fotocamera**. La pipeline foto è un'aggiunta facoltativa: il Raspberry riattiva temporaneamente la Wi-Fi della serra, acquisisce un'immagine dalla fotocamera interna via SSH, ripristina le luci e la rete, poi pubblica l'immagine sul broker MQTT. L'app Home Assistant può mostrarla e archiviarla; la sua configurazione completa verrà pubblicata con l'app.
+La fotocamera è facoltativa. Sul prototipo, il Raspberry fa scattare la webcam interna al VoCore tramite la console USB/UART, trasferisce il JPEG sulla stessa seriale e lo pubblica sul broker MQTT. **La Wi-Fi del VoCore resta spenta**; solo il Raspberry usa la rete domestica per parlare con Home Assistant.
 
-Questa procedura deriva dal prototipo. **Non è stata verificata su una seconda serra**: controlla prima che il tuo firmware abbia `fswebcam`, `/dev/video0` e un server SSH raggiungibile dal Raspberry quando la Wi-Fi della serra è accesa. La serra deve già conoscere una rete Wi-Fi raggiungibile dal Raspberry. Se uno di questi requisiti manca, lascia la funzione foto disattivata: il resto della guida funziona comunque.
+Questa procedura è stata verificata sulla serra dell'autore con firmware VoCore 1.4. Non è ancora stata provata su una seconda unità: prima di installarla, controlla che il tuo firmware abbia `fswebcam`, `uuencode`, `sha256sum` e `/dev/video0`. Il resto del controllo locale funziona anche se salti la fotocamera.
 
-> [!WARNING] Durante lo scatto
-> La pipeline cambia per qualche secondo il mix delle luci. Se non riesce a leggere lo stato precedente, annulla la foto; se il ripristino fallisce, pubblica un errore su `serra/status/last`. Fai la prima prova solo mentre puoi osservare la serra e controllare le luci al termine. La funzione usa la password root della serra: conservala solo nel file privato `/etc/serra-mqtt.env` sul Raspberry. Chi può leggere i topic MQTT della fotocamera può vedere l'interno della serra.
+## Come avviene uno scatto
+
+1. Il pulsante nell'app Home Assistant richiama `script.serra_foto_scatta`, che pubblica `foto` su `serra/cmd/ha`. Il bridge MQTT sul Raspberry esegue `serra foto`.
+2. La pipeline [`serra-foto`](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/serra-foto) legge il mix luci corrente. Se manca anche un solo canale, annulla lo scatto prima di toccare i LED.
+3. Spegne temporaneamente i canali normali, accende solo le sottosezioni **B2 e B5** al 100%, attende un secondo e scatta con `fswebcam` a **640×480, JPEG qualità 95, rotazione 180° e bilanciamento del bianco automatico**. È il profilo fotografico diurno individuato nel firmware originale 1.4. Non ritaglia né corregge i colori.
+4. Ripristina le luci in ogni caso, anche se lo scatto fallisce. Il JPEG passa dal VoCore al Raspberry in blocchi UART; ogni blocco rilascia la seriale per permettere agli altri comandi di procedere. Il Raspberry controlla la dimensione e lo SHA-256 prima di pubblicarlo.
+5. Il Raspberry pubblica il file integrale su `serra/camera/latest` e il timestamp su `serra/camera/latest_ts`. Home Assistant lo mostra tramite `camera.serra_foto` e, nella configurazione dell'autore, lo copia nell'archivio con `camera.snapshot`.
+
+> [!WARNING] Prima prova
+> Le luci cambiano per alcuni secondi. Prova la funzione mentre puoi osservare la serra e verifica che tornino al mix precedente. Se il ripristino fallisce, la pipeline pubblica un errore su `serra/status/last`. Il trasferimento richiede alcune decine di secondi: durante ogni blocco UART un altro comando può attendere, poi prosegue quando la seriale viene rilasciata. Chi può leggere il topic MQTT della fotocamera può vedere l'interno della serra.
 
 ## Verifiche preliminari
 
-Dal Raspberry, apri la console UART della serra come nel [passo 04](../setup/04-uart.md). **Nella shell della serra**, verifica senza modificare nulla:
+Apri la console UART come nel [passo 04](../setup/04-uart.md) e, **nella shell del VoCore**, verifica senza cambiare nulla:
 
 ```sh
 command -v fswebcam
+command -v uuencode
+command -v sha256sum
 ls -l /dev/video0
-command -v dropbear
 ```
 
-Sul prototipo, `fswebcam` e `/dev/video0` erano presenti; il server SSH era disponibile. Se la terza verifica non trova `dropbear`, controlla se il firmware usa un altro server SSH. Esci dalla console e lascia libera la porta UART prima di proseguire.
+Esci dalla console prima di proseguire, in modo da liberare la porta seriale. Il [passo 03](../setup/03-raspberry.md) installa già `python3-serial` e `python3-paho-mqtt` sul Raspberry. Il [passo 06](../setup/06-controller-cli.md) mette `serra_controller.py` in `/home/pi/`; il [passo 07](../setup/07-bridge-mqtt.md) configura bridge, broker e credenziali private.
 
 ## Installazione sul Raspberry
 
-La [pipeline `serra-foto`](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/serra-foto) è inclusa nella repository. Richiede il controller e il bridge MQTT già installati, Python con `paho-mqtt` e Pillow, e `sshpass`. Per la correzione colore con un riferimento fotografico usa anche NumPy; senza NumPy applica una correzione più semplice.
-
-Sul computer da cui hai clonato la repository nel [passo 06](../setup/06-controller-cli.md), copia lo script sul Raspberry:
+Dal computer che contiene il clone della repository, copia lo script:
 
 ```bash
 scp bridge/serra-foto pi@<RASPBERRY_IP>:/home/pi/
 ```
 
-Sostituisci `<RASPBERRY_IP>` con il suo indirizzo reale. Poi, **sul Raspberry**:
+Poi, **sul Raspberry**:
 
 ```bash
-sudo apt update
-sudo apt install sshpass python3-pil python3-numpy
-sudo install -m 755 /home/pi/serra-foto /usr/local/bin/serra-foto
-```
-
-Il [passo 03](../setup/03-raspberry.md) installa `paho-mqtt` per il controller.
-
-Nel file privato `/etc/serra-mqtt.env` aggiungi l'indirizzo **della tua serra**, per esempio:
-
-```text {.reference-example}
-SERRA_FOTO_DEVICE_IP=<IP_DELLA_SERRA>
-```
-
-Il file contiene già `SERRA_ROOT_PASSWORD` e i dati MQTT se hai seguito il [passo 07](../setup/07-bridge-mqtt.md). Mantieni i permessi `600 root:root`. Non copiare il file compilato su GitHub.
-
-Se vuoi usare la correzione del colore con un riferimento, salva sul Raspberry un'immagine della **serra vuota** in `/home/pi/serra/flatfield.jpg`, acquisita con le stesse impostazioni della fotocamera e delle luci. Un'immagine di un'altra serra o ottenuta con un altro mix di luci darebbe colori sbagliati. La funzione resta utilizzabile senza questo file e passa alla correzione automatica semplice. Il riferimento del prototipo non è incluso nella repository.
-
-Verifica la configurazione **senza scattare né attivare la rete o le luci**:
-
-```bash
-sudo systemd-run --wait --collect --unit=serra-foto-check \
-  -p User=pi -p EnvironmentFile=/etc/serra-mqtt.env \
+sudo install -o root -g root -m 755 /home/pi/serra-foto /usr/local/bin/serra-foto
+sudo systemd-run --wait --collect --pipe -p User=pi \
+  -p EnvironmentFile=/etc/serra-mqtt.env \
   /usr/local/bin/serra-foto --check
-journalctl -u serra-foto-check -n 20 --no-pager
 ```
 
-**Risposta attesa:** `configurazione foto pronta (senza prova di scatto)` e servizio concluso con `status=0/SUCCESS`. Il controllo conferma file, librerie e variabili d'ambiente, **non** la connessione SSH alla serra né l'acquisizione della camera.
+Sostituisci `<RASPBERRY_IP>` con l'indirizzo reale del Raspberry. `--check` deve mostrare `pipeline UART pronta`: verifica dipendenze e variabili, **senza scattare o modificare le luci**. La password della console resta nel file privato `/etc/serra-mqtt.env`; non pubblicarlo. Non serve configurare un indirizzo IP della serra o installare `sshpass`, Pillow o un encoder WebP.
 
-## Prima prova e risultato
+## Prima prova
 
-Quando puoi osservare la serra, pubblica il payload testuale `foto` sul topic `serra/cmd` **senza retain**, usando MQTT Explorer come nel [passo 09](../setup/09-home-assistant.md#prova-con-mqtt-explorer). Il bridge esegue il comando con la configurazione privata caricata. `serra foto` da una normale shell del Raspberry funziona solo se hai caricato nello stesso processo le variabili di `/etc/serra-mqtt.env`; non stampare o copiare le credenziali in un comando. Il comando torna subito; la pipeline prosegue in background. Controlla il log e verifica che luci e Wi-Fi tornino allo stato precedente:
+Quando puoi controllare visivamente i LED, usa il pulsante foto dell'app Home Assistant. Se l'app non è installata, pubblica il payload testuale `foto` sul topic `serra/cmd/ha` **senza retain** tramite MQTT Explorer, come nel [passo 09](../setup/09-home-assistant.md#prova-con-mqtt-explorer). Il comando torna subito e la pipeline lavora in background. Sul Raspberry puoi seguirla con:
 
 ```bash
-tail -n 80 /tmp/serra-foto.log
+tail -f /tmp/serra-foto.log
 ```
 
-La pipeline pubblica l'immagine JPEG come messaggio retained in `serra/camera/latest` e l'ora dello scatto in `serra/camera/latest_ts`. Conserva l'ultima foto in `/home/pi/serra/foto/latest.jpg`. La pubblicazione MQTT è il passaggio previsto per la visualizzazione in Home Assistant; l'archivio storico sul prototipo è gestito da Home Assistant, **non** dallo script sul Raspberry.
-
-Se lo scatto fallisce, il log indica la causa e `serra/status/last` riceve un errore. Non ripetere il comando finché non hai verificato il ripristino delle luci e della Wi-Fi.
+Attendi il messaggio `JPEG integrale pubblicato`. Verifica che le luci siano tornate allo stato precedente e che `camera.serra_foto` mostri la nuova immagine. Sul prototipo il JPEG archiviato da Home Assistant era identico byte per byte a quello sul Raspberry, sempre 640×480. Se lo scatto fallisce, controlla il log e il ripristino delle luci prima di riprovare.
 
 ---
 
