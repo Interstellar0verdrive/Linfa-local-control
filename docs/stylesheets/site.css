@@ -28,8 +28,8 @@
   --code-string: #92531f;
   --code-keyword: #315b9c;
   --code-comment: #64786b;
-  --value-check-bg: #ffe079;
-  --value-check-ink: #3d2800;
+  --value-check-bg: #fff0c2;
+  --value-check-ink: #694d16;
   --shadow: 0 12px 38px rgba(24, 54, 33, .07);
 }
 
@@ -63,8 +63,8 @@
   --code-string: #ecc58d;
   --code-keyword: #abc8f3;
   --code-comment: #9db5a3;
-  --value-check-bg: #ffd65c;
-  --value-check-ink: #2e2100;
+  --value-check-bg: #514424;
+  --value-check-ink: #ffe4a0;
   --shadow: 0 14px 40px rgba(0, 0, 0, .16);
 }
 
