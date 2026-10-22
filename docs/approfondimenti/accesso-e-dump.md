@@ -7,7 +7,7 @@ Queste operazioni servono per l'esplorazione tecnica. Il percorso principale usa
 
 ### Entrare nella serra
 
-1. Collegare il Mac alla rete temporanea creata dalla serra e, **se SSH è disponibile su quel firmware**, provare l'accesso alla serra:
+1. Collegare il computer alla rete temporanea creata dalla serra e, **se SSH è disponibile su quel firmware**, provare l'accesso alla serra dal terminale (PowerShell su Windows):
 
     ```bash
     ssh root@<SERRA_AP_IP>
@@ -15,7 +15,7 @@ Queste operazioni servono per l'esplorazione tecnica. Il percorso principale usa
 
     Nella rete temporanea iniziale l'accesso potrebbe non chiedere una password.
 
-2. Oppure dal Terminale del Mac collegarsi al Raspberry (collegato via UART) via SSH:
+2. Oppure dal terminale del computer collegarsi al Raspberry (collegato via UART) tramite SSH:
 
     Usa l'indirizzo del Raspberry, sia che sia collegato via Ethernet sia che usi Wi-Fi; non usare l'indirizzo della rete temporanea della serra:
 
@@ -54,10 +54,10 @@ Queste operazioni servono per l'esplorazione tecnica. Il percorso principale usa
 
 6. Accendere la serra (oppure staccare e riattaccare l’alimentazione). Dovrebbe fare il boot e fermarsi al comando:
 `Welcome to Buildroot`
-7. Nel caso si voglia copiare il file log nel mac:
+7. Per copiare il log sul computer, crea o scegli una cartella di destinazione e apri il terminale lì. Questo comando OpenSSH funziona da macOS, Linux e PowerShell e salva il file nella cartella corrente:
 
-    ```bash
-    scp pi@<RASPBERRY_IP>:/home/pi/serra_uart.log ~/Desktop/serra_uart.log
+    ```text {.command-example}
+    scp pi@<RASPBERRY_IP>:/home/pi/serra_uart.log ./serra_uart.log
     ```
 
     Sostituisci `<RASPBERRY_IP>` con l'indirizzo reale del Raspberry.
@@ -68,7 +68,7 @@ Queste operazioni servono per l'esplorazione tecnica. Il percorso principale usa
 
 ### Fare il dump del modulo robocontrol (rcc.js, properties, ecc.)
 
-I comandi dei primi cinque punti vanno eseguiti **nella shell della serra**, raggiunta tramite UART oppure tramite SSH se la rete della serra è attiva. Il trasferimento del file nei punti successivi richiede invece SSH alla serra: la sola UART non basta per usare `scp`. Nei comandi di trasferimento `<SERRA_IP>` indica l'indirizzo al quale il Mac raggiunge **la serra**, sulla rete temporanea o su quella domestica.
+I comandi dei primi cinque punti vanno eseguiti **nella shell della serra**, raggiunta tramite UART oppure tramite SSH se la rete della serra è attiva. Il trasferimento del file nei punti successivi richiede invece SSH alla serra: la sola UART non basta per usare `scp`. Nei comandi di trasferimento `<SERRA_IP>` indica l'indirizzo al quale il computer raggiunge **la serra**, sulla rete temporanea o su quella domestica.
 
 ---
 
@@ -120,32 +120,35 @@ I comandi dei primi cinque punti vanno eseguiti **nella shell della serra**, rag
 
     **Risposta attesa:** una riga che mostra il file `/tmp/robocontrol.tar.gz`; la dimensione dipende dal contenuto.
 
-6. Scaricare il file sul mac:
+6. Sul computer, apri Terminale (macOS/Linux) o PowerShell (Windows) nella cartella in cui vuoi salvare l'archivio e prova:
 
-    ```bash
-    scp root@<SERRA_IP>:/tmp/robocontrol.tar.gz ~/Desktop/
+    ```text {.command-example}
+    scp root@<SERRA_IP>:/tmp/robocontrol.tar.gz ./robocontrol.tar.gz
     ```
 
-    Inserisci la password root della serra quando richiesta.
+    Inserisci la password root della serra quando richiesta. Da [OpenSSH 9](https://www.openssh.org/releasenotes.html), `scp` usa SFTP per impostazione predefinita; il firmware della serra potrebbe non avere un server SFTP. Se l'errore riguarda il sottosistema SFTP, riprova forzando il protocollo SCP precedente:
 
-    Se scp fallisce (probabile, di solito in questo tipo di build NON è presente sftp-server) usare questo comando DAL MAC:
-
-    **Sul Mac**, non nella shell della serra:
-
-    ```bash
-    ssh root@<SERRA_IP> "cat /tmp/robocontrol.tar.gz" > ~/Desktop/robocontrol.tar.gz
+    ```text {.command-example}
+    scp -O root@<SERRA_IP>:/tmp/robocontrol.tar.gz ./robocontrol.tar.gz
     ```
 
-    Inserisci la password root della serra quando richiesta.
+    L'opzione `-O` è disponibile nei client OpenSSH recenti; se il client non la riconosce, usa il primo comando e controlla l'errore effettivo. Se anche il protocollo SCP precedente non è disponibile ma SSH permette di eseguire `cat`, puoi trasferire il file come flusso binario. **Esegui questo comando sul computer, non nella shell della serra:**
 
-7. Sul mac, per estrarre:
+    **Terminale macOS/Linux o PowerShell 7.4 e successivi:**
 
     ```bash
-    cd ~/Desktop
+    ssh root@<SERRA_IP> "cat /tmp/robocontrol.tar.gz" > ./robocontrol.tar.gz
+    ```
+
+    **Windows PowerShell 5.1:** apri invece il *Prompt dei comandi* (`cmd.exe`) nella cartella di destinazione ed esegui lo stesso comando. La [redirezione `>` di PowerShell](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_redirection?view=powershell-7) precedenti alla versione 7.4 può alterare i byte di un archivio. Non eseguire il fallback binario da quelle versioni di PowerShell. Dopo il trasferimento, verifica che `tar` riesca a leggere l'archivio prima di eliminarlo dalla serra.
+
+7. Sul computer, nella stessa cartella dell'archivio, estrai con `tar` (oppure usa lo strumento di estrazione del sistema):
+
+    ```text {.command-example}
     tar -xzf robocontrol.tar.gz
     ```
 
-    **Risposta attesa:** una cartella `robocontrol/` sulla Scrivania.
+    **Risposta attesa:** una cartella `robocontrol/` nella cartella scelta.
 
 
 ### Il servizio originale `rcc`

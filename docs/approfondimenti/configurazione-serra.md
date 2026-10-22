@@ -16,13 +16,21 @@ UUID della serra: <DEVICE_UUID>
 
 ## Cambiare la rete su cui si collega la serra
 
-Dopo aver collegato il computer alla rete temporanea creata dalla serra, il prototipo ha usato dal **terminale del computer** la richiesta seguente. Sostituisci i segnaposto nel comando prima di eseguirlo. L'endpoint `/credentials` e i nomi delle chiavi sono stati osservati su quel firmware; verifica che siano validi sulla tua versione prima di modificare la configurazione.
+Dopo aver collegato il computer alla rete temporanea creata dalla serra, il prototipo ha usato dal **terminale del computer** la richiesta seguente. Sostituisci i segnaposto nel comando prima di eseguirlo. L'endpoint `/credentials` e i nomi delle chiavi sono stati osservati su quel firmware; verifica che siano validi sulla tua versione prima di modificare la configurazione. Il comando originale usa la sintassi del terminale di **macOS/Linux**:
 
 ```bash
 curl -i -X POST "http://<LOCAL_IP>/credentials" \
 -H "Content-Type: application/json" \
 -d '{"usr-token":"offline-token","SSID":"<WIFI_SSID>","security":"wpa2psk","password":"<WIFI_PASSWORD>","encryption":"AES"}'
 ```
+
+In **Windows PowerShell**, usa invece questa richiesta equivalente:
+
+```powershell
+Invoke-RestMethod -Method Post -Uri 'http://<LOCAL_IP>/credentials' -ContentType 'application/json' -Body (@{ 'usr-token' = 'offline-token'; SSID = '<WIFI_SSID>'; security = 'wpa2psk'; password = '<WIFI_PASSWORD>'; encryption = 'AES' } | ConvertTo-Json -Compress)
+```
+
+Su Windows l'output non mostra intestazioni e codice HTTP come `curl -i`: un errore della richiesta viene segnalato da PowerShell. Entrambi gli esempi inviano gli stessi campi; `LOCAL_IP` è l'indirizzo locale della serra, non quello del Raspberry.
 
 Nelle note originali erano presenti anche varianti di chiamata a `/wifi`, **non usate né verificate**. Non le riportiamo come istruzioni eseguibili perché potrebbero avere effetti diversi da quelli attesi.
 

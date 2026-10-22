@@ -32,20 +32,32 @@ File della repository: [controller CLI](https://github.com/Interstellar0verdrive
 
 ## Copia dei file Python sul Raspberry
 
-Copia sul Raspberry i tre file principali e le unità systemd già pronte. Sul computer da cui esegui la copia, clona la repository:
+I comandi Linux di questo capitolo vanno eseguiti **sul Raspberry**, anche se apri la sua shell da un computer Windows, macOS o Linux. Sul computer ti serve soltanto un client SSH: prova `ssh -V`. Su Windows 10/11, se manca, installa la funzionalità facoltativa [OpenSSH Client](https://learn.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse). Non occorre installare un server SSH sul computer.
 
-```bash
-git clone https://github.com/Interstellar0verdrive/Linfa-local-control.git
-cd Linfa-local-control
-scp bridge/serra_controller.py bridge/serra_mqtt_bridge.py bridge/serra_help.txt pi@<RASPBERRY_IP>:/home/pi/
-scp bridge/systemd/serra-*.service bridge/systemd/serra-*.timer pi@<RASPBERRY_IP>:/home/pi/
-```
+Dal terminale del computer (su Windows, **PowerShell**), collegati al Raspberry, sostituendo `<RASPBERRY_IP>`:
 
-Sostituisci `<RASPBERRY_IP>` prima di eseguire il comando. Per verificare, accedi al Raspberry:
-
-```bash
+```text {.command-example}
 ssh pi@<RASPBERRY_IP>
 ```
+
+**Da qui in poi sei nella shell del Raspberry.** Il passo 03 ha già installato Git e richiesto una connessione Internet al Raspberry: clona la repository direttamente lì e copia i file necessari nella posizione usata dai passi successivi. Lo script fotografico viene soltanto copiato; la sua installazione resta facoltativa.
+
+```bash
+cd /home/pi
+git clone https://github.com/Interstellar0verdrive/Linfa-local-control.git
+cd Linfa-local-control
+cp bridge/serra_controller.py bridge/serra_mqtt_bridge.py bridge/serra_help.txt bridge/serra-foto /home/pi/
+cp bridge/systemd/serra-*.service bridge/systemd/serra-*.timer /home/pi/
+```
+
+Se il Raspberry non può raggiungere GitHub, scarica la repository sul computer ed entra nella sua cartella. Puoi usare Git oppure **Code → Download ZIP** su GitHub ed estrarre l'archivio. Dal terminale del computer, nella cartella che contiene `bridge/`, usa `scp -r bridge pi@<RASPBERRY_IP>:/home/pi/` (lo stesso comando con OpenSSH su macOS, Linux e PowerShell). Poi collegati al Raspberry con `ssh pi@<RASPBERRY_IP>` ed esegui:
+
+```bash
+cp /home/pi/bridge/serra_controller.py /home/pi/bridge/serra_mqtt_bridge.py /home/pi/bridge/serra_help.txt /home/pi/bridge/serra-foto /home/pi/
+cp /home/pi/bridge/systemd/serra-*.service /home/pi/bridge/systemd/serra-*.timer /home/pi/
+```
+
+La copia da computer richiede il client OpenSSH anche per `scp`; il Raspberry deve essere raggiungibile sulla rete locale. Nel resto del capitolo usa sempre la shell del Raspberry.
 
 Impostare permessi di esecuzione:
 

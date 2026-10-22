@@ -30,13 +30,7 @@ Esci dalla console prima di proseguire, in modo da liberare la porta seriale. Il
 
 ## Installazione sul Raspberry
 
-Dal computer che contiene il clone della repository, copia lo script:
-
-```bash
-scp bridge/serra-foto pi@<RASPBERRY_IP>:/home/pi/
-```
-
-Poi, **sul Raspberry**:
+Lo script `serra-foto` è stato copiato in `/home/pi/` nel passo 06, senza attivarlo. **Sul Raspberry** installalo e verifica le dipendenze:
 
 ```bash
 sudo install -o root -g root -m 755 /home/pi/serra-foto /usr/local/bin/serra-foto
@@ -45,7 +39,7 @@ sudo systemd-run --wait --collect --pipe -p User=pi \
   /usr/local/bin/serra-foto --check
 ```
 
-Sostituisci `<RASPBERRY_IP>` con l'indirizzo reale del Raspberry. `--check` deve mostrare `pipeline UART pronta`: verifica dipendenze e variabili, **senza scattare o modificare le luci**. La password della console resta nel file privato `~/.config/serra/root-password`, creato al passo 06; non pubblicarlo. Non serve configurare un indirizzo IP della serra o installare `sshpass`, Pillow o un encoder WebP.
+`--check` deve mostrare `pipeline UART pronta`: verifica dipendenze e variabili, **senza scattare o modificare le luci**. La password della console resta nel file privato `~/.config/serra/root-password`, creato al passo 06; non pubblicarlo. Non serve configurare un indirizzo IP della serra o installare `sshpass`, Pillow o un encoder WebP.
 
 ## Prima prova
 

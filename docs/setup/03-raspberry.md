@@ -16,7 +16,7 @@ Obiettivo di questa sezione: preparare un Raspberry Pi “vergine” (solo OS + 
 
 ## Identificare il sistema e verifica connettività
 
-Sul Raspberry (eventualmente collegandosi dal Mac via SSH):
+Sul Raspberry (anche collegandoti via SSH dal tuo computer, che può usare macOS, Windows o Linux):
 
 ```bash
 date

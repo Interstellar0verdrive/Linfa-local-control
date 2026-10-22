@@ -29,7 +29,7 @@ Approccio: **Man-in-the-middle proxy** (MITM) a livello HTTP/HTTPS.
 
 Strumenti:
 
-- **mitmproxy / mitmdump** su Mac
+- **mitmproxy / mitmdump** sul computer
 - Esportazione in:
     - **.mitm** = cattura raw nel formato di mitmproxy
     - **.har** = export strutturato (HTTP Archive) per analisi con browser/devtools o tool HAR
@@ -39,77 +39,67 @@ Note:
 - Questo è un approccio diverso da tcpdump/wireshark:
     - qui si “intercetta” a livello applicativo tramite proxy
     - con TLS decifrato **solo** se il client accetta il certificato MITM
-- Questa cattura registra il traffico generato dal Mac (browser/webapp).
-Non necessariamente il traffico *diretto* della serra, se la serra *non* usa il Mac come proxy.
+- Questa cattura registra il traffico generato dal computer (browser/webapp), ma non necessariamente quello *diretto* della serra, se questa non usa il computer come proxy.
 
 ---
 
 ### 3) Procedura da seguire (passi)
 
-1. Collegarsi alla rete temporanea creata dalla serra con il Mac
-2. Dal Terminale del Mac:
+1. Collega il computer alla rete temporanea creata dalla serra.
 
-Se non è già installato, installa mitmproxy:
+2. Installa mitmproxy seguendo la [guida ufficiale per il tuo sistema](https://docs.mitmproxy.org/stable/overview/installation/): su macOS `brew install --cask mitmproxy`; su Windows usa l'installer ufficiale; su Linux scarica i binari ufficiali o usa un pacchetto della tua distribuzione, che potrebbe essere meno aggiornato. Il pacchetto include `mitmproxy`, `mitmdump` e `mitmweb`.
 
-```bash
-brew install mitmproxy
-```
+3. Crea una cartella dedicata sul computer, apri lì Terminale (macOS/Linux) o PowerShell (Windows) e avvia la cattura. Il file viene salvato nella cartella corrente:
 
-Il pacchetto include `mitmproxy`, `mitmdump` e `mitmweb`. Avvia la cattura:
+    ```text {.command-example}
+    mitmdump -p 8080 -w serra_ALL.mitm
+    ```
 
-```bash
-mitmdump -p 8080 -w ~/Desktop/serra_ALL.mitm
-```
+    Non si apre una finestra grafica: il terminale resta occupato mentre registra. Lascialo aperto fino alla fine della prova.
 
-Non si apre una finestra grafica: il terminale resta occupato mentre registra. Lascialo aperto fino alla fine della prova.
+4. Imposta nel browser o nelle impostazioni di rete il proxy HTTP e HTTPS su `127.0.0.1`, porta `8080`:
 
-1. Impostare il proxy di macOS su localhost
-**Impostazioni → Rete → Wi-Fi → Dettagli → Proxy**
-✅ Proxy Web (HTTP): 127.0.0.1 porta 8080
-✅ Proxy Web Sicuro (HTTPS): 127.0.0.1 porta 8080
-Nota: questa impostazione vale per la connessione Wi-Fi attuale.
-Quando si passa alla Wi-Fi della serra, meglio ricontrollare che sia ancora attiva (di solito resta attiva, ma macOS a volte la “resetta” per reti nuove).
-2. (Se serve) abilitare la lettura HTTPS:
-Con proxy attivo, aprire dal browser: http://mitm.it
-Scaricare il certificato **macOS**, installarlo nel Portachiavi e impostare **“Sempre attendibile”**.
-3. **Ora fare la procedura della serra**
-    1. aprire la webapp da browser (https://mylinfa.robonica.it/#/mylinfa)
-    2. Avviare **aggiunta nuova serra**
-    3. quando la serra chiede di passare alla Wi-Fi della serra → accettare e procedere
-    4. Lanciare il checkup
-    👉 mitmproxy/mitmdump vedrà **solo il traffico dei programmi del Mac che usano il proxy**. Non acquisisce automaticamente le connessioni avviate dalla serra.
-    5. Quando finisce → chiudere il browser
-4. Tornare al Terminale dove gira mitmdump e premere: CTRL + C
-5. Verificare che il file esista: `ls -lh ~/Desktop/serra_ALL.mitm`
-Un file non vuoto conferma che qualcosa è stato registrato, **non** che contenga tutti i flussi della serra. Aprilo e controlla quali host e richieste sono realmente presenti.
-6. Per visualizzare il file si può usare il comando:
+    | Sistema | Dove configurarlo |
+    | --- | --- |
+    | macOS | [Impostazioni di Sistema → Rete → servizio Wi-Fi → Dettagli → Proxy](https://support.apple.com/en-gb/guide/mac-help/mchlp2591/mac) |
+    | Windows | [Impostazioni → Rete e Internet → Proxy → Configurazione manuale](https://support.microsoft.com/en-us/windows/experience/connectivity-networking/use-a-proxy-server-in-windows) |
+    | Linux | Proxy del browser o impostazioni di rete dell'ambiente desktop: il percorso cambia tra distribuzioni e desktop. |
 
-```bash
-mitmproxy -r ~/Desktop/serra_ALL.mitm
-```
+    Ricontrolla il proxy dopo il passaggio alla rete Wi-Fi della serra: le impostazioni potrebbero essere legate alla rete usata. Per il traffico HTTPS, visita `http://mitm.it` dal browser che usa il proxy e segui le [istruzioni per installare il certificato](https://docs.mitmproxy.org/stable/concepts/certificates/) sul tuo sistema.
 
-**Dentro mitmproxy**, premi `f` e inserisci uno di questi filtri nell'interfaccia (non sono comandi della shell):
+5. Se la webapp originale è ancora raggiungibile, aprila nel browser, avvia **aggiunta nuova serra**, passa alla rete Wi-Fi della serra quando richiesto ed esegui il checkup. Alla fine chiudi il browser. mitmproxy/mitmdump vedrà **solo il traffico dei programmi del computer che usano il proxy**; non acquisisce automaticamente le connessioni avviate dalla serra.
 
-| Cosa mostrare | Filtro |
-| --- | --- |
-| Destinazioni locali | `~dst 192.168.` |
-| Richieste POST | `~m POST` |
-| POST verso destinazioni locali | `~m POST & ~dst 192.168.` |
+6. Torna al terminale dove gira mitmdump e premi **CTRL + C**.
 
-1. Per esportare un HAR dalla cattura, usa l'opzione **integrata** di mitmproxy (disponibile dalla versione 10.1):
+7. Verifica che `serra_ALL.mitm` esista nella cartella scelta e non sia vuoto. Un file non vuoto conferma che qualcosa è stato registrato, **non** che contenga tutti i flussi della serra. Aprilo e controlla quali host e richieste sono realmente presenti.
 
-    ```bash
-    mitmdump -n -r "$HOME/Desktop/serra_ALL.mitm" \
-      --set "hardump=$HOME/Desktop/serra_ALL_OK.har"
+8. Per visualizzare il file, dalla stessa cartella usa:
+
+    ```text {.command-example}
+    mitmproxy -r serra_ALL.mitm
+    ```
+
+    **Dentro mitmproxy**, premi `f` e inserisci uno di questi filtri nell'interfaccia (non sono comandi della shell):
+
+    | Cosa mostrare | Filtro |
+    | --- | --- |
+    | Destinazioni locali | `~dst 192.168.` |
+    | Richieste POST | `~m POST` |
+    | POST verso destinazioni locali | `~m POST & ~dst 192.168.` |
+
+9. Per esportare un HAR dalla cattura, usa l'opzione **integrata** di mitmproxy (disponibile dalla versione 10.1):
+
+    ```text {.command-example}
+    mitmdump -n -r serra_ALL.mitm --set hardump=serra_ALL_OK.har
     ```
 
     Controlla che il comando termini senza errori e apri il file generato per verificare che contenga le richieste cercate. L'opzione `hardump` è descritta nella [documentazione ufficiale di mitmproxy](https://docs.mitmproxy.org/stable/concepts/options/). Le note originali includevano un piccolo script artigianale per produrre un “HAR minimal”, ma mancava di campi e formati richiesti da HAR: non lo riproponiamo come esportazione affidabile.
 
-    **Non pubblicare né condividere i file `.mitm` e `.har` senza revisarli:** possono contenere token, credenziali, cookie e altri dati privati.
+    **Non pubblicare né condividere i file `.mitm` e `.har` senza revisarli:** possono contenere token, credenziali, cookie e altri dati privati. Finita la prova, disattiva il proxy e rimuovi il certificato di test se non ti serve più.
 
 ### 4) Risultati e limiti
 
-La cattura tramite proxy del Mac può mostrare gli endpoint, i token e le richieste della **webapp o del browser**, se questi transitano effettivamente nel proxy. Non basta, da sola, a dimostrare che **la serra** mantiene una connessione persistente al cloud o a stabilire se questa usi WebSocket o long-polling: per quelle conclusioni serve osservare il traffico della serra o i suoi log.
+La cattura tramite proxy del computer può mostrare gli endpoint, i token e le richieste della **webapp o del browser**, se questi transitano effettivamente nel proxy. Non basta, da sola, a dimostrare che **la serra** mantiene una connessione persistente al cloud o a stabilire se questa usi WebSocket o long-polling: per quelle conclusioni serve osservare il traffico della serra o i suoi log.
 
 Le note del [dump del modulo](accesso-e-dump.md#cosa-si-deduce-dal-dump) riportano invece il codice locale di controllo e due seriali interne verso l'elettronica della serra. Le funzioni dei singoli componenti e il ruolo delle schede derivano da quel dump e dalle prove hardware, **non** dal solo HAR del browser. Se ripeti l'analisi, separa sempre osservazioni dirette e ipotesi.
 

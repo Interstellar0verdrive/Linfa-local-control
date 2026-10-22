@@ -285,20 +285,14 @@ Da qui in poi:
 
 ## Backup facoltativo dei file sul Raspberry
 
-I file Python originali sono già nella repository. Se li hai modificati sul Raspberry, puoi scaricarne una copia locale dal tuo computer:
+I file Python originali sono già nella repository. Se li hai modificati sul Raspberry, crea sul computer una cartella dedicata al backup e apri lì Terminale (macOS/Linux) o PowerShell (Windows). Con il client OpenSSH, gli stessi comandi funzionano sui tre sistemi e salvano i file nella **cartella corrente**:
 
-```bash
-cd ~/Downloads
-TS=$(date +"%Y%m%d_%H%M")
-
-scp pi@<RASPBERRY_IP>:/home/pi/serra_controller.py \
-    serra_controller_${TS}.py
-
-scp pi@<RASPBERRY_IP>:/home/pi/serra_mqtt_bridge.py \
-    serra_mqtt_bridge_${TS}.py
+```text {.command-example}
+scp pi@<RASPBERRY_IP>:/home/pi/serra_controller.py ./serra_controller_backup.py
+scp pi@<RASPBERRY_IP>:/home/pi/serra_mqtt_bridge.py ./serra_mqtt_bridge_backup.py
 ```
 
-Sostituisci `<RASPBERRY_IP>` prima di eseguire i comandi. Il file `/etc/serra-mqtt.env` contiene segreti: se vuoi conservarne un backup, trattalo separatamente come materiale riservato e non caricarlo su GitHub.
+Sostituisci `<RASPBERRY_IP>` prima di eseguirli; controlla che i due file compaiano nella cartella scelta. Se ripeti la copia nella stessa cartella, i file con suffisso `_backup` vengono sovrascritti. Il file `/etc/serra-mqtt.env` contiene segreti: se vuoi conservarne un backup, trattalo separatamente come materiale riservato e non caricarlo su GitHub.
 
 ---
 
