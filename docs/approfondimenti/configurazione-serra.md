@@ -1,6 +1,8 @@
 # Wi-Fi, token e aggiornamenti della serra
 
-Questa pagina conserva le modifiche di configurazione esplorate durante lo sviluppo sulla **Linfa Weezy del prototipo**. **Non sono richieste** per seguire il [percorso essenziale](../index.md): il controller usa la console UART e il Raspberry comunica con Home Assistant tramite MQTT. Gli endpoint e i file possono differire su altri firmware; non trattare questi esempi come passaggi di installazione universali.
+Questa pagina conserva le modifiche di configurazione esplorate durante lo sviluppo sulla **Linfa Weezy del prototipo**. Il token fittizio `offline-token` è **ancora presente** sul prototipo: lo abbiamo verificato nel file `/opt/data/token` senza pubblicare il token originale. Era stato impostato per ostacolare l'associazione al cloud originale. Cambiare token, credenziali Wi-Fi o permessi degli aggiornamenti **non è necessario** per usare il [controller locale via UART](../index.md). Gli endpoint e i file possono differire su altri firmware; non trattare questi esempi come passaggi di installazione universali.
+
+Un token fittizio **non spegne la radio né impedisce alla serra di tentare una connessione** se la rete viene riattivata; il cloud potrebbe usare altri identificativi. Sul prototipo la Wi-Fi è disabilitata all'avvio tramite `OFF_S45net`, come spiegato nel [passo 08](../setup/08-servizi-automatici.md#disabilitare-la-wi-fi-allavvio-della-serra). Il token è una misura aggiuntiva, non una prova di isolamento dalla rete.
 
 > [!CAUTION] Modifiche facoltative e persistenti
 > Cambiare token, credenziali Wi-Fi o permessi di `/var/update` modifica il comportamento originale della serra. Conserva i valori e i permessi iniziali prima di intervenire; non eseguire questi comandi come parte automatica dell'installazione del controller. **Non esiste qui una procedura di ripristino completo verificata** per tutte le varianti della serra.

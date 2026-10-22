@@ -42,6 +42,8 @@ sync
 
 La rete originale tornerà ad avviarsi al successivo riavvio della serra.
 
+Sul prototipo è presente anche il token fittizio `offline-token`, verificato nel file `/opt/data/token`. Era stato impostato per ostacolare l'associazione al cloud originale. È una misura distinta: non spegne la Wi-Fi e non garantisce da sola che il cloud non possa riconoscere la serra tramite altri identificativi. La [procedura per il token e il suo ripristino](../approfondimenti/configurazione-serra.md#cambiare-il-token-della-serra) è facoltativa per il controllo locale via UART; conserva il valore originale prima di modificarlo.
+
 ---
 
 ## Service + timer: controllo aggiuntivo della rete VoCore

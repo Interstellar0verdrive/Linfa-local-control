@@ -110,7 +110,8 @@ Vincoli/assunzioni:
 
 - La password root della console viene impostata nel passo 05 perché il controller attuale la richiede.
 - Nel prototipo lo script che avvia la Wi-Fi sul VoCore è già stato rinominato `OFF_S45net`: il boot non lo esegue. Il [passo 08](08-servizi-automatici.md#disabilitare-la-wi-fi-allavvio-della-serra) spiega come verificare e riprodurre questa modifica, e come ripristinarla. Il timer sul Raspberry invia inoltre `serra net off` dopo il proprio avvio; da solo non copre un successivo riavvio della sola serra.
-- La sostituzione del token e il blocco degli aggiornamenti sono [modifiche facoltative documentate a parte](../approfondimenti/configurazione-serra.md), non prerequisiti dei passi 06–09. La gestione del servizio originale `rcc` richiede invece il controllo e, se attivo, la disattivazione descritta nel passo 06.
+- Sul prototipo è ancora impostato anche il token fittizio `offline-token`, introdotto per ostacolare l'associazione della serra al servizio originale. È una [misura aggiuntiva documentata nell'approfondimento](../approfondimenti/configurazione-serra.md#cambiare-il-token-della-serra), non un prerequisito per il controllo via UART e non una garanzia che il cloud non possa identificare il dispositivo con altri dati. La disattivazione della radio è ciò che impedisce alla serra di comunicare tramite Wi-Fi.
+- Il blocco degli aggiornamenti è una [modifica facoltativa documentata a parte](../approfondimenti/configurazione-serra.md#bloccare-gli-aggiornamenti-automatici), non un prerequisito dei passi 06–09. La gestione del servizio originale `rcc` richiede invece il controllo e, se attivo, la disattivazione descritta nel passo 06.
 - Conserva un modo sicuro per ripristinare le modifiche che scegli di applicare. Il collegamento saldato e il foro nella scocca richiedono anche un intervento fisico per tornare alla configurazione originale.
 
 Implicazioni:
