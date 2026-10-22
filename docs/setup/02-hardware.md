@@ -23,7 +23,7 @@ Il progetto non installa un nuovo firmware; il percorso cambia però la password
 </div>
 
 > [!NOTE] Comportamento originale
-> Il percorso principale non cambia token o permessi di `/var/update`, ma **cambia la password root** e comporta saldature e un foro nella scocca. Per tornare alla configurazione precedente occorre ripristinare anche queste modifiche. La Wi-Fi della serra viene disabilitata da un comando esterno del Raspberry, non da una modifica permanente alla configurazione del VoCore; verifica il risultato dopo un riavvio della serra.
+> Il percorso principale non cambia token o permessi di `/var/update`, ma **cambia la password root** e comporta saldature e un foro nella scocca. Per tornare alla configurazione precedente occorre ripristinare anche queste modifiche. Nel prototipo, inoltre, lo script che avvia la Wi-Fi sul VoCore è stato rinominato `OFF_S45net`: il [passo 08](08-servizi-automatici.md#disabilitare-la-wi-fi-allavvio-della-serra) spiega come verificarlo, riprodurlo e ripristinarlo. Il comando dal Raspberry è un controllo aggiuntivo.
 
 Per i dettagli sul modulo: [specifiche VoCore2](https://vocore.io/v2.html).
 
@@ -41,7 +41,7 @@ Il Raspberry Pi è il **controller esterno** e il punto di integrazione con MQTT
 
 - Comunica con la serra via USB → UART.
 - Esegue la CLI `serra` e il bridge MQTT.
-- Applica le policy, come la disabilitazione della Wi-Fi della serra all’avvio.
+- Invia alla serra il comando di spegnimento della rete come controllo aggiuntivo dopo l'avvio del Raspberry.
 - Pubblica stati e comandi su MQTT.
 
 ## L’adattatore USB → TTL

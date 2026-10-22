@@ -2,15 +2,53 @@
 
 **Percorso guidato:** [Indice dei capitoli](../index.md)
 
-Con il bridge già funzionante, installa i servizi copiati nel passo 06. I timer spengono la rete del VoCore dopo l'avvio, ripubblicano lo stato logico e controllano se la serra è stata riavviata. Un servizio separato può leggere il livello dell'acqua su richiesta.
+Con il bridge già funzionante, verifica che la Wi-Fi della serra non venga avviata al boot e installa i servizi copiati nel passo 06. I timer inviano un comando aggiuntivo di spegnimento della rete, ripubblicano lo stato logico e controllano se la serra è stata riavviata. Un servizio separato può leggere il livello dell'acqua su richiesta.
 
 **Se l'utente del Raspberry non è `pi`:** prima di installare i file, modifica la copia dei quattro servizi `serra-netoff`, `serra-state-sync`, `serra-uptime` e `serra-water-level` sostituendo `User=pi` con l'utente che ha eseguito `serra auth save`. Adatta anche i percorsi `/home/pi/` nei comandi di installazione qui sotto.
 
-## Service + timer: spegnimento rete VoCore dopo boot
+## Disabilitare la Wi-Fi all'avvio della serra
 
-Questo service invia alla serra il comando `serra net off`. Il timer lo esegue **una sola volta, circa 60 secondi dopo l'avvio del Raspberry**: non è un rilevatore dell'avvio della serra. Se abiliti il timer quando il Raspberry è acceso da più di 60 secondi, systemd può eseguirlo subito.
+Sul **VoCore del prototipo** abbiamo verificato via UART che `/etc/init.d/S45net` non esiste e che è presente `/etc/init.d/OFF_S45net`. Quest'ultimo è lo script che caricherebbe `mt_wifi` e avvierebbe le interfacce Wi-Fi. Lo script di avvio `/etc/init.d/rcS` esegue soltanto i file che corrispondono a `S??*`, quindi **`OFF_S45net` non parte al boot**. Nel controllo effettuato con la serra accesa, `mt_wifi` non risultava caricato. Questo descrive il prototipo; verifica i file sulla tua versione prima di modificarli.
 
-La serra deve essere già accesa e raggiungibile via UART quando il timer scatta. Se si accende più tardi, controlla il log con `journalctl -u serra-netoff.service -n 30 --no-pager` ed esegui `sudo systemctl start serra-netoff.service` dopo averla accesa. **Se riavvii soltanto la serra, il timer non scatta di nuovo:** ripeti il comando manualmente o riavvia il Raspberry. Verifica sulla rete che la serra non sia più raggiungibile; il log conferma l'invio del comando, non è una misura indipendente della radio Wi-Fi.
+Esegui i prossimi comandi **nella console root della serra via UART**, non nella shell del Raspberry. Conserva il collegamento UART: dopo questa modifica la serra potrebbe non essere più raggiungibile via Wi-Fi. Controlla quali script esistono:
+
+```sh
+ls -l /etc/init.d/S45net /etc/init.d/OFF_S45net 2>&1
+```
+
+Se esiste solo `OFF_S45net`, questa modifica è già presente. Se esiste solo `S45net`, verifica prima che lo script contenga effettivamente l'avvio della radio sul tuo firmware:
+
+```sh
+grep -n -E 'mt_wifi|apcli|ra0|udhcpc|udhcpd' /etc/init.d/S45net
+```
+
+**Solo se hai confermato lo script e hai accesso UART funzionante**, rinominalo senza cancellarlo:
+
+```sh
+mv /etc/init.d/S45net /etc/init.d/OFF_S45net
+sync
+```
+
+Se esistono entrambi i file, o nessuno dei due, fermati: la configurazione è diversa e non sovrascrivere nulla. Non lasciare una copia chiamata `S45net.bak` dentro `/etc/init.d`: anche quel nome corrisponde a `S??*` e verrebbe eseguito al boot.
+
+Al successivo **riavvio controllato della serra**, rientra via UART e ricontrolla il nome dello script. Per verificare lo stato corrente, `lsmod | grep '^mt_wifi'` non dovrebbe restituire righe e `ifconfig ra0` / `ifconfig apcli0` non dovrebbero mostrare interfacce attive. Controlla anche sul router che la serra non torni collegata. Queste verifiche riguardano il boot e lo stato osservato; non dimostrano da sole l'assenza di qualunque trasmissione radio in ogni istante.
+
+Per **ripristinare l'avvio originale** sul firmware che usa questi nomi, sempre via UART e solo se `S45net` non esiste già:
+
+```sh
+mv /etc/init.d/OFF_S45net /etc/init.d/S45net
+sync
+```
+
+La rete originale tornerà ad avviarsi al successivo riavvio della serra.
+
+---
+
+## Service + timer: controllo aggiuntivo della rete VoCore
+
+Questo service invia alla serra il comando `serra net off`. Il timer lo esegue **una sola volta, circa 60 secondi dopo l'avvio del Raspberry**: è un controllo aggiuntivo, utile anche se la rete è stata riattivata durante la sessione, ma non sostituisce la modifica dello script sul VoCore. Se abiliti il timer quando il Raspberry è acceso da più di 60 secondi, systemd può eseguirlo subito.
+
+La serra deve essere già accesa e raggiungibile via UART quando il timer scatta. Se si accende più tardi, controlla il log con `journalctl -u serra-netoff.service -n 30 --no-pager` ed esegui `sudo systemctl start serra-netoff.service` dopo averla accesa. **Se riavvii soltanto la serra, il timer non scatta di nuovo:** la Wi-Fi rimane disabilitata al boot soltanto se hai verificato o effettuato la modifica dello script qui sopra. Altrimenti ripeti `serra net off` manualmente. Il log conferma l'invio del comando, non è una misura indipendente della radio Wi-Fi.
 
 ### Service one-shot
 
@@ -190,7 +228,7 @@ systemctl show serra-water-level.service -p Result -p ExecMainStatus
 
 ### Comandi utili per verificare i timer e services
 
-Per verificare il timer che spegne la rete dopo il boot:
+Per verificare il timer che invia `net off` dopo il boot del Raspberry:
 
 ```bash
 systemctl status serra-netoff.timer --no-pager
@@ -231,7 +269,7 @@ A questo punto questo dovrebbe essere lo stato attuale:
 - ✅ controllo serra via UART
 - ✅ bridge MQTT attivo e resiliente
 - ✅ topic di stato MQTT pubblicati; coerenza logica da verificare dopo riavvii o comandi non osservati
-- ✅ tentativo di spegnimento della rete VoCore dopo l'avvio del Raspberry, con esito da verificare
+- ✅ script di avvio Wi-Fi del VoCore disabilitato e verificato sulla tua serra; comando aggiuntivo dal Raspberry con esito da verificare
 - ✅ state sync periodico attivo
 - ✅ timer di controllo dei riavvii attivo
 - ✅ servizio livello acqua disponibile su richiesta (dopo la calibrazione)

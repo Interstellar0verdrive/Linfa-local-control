@@ -21,7 +21,7 @@ Questi sono i file coinvolti nei passi 06–08:
 | /home/pi/.serra_state.json | **Stato runtime (source of truth logica):** cache JSON con ultimo stato noto dei componenti + ultimi comandi. Viene aggiornata dalla CLI ad ogni comando e usata per pubblicare serra/state/... su MQTT (retained). | Viene creata/aggiornata automaticamente dal controller al primo comando (serra ...). Non va caricata manualmente al primo setup.  |
 | /etc/serra-mqtt.env | **Configurazione MQTT**: contiene segreti + parametri runtime | Va creato “a mano” nel Raspberry al primo setup. |
 | /etc/systemd/system/serra-mqtt-bridge.service | Avvia e mantiene attivo il bridge MQTT. | File pronto in `bridge/systemd/`, da installare nel passo 07. |
-| /etc/systemd/system/serra-netoff.service e .timer | Spengono la rete della serra dopo il boot del Raspberry. | File pronti in `bridge/systemd/`, da installare nel passo 08. |
+| /etc/systemd/system/serra-netoff.service e .timer | Inviano lo spegnimento della rete dopo il boot del Raspberry; non sostituiscono la modifica dello script di avvio del VoCore. | File pronti in `bridge/systemd/`, da installare nel passo 08. |
 | /etc/systemd/system/serra-state-sync.service e .timer | Ripubblicano periodicamente lo stato logico. | File pronti in `bridge/systemd/`, da installare nel passo 08. |
 | /etc/systemd/system/serra-uptime.service e .timer | Controllano i riavvii della serra. | File pronti in `bridge/systemd/`, da installare nel passo 08. |
 | /etc/systemd/system/serra-water-level.service | Pubblica il livello acqua su richiesta, dopo la calibrazione. | File pronto in `bridge/systemd/`, da installare nel passo 08. |

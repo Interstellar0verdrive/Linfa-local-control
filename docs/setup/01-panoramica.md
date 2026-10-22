@@ -66,7 +66,7 @@ Obiettivo pratico del progetto:
 - Comandi affidabili da CLI (`serra ...`) sul Raspberry
 - Comandi equivalenti via MQTT (`serra/cmd`)
 - Stati consistenti e leggibili via MQTT (`serra/state/...`)
-- Un timer sul Raspberry che prova a disabilitare la Wi-Fi della serra dopo l'avvio del Raspberry
+- La Wi-Fi della serra disabilitata all'avvio del VoCore, con un comando del Raspberry come controllo aggiuntivo
 
 ---
 
@@ -95,7 +95,7 @@ Questa guida **presuppone esperienza di base con elettronica e saldatura**: devi
 
 La modifica fisica illustrata in questa guida è stata realizzata nella **parte superiore della serra, dove si trovano le luci e il VoCore**, con **fili saldati** e un **foro nella scocca per il passaggio dei fili del cavo seriale**. Il [passo 02](02-hardware.md#cablaggio-uart) descrive i collegamenti e mostra il foro. Non è disponibile una foto ravvicinata delle saldature: prima di richiudere verifica che i collegamenti siano saldi e isolati.
 
-Per ottenere lo stesso controllo locale **non devi ripetere l'analisi MITM, il dump del modulo o le prove delle API originali**: sono documentati negli approfondimenti. Anche la [modifica del token, della Wi-Fi e dei permessi degli aggiornamenti](../approfondimenti/configurazione-serra.md) è separata dal percorso essenziale, perché il controller comunica con la serra via UART.
+Per ottenere lo stesso controllo locale **non devi ripetere l'analisi MITM, il dump del modulo o le prove delle API originali**: sono documentati negli approfondimenti. La [modifica del token, delle credenziali Wi-Fi e dei permessi degli aggiornamenti](../approfondimenti/configurazione-serra.md) è separata dal percorso essenziale, perché il controller comunica con la serra via UART. Se vuoi che **anche la radio della serra resti spenta dopo un riavvio della sola serra**, segui invece la verifica dello script di avvio nel [passo 08](08-servizi-automatici.md#disabilitare-la-wi-fi-allavvio-della-serra).
 
 > [!WARNING] Servizio originale da verificare
 > Nel prototipo, `robocontrol/rcc` era già fermo durante i test dei comandi. I file attuali confermano che il suo avvio automatico è disattivato. **Non è verificato** che il controller e il servizio originale possano comandare contemporaneamente gli stessi componenti. Il [passo 06](06-controller-cli.md#verifica-del-servizio-originale) spiega come controllare, disattivare e ripristinare il servizio prima di azionare luci, ventole o pompe. La sequenza è stata ricostruita sul prototipo, ma non ancora provata da zero su una seconda serra.
@@ -109,7 +109,7 @@ Il percorso essenziale **non sostituisce il firmware** né richiede il dump del 
 Vincoli/assunzioni:
 
 - La password root della console viene impostata nel passo 05 perché il controller attuale la richiede.
-- La disattivazione di Wi-Fi/NTP viene comandata **dall'esterno**, tramite UART e un timer sul Raspberry; non serve riconfigurare la rete della serra per usare il bridge MQTT. Il timer non rileva un eventuale riavvio successivo della sola serra: controlla la rete dopo ogni riavvio della serra se vuoi mantenerla offline.
+- Nel prototipo lo script che avvia la Wi-Fi sul VoCore è già stato rinominato `OFF_S45net`: il boot non lo esegue. Il [passo 08](08-servizi-automatici.md#disabilitare-la-wi-fi-allavvio-della-serra) spiega come verificare e riprodurre questa modifica, e come ripristinarla. Il timer sul Raspberry invia inoltre `serra net off` dopo il proprio avvio; da solo non copre un successivo riavvio della sola serra.
 - La sostituzione del token e il blocco degli aggiornamenti sono [modifiche facoltative documentate a parte](../approfondimenti/configurazione-serra.md), non prerequisiti dei passi 06–09. La gestione del servizio originale `rcc` richiede invece il controllo e, se attivo, la disattivazione descritta nel passo 06.
 - Conserva un modo sicuro per ripristinare le modifiche che scegli di applicare. Il collegamento saldato e il foro nella scocca richiedono anche un intervento fisico per tornare alla configurazione originale.
 

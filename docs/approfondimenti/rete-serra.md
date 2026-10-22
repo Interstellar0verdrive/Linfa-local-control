@@ -69,7 +69,7 @@ ssh pi@<RASPBERRY_IP>
 
 Sostituisci `<RASPBERRY_IP>` con l'indirizzo trovato sopra. Se il nome locale è configurato, puoi usare `ssh pi@serra.local`. Inserisci la password dell'utente del Raspberry quando richiesta.
 
-Il Raspberry deve rimanere connesso alla rete di casa durante il funzionamento; è il punto di controllo locale tramite MQTT. Il timer del percorso principale prova a spegnere la rete della serra dopo l'avvio del Raspberry, ma non rileva un riavvio successivo della sola serra.
+Il Raspberry deve rimanere connesso alla rete di casa durante il funzionamento; è il punto di controllo locale tramite MQTT. Sul prototipo lo script Wi-Fi del VoCore è stato rinominato `OFF_S45net`, così non viene eseguito al boot. Il [passo 08](../setup/08-servizi-automatici.md#disabilitare-la-wi-fi-allavvio-della-serra) spiega come verificarlo. Il timer sul Raspberry invia `serra net off` dopo il proprio avvio, ma non rileva un riavvio successivo della sola serra.
 
 ---
 
