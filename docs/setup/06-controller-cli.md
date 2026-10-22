@@ -95,12 +95,7 @@ readlink -f /usr/local/bin/serra
 which serra
 ```
 
-I due comandi stampano, nell'ordine:
-
-```text {.expected-output}
-/home/pi/serra_controller.py
-/usr/local/bin/serra
-```
+**Risposta attesa:** i due comandi stampano, nell'ordine, `/home/pi/serra_controller.py` e `/usr/local/bin/serra`.
 
 ---
 

@@ -51,7 +51,7 @@ if ('IntersectionObserver' in window && tocLinks.length) {
 
 document.querySelectorAll('.markdown-body .highlight').forEach(block => {
   const header = block.querySelector(':scope > .code-header');
-  if (header || block.classList.contains('expected-output') || block.classList.contains('reference-example')) return;
+  if (header) return;
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'copy-code';

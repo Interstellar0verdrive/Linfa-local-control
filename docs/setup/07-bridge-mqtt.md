@@ -145,12 +145,7 @@ journalctl -u serra-mqtt-bridge.service -n 100 --no-pager
 
 ### Stato bridge
 
-Il bridge pubblica:
-
-```text {.reference-example}
-serra/status/online
-serra/status/last_seen
-```
+Il bridge pubblica i topic `serra/status/online` e `serra/status/last_seen`.
 
 Verifica:
 

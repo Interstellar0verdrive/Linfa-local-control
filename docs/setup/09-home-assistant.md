@@ -54,30 +54,16 @@ Per i nomi aggiornati dei menu e la configurazione del broker, consulta la [docu
 
 ### Topic usati dal sistema serra
 
-**Topic base:**
-
-```text {.reference-example}
-serra/
-```
+**Topic base:** `serra/`.
 
 ### Stato (publish dal Raspberry → HA)
 
-```text {.reference-example}
-serra/status/online
-serra/status/last_seen
-serra/status/last
+I topic di stato pubblicati dal Raspberry sono:
 
-serra/state/lights
-serra/state/fans/fan-1
-serra/state/fans/fan-2
-serra/state/fans/fan-F
-serra/state/ring
-serra/state/pumps/main
-serra/state/pumps/nutrient-0
-serra/state/pumps/nutrient-1
-serra/state/pumps/nutrient-2
-serra/state/net
-```
+- `serra/status/online`, `serra/status/last_seen`, `serra/status/last`
+- `serra/state/lights`, `serra/state/ring`, `serra/state/net`
+- `serra/state/fans/fan-1`, `serra/state/fans/fan-2`, `serra/state/fans/fan-F`
+- `serra/state/pumps/main`, `serra/state/pumps/nutrient-0`, `serra/state/pumps/nutrient-1`, `serra/state/pumps/nutrient-2`
 
 Il controller e il bridge pubblicano questi topic con il flag **retain**. I contenuti sono gli ultimi stati **logici** noti, non telemetria hardware: dopo un riavvio della sola serra potrebbero essere superati finché non invii nuovi comandi o verifichi i componenti.
 
@@ -88,23 +74,9 @@ Il controller e il bridge pubblicano questi topic con il flag **retain**. I cont
 > [!TIP] Vuoi provare altri comandi?
 > Nel [riferimento comandi](../riferimento-comandi.md) trovi l'elenco completo, esempi con parametri diversi e la sintassi da usare sul Raspberry o in un client MQTT. Per usare la futura app Linfa in Home Assistant non dovrai digitare questi comandi.
 
-```text {.reference-example}
-serra/cmd
-serra/cmd/<id>
-```
+Pubblica su `serra/cmd` oppure su `serra/cmd/<id>` se vuoi ricevere un riscontro associato a un ID.
 
-Payload tipico per una prima prova con le ventole:
-
-```text {.reference-example}
-fans on
-```
-
-oppure con ID (per ack):
-
-```text {.reference-example}
-topic: serra/cmd/abc123
-payload: fans off
-```
+Per una prima prova con le ventole, usa il payload `fans on`. Per spegnerle con un ID di riscontro, pubblica `fans off` sul topic `serra/cmd/abc123`.
 
 ### Prova con MQTT Explorer
 

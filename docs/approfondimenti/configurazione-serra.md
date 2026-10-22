@@ -7,12 +7,7 @@ Un token fittizio **non spegne la radio né impedisce alla serra di tentare una 
 > [!CAUTION] Modifiche facoltative e persistenti
 > Cambiare token, credenziali Wi-Fi o permessi di `/var/update` modifica il comportamento originale della serra. Conserva i valori e i permessi iniziali prima di intervenire; non eseguire questi comandi come parte automatica dell'installazione del controller. **Non esiste qui una procedura di ripristino completo verificata** per tutte le varianti della serra.
 
-In origine la serra ha uno **user-token** e un **UUID** come questi:
-
-```text {.reference-example}
-user-token: <ORIGINAL_DEVICE_TOKEN>
-UUID della serra: <DEVICE_UUID>
-```
+In origine la serra ha uno **user-token** (`<ORIGINAL_DEVICE_TOKEN>`) e un **UUID** (`<DEVICE_UUID>`). Sono segnaposto, non i valori della tua serra.
 
 ## Cambiare la rete su cui si collega la serra
 
@@ -64,12 +59,7 @@ hexdump -C /opt/data/token
 
 **Risposta attesa:** nella colonna testuale dell'output compare il valore **attualmente salvato**, che non è necessariamente `offline-token`. Offset e spaziatura del dump dipendono dal comando. Il token è un segreto: non pubblicare l'output.
 
-Il token originale della serra era:
-
-```text {.reference-example}
-user-token: <ORIGINAL_DEVICE_TOKEN>
-UUID della serra: <DEVICE_UUID>
-```
+Per ripristinare in seguito **il solo token**, conserva prima il suo valore originale (`<ORIGINAL_DEVICE_TOKEN>`). Il segnaposto non va scritto nel dispositivo.
 
 Solo se hai conservato il token originale e hai deciso di modificarlo, imposta prima il valore fittizio:
 

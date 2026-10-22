@@ -78,9 +78,7 @@ Una volta loggati, eseguire solo comandi **non distruttivi**:
 uname -a
 ```
 
-```text {.expected-output}
-Linux buildroot 3.18.29 #1 Thu May 16 10:06:29 UTC 2019 mips GNU/Linux
-```
+**Risposta attesa:** una riga simile a `Linux buildroot 3.18.29 #1 Thu May 16 10:06:29 UTC 2019 mips GNU/Linux`. Data e versione possono differire.
 
 Verifica:
 
@@ -91,9 +89,7 @@ Verifica:
 uptime
 ```
 
-```text {.expected-output}
-09:06:53 up 1:24, 0 users, load average: 0.03, 0.02, 0.05
-```
+**Risposta attesa:** una riga simile a `09:06:53 up 1:24, 0 users, load average: 0.03, 0.02, 0.05`. Orario, durata e carico cambiano.
 
 Serve per:
 
@@ -104,11 +100,7 @@ Serve per:
 ls /
 ```
 
-**Risposta attesa:** una lista di directory simile a questa; il contenuto preciso dipende dal firmware.
-
-```text {.expected-output}
-bin  dev  etc  lib  linuxrc  mnt  opt  proc  root  sbin  sys  tmp  usr  var
-```
+**Risposta attesa:** una lista di directory, per esempio `bin`, `dev`, `etc`, `lib`, `linuxrc`, `mnt`, `opt`, `proc`, `root`, `sbin`, `sys`, `tmp`, `usr`, `var`. Il contenuto preciso dipende dal firmware.
 
 Controllo rapido della struttura filesystem (rootfs minimale BusyBox).
 

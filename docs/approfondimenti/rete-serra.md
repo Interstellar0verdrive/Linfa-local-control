@@ -52,12 +52,7 @@ Il Raspberry può collegarsi alla rete via **Ethernet** o **Wi-Fi**. Per trovare
 ip -br -4 address show
 ```
 
-Per esempio, una risposta *fittizia* potrebbe essere:
-
-```text {.expected-output}
-eth0   UP     192.168.1.42/24
-wlan0  DOWN
-```
+**Risposta attesa:** per esempio, in uno scenario *fittizio*, l'interfaccia `eth0` potrebbe risultare `UP` con indirizzo `192.168.1.42/24`, mentre `wlan0` potrebbe risultare `DOWN`.
 
 Qui l'indirizzo da usare è `192.168.1.42`, senza `/24`. Sul tuo Raspberry potrebbe essere diverso; anche i nomi delle interfacce possono cambiare. Se vuoi che l'indirizzo resti costante, configura una **prenotazione DHCP** nel router per l'interfaccia che usi. Trovi il suo MAC nella pagina del dispositivo sul router oppure con `ip -br link show` sul Raspberry. Ethernet e Wi-Fi hanno indirizzi MAC distinti.
 

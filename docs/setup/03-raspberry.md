@@ -102,10 +102,7 @@ python3 -c "import paho.mqtt.client as c; print('paho OK')"
 python3 -c "import serial; print('pyserial OK')"
 ```
 
-```text {.expected-output}
-paho OK
-pyserial OK
-```
+**Risposta attesa:** due righe, nell'ordine: `paho OK` e `pyserial OK`.
 
 Verifica presenza strumenti (se installati):
 
@@ -138,6 +135,7 @@ ls -l /dev/ttyUSB0 2>/dev/null || true
 ```
 
 **Risposta attesa:** `groups` include `dialout`, `getent group dialout` mostra il gruppo e `ls -l` mostra la porta seriale. Nomi, date e numeri variano da sistema a sistema.
+
 Se la porta trovata sopra ha un nome diverso, sostituisci `/dev/ttyUSB0` nell'ultimo comando.
 
 Se l'utente `pi` **non** è in `dialout`, aggiungilo (sostituisci `pi` se usi un altro utente):
