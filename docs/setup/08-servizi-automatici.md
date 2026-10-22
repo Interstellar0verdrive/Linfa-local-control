@@ -4,6 +4,8 @@
 
 Con il bridge già funzionante, installa i servizi copiati nel passo 06. I timer spengono la rete del VoCore dopo l'avvio, ripubblicano lo stato logico e controllano se la serra è stata riavviata. Un servizio separato può leggere il livello dell'acqua su richiesta.
 
+**Se l'utente del Raspberry non è `pi`:** prima di installare i file, modifica la copia dei quattro servizi `serra-netoff`, `serra-state-sync`, `serra-uptime` e `serra-water-level` sostituendo `User=pi` con l'utente che ha eseguito `serra auth save`. Adatta anche i percorsi `/home/pi/` nei comandi di installazione qui sotto.
+
 ## Service + timer: spegnimento rete VoCore dopo boot
 
 Questo service invia alla serra il comando `serra net off`. Il timer lo esegue **una sola volta, circa 60 secondi dopo l'avvio del Raspberry**: non è un rilevatore dell'avvio della serra. Se abiliti il timer quando il Raspberry è acceso da più di 60 secondi, systemd può eseguirlo subito.
