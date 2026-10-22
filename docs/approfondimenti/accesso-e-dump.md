@@ -221,13 +221,38 @@ le posizioni così:
 | 5 | `Tachimetric-sensor` | 0 |
 
 Un'altra funzione del firmware usa `T1-sensor` come temperatura della camera
-della serra. I numeri sono quindi interpretabili come temperature, umidità e
-lettura tachimetrica; **unità, eventuali correzioni e precisione vanno ancora
-verificate su una serra accesa**, confrontando più letture con un sensore
-ambientale indipendente. Il controller di questo progetto non acquisisce né
-pubblica ancora questi valori. Non inviare la richiesta manualmente mentre
-il controller usa la stessa seriale: prima serve una lettura coordinata con
-il suo lock UART.
+della serra. `T2-sensor` è un secondo canale di temperatura, ma dal codice non
+si ricava dove sia collocato fisicamente. Il canale `T-LED-sensor` è usato
+dalla routine originale di raffreddamento dei LED. **Unità, eventuali
+correzioni, precisione e comportamento sulla serra reale vanno ancora
+verificati**, confrontando più letture con un sensore ambientale indipendente.
+
+Il quinto campo **non è una velocità in giri/minuto**. La funzione originale
+che controlla il tachimetro lo interpreta come codice diagnostico delle
+ventole:
+
+| Codice | Interpretazione nel software originale |
+| ---: | --- |
+| `0` | Nessun guasto tachimetrico segnalato |
+| `1` | Anomalia ventola 1 |
+| `2` | Anomalia ventola 2 |
+| `3` | Anomalia di tutte le ventole |
+| `4` | Anomalia ventola `P` (frontale/LED) |
+
+Il valore `0` da solo non dimostra che tutte le ventole stiano girando: va
+interpretato insieme ai comandi impartiti e a una verifica fisica. Il
+controller di questo progetto non acquisisce né pubblica ancora questi
+valori, né esegue la routine originale `cool-LED` che comandava la ventola
+dedicata. Prima di usare la temperatura LED per allarmi o regolazione
+automatica della luce bisogna validare le letture e stabilire soglie adatte
+all'hardware. Non inviare la richiesta manualmente mentre il controller usa
+la stessa seriale: prima serve una lettura coordinata con il suo lock UART.
+
+Il lettore originale cita anche `pH-sensor`, `Ec-sensor`, `env-light-sensor` e
+`T-water-sensor`, ma per questi quattro nomi restituisce rispettivamente
+valori fissi (`7`, `1200`, `50`, `24`): **non sono misure reali** da esporre
+come sensori. Il livello dell'acqua ha invece un percorso di lettura reale,
+già utilizzato dal controller di questo progetto.
 
 Luci / switch (da `stress-test.sh`: su /dev/tty-local) — NON ancora validato in runtime ma molto probabile:
 
