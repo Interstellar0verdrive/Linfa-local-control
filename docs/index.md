@@ -45,7 +45,7 @@ La [tabella completa dei comandi](riferimento-comandi.md) affianca ogni comando 
 
 ## Prima di copiare i comandi
 
-Nei comandi e nei blocchi di configurazione, le parti **evidenziate in giallo** vanno controllate o sostituite. I valori tra parentesi angolari, come `<LOCAL_IP>` e `<WIFI_PASSWORD>`, sono segnaposto; anche un percorso di esempio come `/dev/ttyUSB0` va verificato sul proprio sistema. Il pulsante **Copia** conserva il testo originale: non inserisce automaticamente i tuoi valori. Conserva le credenziali solo sui dispositivi che le usano. Alcuni comandi modificano la configurazione della serra: leggi il capitolo per intero prima di eseguirli.
+Nei comandi e nei blocchi di configurazione, il giallo segnala le parti <mark class="value-to-check">da verificare o sostituire</mark> prima di usarli. I valori tra parentesi angolari, come `<LOCAL_IP>` e `<WIFI_PASSWORD>`, sono segnaposto; anche un percorso di esempio come `/dev/ttyUSB0` va verificato sul proprio sistema. Il pulsante **Copia** conserva il testo originale: non inserisce automaticamente i tuoi valori. Conserva le credenziali solo sui dispositivi che le usano. Alcuni comandi modificano la configurazione della serra: leggi il capitolo per intero prima di eseguirli.
 
 ## Approfondimenti facoltativi
 

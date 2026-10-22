@@ -350,7 +350,7 @@ h2 { margin: 0; font-size: clamp(26px, 2.6vw, 34px); font-weight: 750; letter-sp
 .markdown-body .highlight .s, .markdown-body .highlight .s1, .markdown-body .highlight .s2, .markdown-body .highlight .se { color: var(--code-string); }
 .markdown-body .highlight .k, .markdown-body .highlight .nb, .markdown-body .highlight .na { color: var(--code-keyword); }
 .markdown-body .highlight .c, .markdown-body .highlight .c1, .markdown-body .highlight .cm { color: var(--code-comment); }
-.markdown-body code .value-to-check { padding: .08em .16em; border-radius: 3px; background: var(--value-check-bg); color: var(--value-check-ink); font-weight: 800; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.markdown-body .value-to-check { padding: .08em .16em; border-radius: 3px; background: var(--value-check-bg); color: var(--value-check-ink); font-weight: 800; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
 .markdown-body > pre { margin: 28px 0; border-radius: 12px; }
 .markdown-body table { display: table; width: 100%; margin: 28px 0; border-collapse: separate; border-spacing: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); font-size: 13px; }
 .markdown-body table th { padding: 13px 16px; border-bottom: 1px solid var(--line); background: var(--accent-soft); color: var(--accent-dark); text-align: left; font-size: 11px; letter-spacing: .025em; }
