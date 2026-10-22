@@ -16,6 +16,9 @@
   --warning-bg: #fff0e8;
   --warning-border: #ecb58c;
   --warning-ink: #8d4927;
+  --warning-text: #543729;
+  --warning-code-bg: #ffe3d4;
+  --warning-code-border: #e8b895;
   --tip-bg: #e8f4ea;
   --code-bg: #f1f6f0;
   --code-head: #e5f0e5;
@@ -46,6 +49,9 @@
   --warning-bg: #37281f;
   --warning-border: #84563b;
   --warning-ink: #f4bf9c;
+  --warning-text: #f3e5db;
+  --warning-code-bg: #493226;
+  --warning-code-border: #8b5a40;
   --tip-bg: #203d2a;
   --code-bg: #0d1510;
   --code-head: #14231a;
@@ -356,8 +362,12 @@ h2 { margin: 0; font-size: clamp(26px, 2.6vw, 34px); font-weight: 750; letter-sp
 .markdown-body .admonition p { margin: 0 0 10px; font-size: 13px; line-height: 1.67; }
 .markdown-body .admonition p:last-child { margin-bottom: 0; }
 .markdown-body .admonition-title { margin: 0 0 7px !important; color: var(--accent-dark); font-size: 13px !important; font-weight: 800; }
-.markdown-body .admonition.warning, .markdown-body .admonition.caution, .markdown-body .admonition.danger { border-color: var(--warning-border); border-left-color: var(--warning-ink); background: var(--warning-bg); }
-.markdown-body .admonition.warning .admonition-title, .markdown-body .admonition.caution .admonition-title, .markdown-body .admonition.danger .admonition-title { color: var(--warning-ink); }
+.markdown-body .admonition:is(.warning, .caution, .danger) { border-color: var(--warning-border); border-left-color: var(--warning-ink); background: var(--warning-bg); color: var(--warning-text); }
+.markdown-body .admonition:is(.warning, .caution, .danger) .admonition-title,
+.markdown-body .admonition:is(.warning, .caution, .danger) strong,
+.markdown-body .admonition:is(.warning, .caution, .danger) a { color: var(--warning-ink); }
+.markdown-body .admonition:is(.warning, .caution, .danger) code:not(pre code) { border-color: var(--warning-code-border); background: var(--warning-code-bg); color: var(--warning-ink); }
+.markdown-body .admonition:is(.warning, .caution, .danger) li::marker { color: var(--warning-ink); }
 .markdown-body .admonition.tip, .markdown-body .admonition.success { background: var(--tip-bg); }
 .markdown-body .admonition strong { color: var(--ink); }
 .completion-callout { display: flex; align-items: flex-start; gap: 14px; margin: 75px 0 0; padding: 22px; border: 1px solid var(--accent-strong); border-left: 3px solid var(--accent); border-radius: 12px; background: var(--tip-bg); }
