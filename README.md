@@ -48,4 +48,4 @@ Il controller usa il collegamento seriale alla console del VoCore2; il Raspberry
 
 ## Licenza
 
-Il codice e i contenuti originali della repository sono distribuiti con [licenza MIT](LICENSE). I nomi e i marchi Robonica, Linfa e Weezy e le immagini di terzi collegate nella guida restano dei rispettivi titolari.
+Il codice e i contenuti originali della repository sono distribuiti con [licenza MIT](LICENSE). I nomi e i marchi Robonica, Linfa e Weezy restano dei rispettivi titolari. Le immagini delle guide dell'app nella cartella [`app/`](app/) non sono comprese nella licenza MIT; i diritti restano ai rispettivi titolari.
