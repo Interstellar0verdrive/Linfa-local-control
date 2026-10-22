@@ -55,7 +55,7 @@ Nel seguito, `<BROKER_IP>`, `<MQTT_USER>` e `<MQTT_PASSWORD>` indicano l'indiriz
 
 Puoi partire dal [modello senza credenziali](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/serra-mqtt.env.example).
 
-```bash
+```bash {.terminal-raspberry}
 if [ ! -e /etc/serra-mqtt.env ]; then sudo install -m 600 /dev/null /etc/serra-mqtt.env; fi
 sudo nano /etc/serra-mqtt.env
 ```
@@ -78,7 +78,7 @@ Se la seriale non è `/dev/ttyUSB0`, aggiungi `SERRA_UART_PORT=/dev/ttyUSB1` sos
 
 Permessi:
 
-```bash
+```bash {.terminal-raspberry}
 sudo chown root:root /etc/serra-mqtt.env
 sudo chmod 600 /etc/serra-mqtt.env
 ```
@@ -99,7 +99,7 @@ Nel passo 06 hai già copiato il [file pronto del servizio](https://github.com/I
 
 **Se l'utente del Raspberry non è `pi`:** prima di installare il file, modifica la copia nella tua home sostituendo `User=pi` e `/home/pi/serra_mqtt_bridge.py` con l'utente e il percorso effettivi. Usa lo stesso utente con cui hai eseguito `serra auth save` e adatta anche il percorso nel comando seguente.
 
-```bash
+```bash {.terminal-raspberry}
 sudo install -m 644 /home/pi/serra-mqtt-bridge.service /etc/systemd/system/
 ```
 
@@ -125,14 +125,14 @@ WantedBy=multi-user.target
 
 ### Enable e start
 
-```bash
+```bash {.terminal-raspberry}
 sudo systemctl daemon-reload
 sudo systemctl enable --now serra-mqtt-bridge.service
 ```
 
 Verifica:
 
-```bash
+```bash {.terminal-raspberry}
 systemctl status serra-mqtt-bridge.service --no-pager
 journalctl -u serra-mqtt-bridge.service -n 100 --no-pager
 ```
@@ -149,7 +149,7 @@ Il bridge pubblica i topic `serra/status/online` e `serra/status/last_seen`.
 
 Verifica:
 
-```bash
+```bash {.terminal-raspberry}
 mosquitto_sub -h <BROKER_IP> -u <MQTT_USER> -P '<MQTT_PASSWORD>' -t "serra/status/#" -v
 ```
 
@@ -161,21 +161,21 @@ Per uscire: `CTRL + C`
 
 Accendi le luci con una dissolvenza di 3 secondi:
 
-```bash
+```bash {.terminal-raspberry}
 mosquitto_pub -h <BROKER_IP> -u <MQTT_USER> -P '<MQTT_PASSWORD>' \
   -t serra/cmd -m "lights on -f 3"
 ```
 
 Poi spegnile:
 
-```bash
+```bash {.terminal-raspberry}
 mosquitto_pub -h <BROKER_IP> -u <MQTT_USER> -P '<MQTT_PASSWORD>' \
   -t serra/cmd -m "lights off"
 ```
 
 Verifica che lo stato venga aggiornato su `serra/state/...`:
 
-```bash
+```bash {.terminal-raspberry}
 mosquitto_sub -h <BROKER_IP> -u <MQTT_USER> -P '<MQTT_PASSWORD>' -t "serra/status/last" -v
 ```
 

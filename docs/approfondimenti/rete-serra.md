@@ -24,7 +24,7 @@ Caratteristiche:
 
 Accesso SSH (quando la rete NON è ancora disabilitata):
 
-```bash
+```bash {.terminal-computer}
 ssh root@<SERRA_IP>
 ```
 
@@ -48,7 +48,7 @@ Configurazione tipica:
 
 Il Raspberry può collegarsi alla rete via **Ethernet** o **Wi-Fi**. Per trovare l'indirizzo dell'interfaccia in uso, esegui sul Raspberry:
 
-```bash
+```bash {.terminal-raspberry}
 ip -br -4 address show
 ```
 
@@ -58,7 +58,7 @@ Qui l'indirizzo da usare è `192.168.1.42`, senza `/24`. Sul tuo Raspberry potre
 
 Collegati via SSH usando l'indirizzo effettivo del Raspberry:
 
-```bash
+```bash {.terminal-computer}
 ssh pi@<RASPBERRY_IP>
 ```
 

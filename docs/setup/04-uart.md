@@ -24,7 +24,7 @@ Questa verifica:
 
 Dal Raspberry, collegato via SSH:
 
-```bash
+```bash {.terminal-raspberry}
 picocom -b 115200 /dev/ttyUSB0
 ```
 
@@ -74,7 +74,7 @@ Se il login va a buon fine, ci si trova **dentro la serra**, senza passare da Wi
 
 Una volta loggati, eseguire solo comandi **non distruttivi**:
 
-```bash
+```bash {.terminal-serra}
 uname -a
 ```
 
@@ -85,7 +85,7 @@ Verifica:
 - kernel Linux (3.18.x)
 - architettura MIPS (VoCore2)
 
-```bash
+```bash {.terminal-serra}
 uptime
 ```
 
@@ -96,7 +96,7 @@ Serve per:
 - confermare che la shell risponde correttamente
 - verificare eventuali reboot inattesi
 
-```bash
+```bash {.terminal-serra}
 ls /
 ```
 

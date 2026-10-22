@@ -6,7 +6,7 @@ Questa pagina raccoglie i comandi **per completezza della documentazione** e per
 
 Sul Raspberry, dopo aver installato il controller, puoi leggere l'help completo con:
 
-```bash
+```bash {.terminal-raspberry}
 serra --help
 ```
 

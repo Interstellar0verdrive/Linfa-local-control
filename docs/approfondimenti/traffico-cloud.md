@@ -51,7 +51,7 @@ Note:
 
 3. Crea una cartella dedicata sul computer, apri lì Terminale (macOS/Linux) o PowerShell (Windows) e avvia la cattura. Il file viene salvato nella cartella corrente:
 
-    ```text {.command-example}
+    ```text {.terminal-computer}
     mitmdump -p 8080 -w serra_ALL.mitm
     ```
 
@@ -75,7 +75,7 @@ Note:
 
 8. Per visualizzare il file, dalla stessa cartella usa:
 
-    ```text {.command-example}
+    ```text {.terminal-computer}
     mitmproxy -r serra_ALL.mitm
     ```
 
@@ -89,7 +89,7 @@ Note:
 
 9. Per esportare un HAR dalla cattura, usa l'opzione **integrata** di mitmproxy (disponibile dalla versione 10.1):
 
-    ```text {.command-example}
+    ```text {.terminal-computer}
     mitmdump -n -r serra_ALL.mitm --set hardump=serra_ALL_OK.har
     ```
 

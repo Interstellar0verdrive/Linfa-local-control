@@ -19,7 +19,7 @@ Questa procedura è stata verificata sulla serra dell'autore con firmware VoCore
 
 Apri la console UART come nel [passo 04](../setup/04-uart.md) e, **nella shell del VoCore**, verifica senza cambiare nulla:
 
-```sh
+```sh {.terminal-serra}
 command -v fswebcam
 command -v uuencode
 command -v sha256sum
@@ -32,7 +32,7 @@ Esci dalla console prima di proseguire, in modo da liberare la porta seriale. Il
 
 Lo script `serra-foto` è stato copiato in `/home/pi/` nel passo 06, senza attivarlo. **Sul Raspberry** installalo e verifica le dipendenze:
 
-```bash
+```bash {.terminal-raspberry}
 sudo install -o root -g root -m 755 /home/pi/serra-foto /usr/local/bin/serra-foto
 sudo systemd-run --wait --collect --pipe -p User=pi \
   -p EnvironmentFile=/etc/serra-mqtt.env \
@@ -45,7 +45,7 @@ sudo systemd-run --wait --collect --pipe -p User=pi \
 
 Quando puoi controllare visivamente i LED, usa il pulsante foto dell'app Home Assistant. Se l'app non è installata, pubblica il payload testuale `foto` sul topic `serra/cmd/ha` **senza retain** tramite MQTT Explorer, come nel [passo 09](../setup/09-home-assistant.md#prova-con-mqtt-explorer). Il comando torna subito e la pipeline lavora in background. Sul Raspberry puoi seguirla con:
 
-```bash
+```bash {.terminal-raspberry}
 tail -f /tmp/serra-foto.log
 ```
 

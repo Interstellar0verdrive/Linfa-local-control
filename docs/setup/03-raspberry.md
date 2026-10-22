@@ -18,7 +18,7 @@ Obiettivo di questa sezione: preparare un Raspberry Pi “vergine” (solo OS + 
 
 Sul Raspberry (anche collegandoti via SSH dal tuo computer, che può usare macOS, Windows o Linux):
 
-```bash
+```bash {.terminal-raspberry}
 date
 hostname
 uname -a
@@ -27,7 +27,7 @@ cat /etc/os-release
 
 Verificare rete (deve uscire su Internet per installare pacchetti):
 
-```bash
+```bash {.terminal-raspberry}
 ip a
 ip r
 ping -c 1 1.1.1.1
@@ -38,7 +38,7 @@ ping -c 1 deb.debian.org || true
 
 ## Aggiornare repository e pacchetti base
 
-```bash
+```bash {.terminal-raspberry}
 sudo apt update
 sudo apt -y full-upgrade
 sudo apt -y autoremove
@@ -54,7 +54,7 @@ Se l'aggiornamento ha installato un nuovo kernel o richiede un riavvio, esegui `
 
 Questi servono al funzionamento reale (UART, Python, dipendenze Python via APT):
 
-```bash
+```bash {.terminal-raspberry}
 sudo apt install -y \
   python3 \
   python3-serial \
@@ -68,7 +68,7 @@ sudo apt install -y \
 
 Git serve per scaricare la repository direttamente sul Raspberry nel passo 06; `mosquitto-clients` e `jq` servono per le verifiche descritte nei passi successivi. Installali se segui i comandi di questa guida:
 
-```bash
+```bash {.terminal-raspberry}
 sudo apt install -y \
   mosquitto-clients \
   jq \
@@ -79,7 +79,7 @@ sudo apt install -y \
 
 Nel setup finale non è indispensabile perché `python3-paho-mqtt` e `python3-serial` vengono installati via APT. Se ti serve `pip` per altri progetti, puoi aggiungerlo:
 
-```bash
+```bash {.terminal-raspberry}
 sudo apt install -y python3-pip
 ```
 
@@ -89,7 +89,7 @@ sudo apt install -y python3-pip
 
 Verifica versione:
 
-```bash
+```bash {.terminal-raspberry}
 python3 --version
 ```
 
@@ -97,7 +97,7 @@ python3 --version
 
 Verifica che i moduli necessari siano importabili **prima** di caricare gli script:
 
-```bash
+```bash {.terminal-raspberry}
 python3 -c "import paho.mqtt.client as c; print('paho OK')"
 python3 -c "import serial; print('pyserial OK')"
 ```
@@ -106,7 +106,7 @@ python3 -c "import serial; print('pyserial OK')"
 
 Verifica che gli strumenti siano disponibili e individua quelli mancanti:
 
-```bash
+```bash {.terminal-raspberry}
 for tool in python3 picocom git jq mosquitto_pub mosquitto_sub pip3; do
   printf '%s: ' "$tool"
   command -v "$tool" || printf 'non trovato\n'
@@ -123,7 +123,7 @@ done
 
 Con adattatore collegato:
 
-```bash
+```bash {.terminal-raspberry}
 ls -l /dev/ttyUSB* /dev/ttyACM* 2>/dev/null || true
 ```
 
@@ -133,7 +133,7 @@ ls -l /dev/ttyUSB* /dev/ttyACM* 2>/dev/null || true
 
 L’utente che eseguirà i comandi (tipicamente pi) deve poter aprire la seriale.
 
-```bash
+```bash {.terminal-raspberry}
 groups
 getent group dialout || true
 ls -l /dev/ttyUSB0 2>/dev/null || true
@@ -145,7 +145,7 @@ Se la porta trovata sopra ha un nome diverso, sostituisci `/dev/ttyUSB0` nell'ul
 
 Se l'utente `pi` **non** è in `dialout`, aggiungilo (sostituisci `pi` se usi un altro utente):
 
-```bash
+```bash {.terminal-raspberry}
 sudo usermod -aG dialout pi
 ```
 
@@ -157,7 +157,7 @@ Poi disconnettiti e riconnettiti via SSH perché la nuova appartenenza al gruppo
 
 Per evitare confusione nei capitoli successivi, prepara già una struttura standard:
 
-```bash
+```bash {.terminal-raspberry}
 mkdir -p /home/pi/serra
 mkdir -p /home/pi/serra/_bak
 ```
@@ -175,13 +175,13 @@ Se il broker MQTT esiste già (es. Mosquitto su `<BROKER_IP>`:1883), puoi fare u
 
 **Primo terminale:** resta in attesa di un messaggio.
 
-```bash
+```bash {.terminal-raspberry}
 mosquitto_sub -h <BROKER_IP> -p 1883 -u <MQTT_USER> -P '<MQTT_PASSWORD>' -t serra/test -C 1
 ```
 
 **Secondo terminale:** invia il messaggio di prova.
 
-```bash
+```bash {.terminal-raspberry}
 mosquitto_pub -h <BROKER_IP> -p 1883 -u <MQTT_USER> -P '<MQTT_PASSWORD>' -t serra/test -m "hello"
 ```
 

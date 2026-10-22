@@ -11,7 +11,7 @@ Hai già verificato l'accesso alla console nel [passo 04](04-uart.md).
 
 Collegati al **Raspberry Pi** via SSH e apri la console della **serra** con `picocom`:
 
-```bash
+```bash {.terminal-raspberry}
 picocom -b 115200 /dev/ttyUSB0
 ```
 
@@ -21,13 +21,13 @@ Adatta il nome della porta se necessario. Effettua il login come `root` sulla se
 
 Controlla di essere sulla serra: l'architettura del VoCore è MIPS.
 
-```sh
+```sh {.terminal-serra}
 uname -m
 ```
 
 Imposta una nuova password senza stampare in terminale il contenuto di `/etc/shadow`:
 
-```sh
+```sh {.terminal-serra}
 passwd
 ```
 

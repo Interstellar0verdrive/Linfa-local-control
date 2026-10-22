@@ -36,13 +36,13 @@ I comandi Linux di questo capitolo vanno eseguiti **sul Raspberry**, anche se ap
 
 Dal terminale del computer (su Windows, **PowerShell**), collegati al Raspberry, sostituendo `<RASPBERRY_IP>`:
 
-```text {.command-example}
+```text {.terminal-computer}
 ssh pi@<RASPBERRY_IP>
 ```
 
 **Da qui in poi sei nella shell del Raspberry.** Il passo 03 ha già installato Git e richiesto una connessione Internet al Raspberry: clona la repository direttamente lì e copia i file necessari nella posizione usata dai passi successivi. Lo script fotografico viene soltanto copiato; la sua installazione resta facoltativa.
 
-```bash
+```bash {.terminal-raspberry}
 cd /home/pi
 git clone https://github.com/Interstellar0verdrive/Linfa-local-control.git
 cd Linfa-local-control
@@ -52,7 +52,7 @@ cp bridge/systemd/serra-*.service bridge/systemd/serra-*.timer /home/pi/
 
 Se il Raspberry non può raggiungere GitHub, scarica la repository sul computer ed entra nella sua cartella. Puoi usare Git oppure **Code → Download ZIP** su GitHub ed estrarre l'archivio. Dal terminale del computer, nella cartella che contiene `bridge/`, usa `scp -r bridge pi@<RASPBERRY_IP>:/home/pi/` (lo stesso comando con OpenSSH su macOS, Linux e PowerShell). Poi collegati al Raspberry con `ssh pi@<RASPBERRY_IP>` ed esegui:
 
-```bash
+```bash {.terminal-raspberry}
 cp /home/pi/bridge/serra_controller.py /home/pi/bridge/serra_mqtt_bridge.py /home/pi/bridge/serra_help.txt /home/pi/bridge/serra-foto /home/pi/
 cp /home/pi/bridge/systemd/serra-*.service /home/pi/bridge/systemd/serra-*.timer /home/pi/
 ```
@@ -61,13 +61,13 @@ La copia da computer richiede il client OpenSSH anche per `scp`; il Raspberry de
 
 Impostare permessi di esecuzione:
 
-```bash
+```bash {.terminal-raspberry}
 chmod +x /home/pi/serra_controller.py /home/pi/serra_mqtt_bridge.py
 ```
 
 Verifica:
 
-```bash
+```bash {.terminal-raspberry}
 ls -la /home/pi/serra_controller.py /home/pi/serra_mqtt_bridge.py
 ```
 
@@ -84,13 +84,13 @@ Questo consente di:
 - aggiornare il controller modificando solo `serra_controller.py`
 - non toccare systemd o il PATH
 
-```bash
+```bash {.terminal-raspberry}
 sudo ln -sf /home/pi/serra_controller.py /usr/local/bin/serra
 ```
 
 Verifica:
 
-```bash
+```bash {.terminal-raspberry}
 readlink -f /usr/local/bin/serra
 which serra
 ```
@@ -109,7 +109,7 @@ Questi comandi vanno eseguiti nella **shell della serra** aperta con `picocom`, 
 
 Controlla versione, configurazione e processi prima di cambiare qualcosa:
 
-```sh
+```sh {.terminal-serra}
 busybox | head -1
 grep -n 'start-rcc' /etc/inittab
 ps -o pid,args
@@ -121,14 +121,14 @@ ps -o pid,args
 
 Esegui questa parte **solo** se hai trovato esattamente la voce attiva indicata sopra. Crea un backup dedicato senza sovrascriverne uno esistente:
 
-```sh
+```sh {.terminal-serra}
 test ! -e /etc/inittab.linfa.bak && cp -p /etc/inittab /etc/inittab.linfa.bak && echo 'OK: backup creato'
 ls -l /etc/inittab.linfa.bak
 ```
 
 Deve comparire `OK: backup creato`. Se manca, **fermati**: conserva il backup già presente o chiarisci perché la copia è fallita. Prepara un nuovo file e controlla che l'unica modifica sia il `#` davanti a `start-rcc`:
 
-```sh
+```sh {.terminal-serra}
 sed 's@^::respawn:/usr/bin/start-rcc$@#::respawn:/usr/bin/start-rcc@' /etc/inittab.linfa.bak > /etc/inittab.linfa.new
 grep -n 'start-rcc' /etc/inittab.linfa.new
 sed 's@^#::respawn:/usr/bin/start-rcc$@::respawn:/usr/bin/start-rcc@' /etc/inittab.linfa.new | cmp - /etc/inittab.linfa.bak && echo 'OK: solo start-rcc è cambiato'
@@ -136,7 +136,7 @@ sed 's@^#::respawn:/usr/bin/start-rcc$@::respawn:/usr/bin/start-rcc@' /etc/initt
 
 **Risposta attesa:** una sola riga commentata da `grep`, poi `OK: solo start-rcc è cambiato`. Se il messaggio `OK` non compare, **non installare il nuovo file**. Quando i controlli sono riusciti, sostituisci `inittab` e chiedi a BusyBox `init` di rileggerlo:
 
-```sh
+```sh {.terminal-serra}
 chmod 644 /etc/inittab.linfa.new
 mv /etc/inittab.linfa.new /etc/inittab
 sync
@@ -146,7 +146,7 @@ grep -n 'start-rcc' /etc/inittab
 
 La voce deve risultare commentata. Il segnale HUP **non garantisce da solo** che il processo già in esecuzione sia stato terminato: dipende da come BusyBox è stato compilato. Controlla di nuovo i processi:
 
-```sh
+```sh {.terminal-serra}
 ps -o pid,args
 ```
 
@@ -160,7 +160,7 @@ Riavvia la serra, riapri la console e ripeti `grep -n 'start-rcc' /etc/inittab` 
 
 Per tornare alla configurazione originale, **prima ferma il bridge e i timer della serra sul Raspberry**; evita che i due sistemi comandino i componenti insieme. Poi, nella shell della serra, controlla che `/etc/inittab.linfa.bak` sia il backup creato sopra e ripristinalo:
 
-```sh
+```sh {.terminal-serra}
 cp -p /etc/inittab.linfa.bak /etc/inittab.linfa.restore
 mv /etc/inittab.linfa.restore /etc/inittab
 sync
@@ -174,7 +174,7 @@ Chiudi `picocom` con `Ctrl+A`, poi `Ctrl+X` prima di usare la CLI; altrimenti la
 
 Il controller non contiene una password root predefinita. Salva **una volta sola** la password della console della tua serra in un file privato sul Raspberry, senza scriverla nella cronologia della shell:
 
-```bash
+```bash {.terminal-raspberry}
 serra auth save
 ```
 
@@ -182,7 +182,7 @@ Il comando la chiede due volte senza mostrarla e crea `~/.config/serra/root-pass
 
 Se la porta individuata nel passo 03 non è `/dev/ttyUSB0`, imposta anche il percorso reale **nella stessa sessione** (esempio):
 
-```bash
+```bash {.terminal-raspberry}
 export SERRA_UART_PORT=/dev/ttyUSB1
 ```
 
@@ -190,7 +190,7 @@ Nel passo 07 riporterai l'eventuale `SERRA_UART_PORT` anche nel file usato dai s
 
 I servizi automatici eseguiti come utente `pi` leggeranno la stessa password da questo file privato. Nel passo 07 `/etc/serra-mqtt.env` conterrà le credenziali del broker MQTT e gli altri parametri, senza duplicare la password della serra. Nessuno dei due file va caricato su GitHub.
 
-```bash
+```bash {.terminal-raspberry}
 serra --help
 ```
 
@@ -200,7 +200,7 @@ Per cercare un'azione senza scorrere l'help nel terminale, consulta il [riferime
 
 Test di apertura della console e login via UART, senza azionare i componenti:
 
-```bash
+```bash {.terminal-raspberry}
 serra uptime
 ```
 
@@ -208,7 +208,7 @@ serra uptime
 
 Per verificare separatamente il file di stato locale:
 
-```bash
+```bash {.terminal-raspberry}
 serra state sync
 ```
 
@@ -218,25 +218,25 @@ Esegui questi comandi di prova **uno alla volta**, osservando il risultato dopo 
 
 Accendi le luci con una dissolvenza di 2 secondi:
 
-```bash
+```bash {.terminal-raspberry}
 serra lights on -f 2
 ```
 
 Spegni le luci con una dissolvenza di 2 secondi:
 
-```bash
+```bash {.terminal-raspberry}
 serra lights off -f 2
 ```
 
 Accendi le ventole:
 
-```bash
+```bash {.terminal-raspberry}
 serra fans on
 ```
 
 Spegni le ventole:
 
-```bash
+```bash {.terminal-raspberry}
 serra fans off
 ```
 
@@ -255,7 +255,7 @@ Nel passaggio precedente abbiamo già dato alcuni comandi di test, quindi dovreb
 
 Verifica:
 
-```bash
+```bash {.terminal-raspberry}
 ls -la /home/pi/.serra_state.json
 cat /home/pi/.serra_state.json | jq .
 ```

@@ -336,8 +336,10 @@ h2 { margin: 0; font-size: clamp(26px, 2.6vw, 34px); font-weight: 750; letter-sp
 .markdown-body pre { overflow: auto; max-width: 100%; margin: 0; padding: 23px 20px; border-radius: 0 0 11px 11px; background: var(--code-bg); color: var(--code-ink); font-size: 12px; line-height: 1.65; tab-size: 2; }
 .markdown-body pre code { color: inherit; font-size: inherit; }
 .markdown-body .highlight { overflow: hidden; margin: 28px 0; border: 1px solid var(--code-border); border-radius: 12px; background: var(--code-bg); }
-.markdown-body .highlight::before { content: 'TERMINALE · COPIA I COMANDI CON ATTENZIONE'; display: block; padding: 10px 17px; border-bottom: 1px solid var(--code-border); background: var(--code-head); color: var(--code-caption); font-size: 10px; font-weight: 850; letter-spacing: .09em; }
-.markdown-body .highlight.command-example::before { content: 'SUL COMPUTER · TERMINALE O POWERSHELL'; }
+.markdown-body .highlight::before { content: 'COMANDI · VERIFICA DOVE ESEGUIRLI'; display: block; padding: 10px 17px; border-bottom: 1px solid var(--code-border); background: var(--code-head); color: var(--code-caption); font-size: 10px; font-weight: 850; letter-spacing: .09em; }
+.markdown-body .highlight.terminal-raspberry::before { content: 'TERMINALE RASPBERRY PI · COPIA I COMANDI CON ATTENZIONE'; }
+.markdown-body .highlight.terminal-serra::before { content: 'CONSOLE DELLA SERRA · COPIA I COMANDI CON ATTENZIONE'; }
+.markdown-body .highlight.terminal-computer::before { content: 'TERMINALE COMPUTER · COPIA I COMANDI CON ATTENZIONE'; }
 .markdown-body .highlight.file-content::before { content: 'CONTENUTO DEL FILE · VERIFICA I VALORI'; }
 .markdown-body .highlight.source-code::before { content: 'CODICE DA INSERIRE NEL FILE'; }
 .markdown-body .highlight pre { border-radius: 0; }

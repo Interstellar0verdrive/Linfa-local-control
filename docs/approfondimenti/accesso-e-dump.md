@@ -9,7 +9,7 @@ Queste operazioni servono per l'esplorazione tecnica. Il percorso principale usa
 
 1. Collegare il computer alla rete temporanea creata dalla serra e, **se SSH è disponibile su quel firmware**, provare l'accesso alla serra dal terminale (PowerShell su Windows):
 
-    ```bash
+    ```bash {.terminal-computer}
     ssh root@<SERRA_AP_IP>
     ```
 
@@ -19,7 +19,7 @@ Queste operazioni servono per l'esplorazione tecnica. Il percorso principale usa
 
     Usa l'indirizzo del Raspberry, sia che sia collegato via Ethernet sia che usi Wi-Fi; non usare l'indirizzo della rete temporanea della serra:
 
-    ```bash
+    ```bash {.terminal-computer}
     ssh pi@<RASPBERRY_IP>
     ```
 
@@ -27,7 +27,7 @@ Queste operazioni servono per l'esplorazione tecnica. Il percorso principale usa
 
 3. Verificare che l’FT232 sia visto dal sistema:
 
-    ```bash
+    ```bash {.terminal-raspberry}
     ls -l /dev/ttyUSB*
     ```
 
@@ -36,19 +36,19 @@ Queste operazioni servono per l'esplorazione tecnica. Il percorso principale usa
 4. Installare minicom nel Raspberry: `sudo apt install -y minicom`
 5. Avviare minicom:
 
-    ```bash
+    ```bash {.terminal-raspberry}
     sudo minicom -D /dev/ttyUSB0 -b 115200
     ```
 
     Per uscire, premi **CTRL + A**, poi **X**. Se vuoi registrare la sessione in un file, avvia invece:
 
-    ```bash
+    ```bash {.terminal-raspberry}
     sudo minicom -D /dev/ttyUSB0 -b 115200 -C /home/pi/serra_uart.log
     ```
 
     Per leggere il log salvato:
 
-    ```bash
+    ```bash {.terminal-raspberry}
     tail -n 200 /home/pi/serra_uart.log
     ```
 
@@ -56,7 +56,7 @@ Queste operazioni servono per l'esplorazione tecnica. Il percorso principale usa
 `Welcome to Buildroot`
 7. Per copiare il log sul computer, crea o scegli una cartella di destinazione e apri il terminale lì. Questo comando OpenSSH funziona da macOS, Linux e PowerShell e salva il file nella cartella corrente:
 
-    ```text {.command-example}
+    ```text {.terminal-computer}
     scp pi@<RASPBERRY_IP>:/home/pi/serra_uart.log ./serra_uart.log
     ```
 
@@ -74,7 +74,7 @@ I comandi dei primi cinque punti vanno eseguiti **nella shell della serra**, rag
 
 1. Lanciare questo comando:
 
-    ```bash
+    ```bash {.terminal-serra}
     ls -la /usr/lib/node_modules/@robonica
     ```
 
@@ -82,7 +82,7 @@ I comandi dei primi cinque punti vanno eseguiti **nella shell della serra**, rag
 
 2. Entrare nella directory:
 
-    ```bash
+    ```bash {.terminal-serra}
     cd /usr/lib/node_modules/@robonica/robocontrol || echo "CD FAILED"
     pwd
     ```
@@ -91,7 +91,7 @@ I comandi dei primi cinque punti vanno eseguiti **nella shell della serra**, rag
 
 3. Verifichiamo che tar esista:
 
-    ```bash
+    ```bash {.terminal-serra}
     which tar || tar --version
     ```
 
@@ -99,14 +99,14 @@ I comandi dei primi cinque punti vanno eseguiti **nella shell della serra**, rag
 
     Crea l'archivio TAR:
 
-    ```bash
+    ```bash {.terminal-serra}
     cd /usr/lib/node_modules/@robonica
     tar -cf /tmp/robocontrol.tar robocontrol
     ```
 
     Poi comprimilo con gzip:
 
-    ```bash
+    ```bash {.terminal-serra}
     gzip /tmp/robocontrol.tar
     ```
 
@@ -114,7 +114,7 @@ I comandi dei primi cinque punti vanno eseguiti **nella shell della serra**, rag
 
 5. Verificare **che il file esista:**
 
-    ```bash
+    ```bash {.terminal-serra}
     ls -lh /tmp/robocontrol.tar.gz
     ```
 
@@ -122,13 +122,13 @@ I comandi dei primi cinque punti vanno eseguiti **nella shell della serra**, rag
 
 6. Sul computer, apri Terminale (macOS/Linux) o PowerShell (Windows) nella cartella in cui vuoi salvare l'archivio e prova:
 
-    ```text {.command-example}
+    ```text {.terminal-computer}
     scp root@<SERRA_IP>:/tmp/robocontrol.tar.gz ./robocontrol.tar.gz
     ```
 
     Inserisci la password root della serra quando richiesta. Da [OpenSSH 9](https://www.openssh.org/releasenotes.html), `scp` usa SFTP per impostazione predefinita; il firmware della serra potrebbe non avere un server SFTP. Se l'errore riguarda il sottosistema SFTP, riprova forzando il protocollo SCP precedente:
 
-    ```text {.command-example}
+    ```text {.terminal-computer}
     scp -O root@<SERRA_IP>:/tmp/robocontrol.tar.gz ./robocontrol.tar.gz
     ```
 
@@ -136,7 +136,7 @@ I comandi dei primi cinque punti vanno eseguiti **nella shell della serra**, rag
 
     **Terminale macOS/Linux o PowerShell 7.4 e successivi:**
 
-    ```bash
+    ```bash {.terminal-computer}
     ssh root@<SERRA_IP> "cat /tmp/robocontrol.tar.gz" > ./robocontrol.tar.gz
     ```
 
@@ -144,7 +144,7 @@ I comandi dei primi cinque punti vanno eseguiti **nella shell della serra**, rag
 
 7. Sul computer, nella stessa cartella dell'archivio, estrai con `tar` (oppure usa lo strumento di estrazione del sistema):
 
-    ```text {.command-example}
+    ```text {.terminal-computer}
     tar -xzf robocontrol.tar.gz
     ```
 

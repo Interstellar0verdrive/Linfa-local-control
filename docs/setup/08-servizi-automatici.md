@@ -12,19 +12,19 @@ Sul **VoCore del prototipo** abbiamo verificato via UART che `/etc/init.d/S45net
 
 Esegui i prossimi comandi **nella console root della serra via UART**, non nella shell del Raspberry. Conserva il collegamento UART: dopo questa modifica la serra potrebbe non essere più raggiungibile via Wi-Fi. Controlla quali script esistono:
 
-```sh
+```sh {.terminal-serra}
 ls -l /etc/init.d/S45net /etc/init.d/OFF_S45net 2>&1
 ```
 
 Se esiste solo `OFF_S45net`, questa modifica è già presente. Se esiste solo `S45net`, verifica prima che lo script contenga effettivamente l'avvio della radio sul tuo firmware:
 
-```sh
+```sh {.terminal-serra}
 grep -n -E 'mt_wifi|apcli|ra0|udhcpc|udhcpd' /etc/init.d/S45net
 ```
 
 **Solo se hai confermato lo script e hai accesso UART funzionante**, rinominalo senza cancellarlo:
 
-```sh
+```sh {.terminal-serra}
 mv /etc/init.d/S45net /etc/init.d/OFF_S45net
 sync
 ```
@@ -35,7 +35,7 @@ Al successivo **riavvio controllato della serra**, rientra via UART e ricontroll
 
 Per **ripristinare l'avvio originale** sul firmware che usa questi nomi, sempre via UART e solo se `S45net` non esiste già:
 
-```sh
+```sh {.terminal-serra}
 mv /etc/init.d/OFF_S45net /etc/init.d/S45net
 sync
 ```
@@ -56,7 +56,7 @@ La serra deve essere già accesa e raggiungibile via UART quando il timer scatta
 
 Installa il [file del servizio](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/systemd/serra-netoff.service) già copiato sul Raspberry:
 
-```bash
+```bash {.terminal-raspberry}
 sudo install -m 644 /home/pi/serra-netoff.service /etc/systemd/system/
 ```
 
@@ -78,7 +78,7 @@ ExecStart=/usr/local/bin/serra net off
 
 Installa il [file del timer](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/systemd/serra-netoff.timer):
 
-```bash
+```bash {.terminal-raspberry}
 sudo install -m 644 /home/pi/serra-netoff.timer /etc/systemd/system/
 ```
 
@@ -99,14 +99,14 @@ WantedBy=timers.target
 
 ### Enable
 
-```bash
+```bash {.terminal-raspberry}
 sudo systemctl daemon-reload
 sudo systemctl enable --now serra-netoff.timer
 ```
 
 Verifica:
 
-```bash
+```bash {.terminal-raspberry}
 systemctl list-timers --all | grep serra
 systemctl status serra-netoff.service --no-pager
 journalctl -u serra-netoff.service -n 30 --no-pager
@@ -124,7 +124,7 @@ Questo servizio esegue `serra state sync` senza aprire la UART. Ricalcola gli st
 
 Installa il [file del servizio](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/systemd/serra-state-sync.service):
 
-```bash
+```bash {.terminal-raspberry}
 sudo install -m 644 /home/pi/serra-state-sync.service /etc/systemd/system/
 ```
 
@@ -148,7 +148,7 @@ ExecStart=/usr/local/bin/serra state sync
 
 Installa il [file del timer](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/systemd/serra-state-sync.timer):
 
-```bash
+```bash {.terminal-raspberry}
 sudo install -m 644 /home/pi/serra-state-sync.timer /etc/systemd/system/
 ```
 
@@ -170,14 +170,14 @@ WantedBy=timers.target
 
 ### Enable
 
-```bash
+```bash {.terminal-raspberry}
 sudo systemctl daemon-reload
 sudo systemctl enable --now serra-state-sync.timer
 ```
 
 Verifica:
 
-```bash
+```bash {.terminal-raspberry}
 systemctl list-timers --all | grep serra
 journalctl -u serra-state-sync.service -n 50 --no-pager
 ```
@@ -192,7 +192,7 @@ journalctl -u serra-state-sync.service -n 50 --no-pager
 
 Installa i file pronti [service](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/systemd/serra-uptime.service) e [timer](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/systemd/serra-uptime.timer):
 
-```bash
+```bash {.terminal-raspberry}
 sudo install -m 644 /home/pi/serra-uptime.service /home/pi/serra-uptime.timer /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now serra-uptime.timer
@@ -200,7 +200,7 @@ sudo systemctl enable --now serra-uptime.timer
 
 Verifica senza attendere il prossimo intervallo:
 
-```bash
+```bash {.terminal-raspberry}
 sudo systemctl start serra-uptime.service
 systemctl show serra-uptime.service -p Result -p ExecMainStatus
 journalctl -u serra-uptime.service -n 20 --no-pager
@@ -214,14 +214,14 @@ journalctl -u serra-uptime.service -n 20 --no-pager
 
 Il [servizio del livello acqua](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/systemd/serra-water-level.service) esegue `serra water level` e pubblica `serra/state/water`. È installato **senza timer**: avvialo quando serve, con la pompa ferma e l'acqua a riposo. Prima occorrono i due riferimenti `serra water calibrate empty` e `serra water calibrate full`; la [sintassi completa](../riferimento-comandi.md#livello-dellacqua) è nella pagina dei comandi.
 
-```bash
+```bash {.terminal-raspberry}
 sudo install -m 644 /home/pi/serra-water-level.service /etc/systemd/system/
 sudo systemctl daemon-reload
 ```
 
 Se hai già calibrato il sensore e la pompa è ferma:
 
-```bash
+```bash {.terminal-raspberry}
 sudo systemctl start serra-water-level.service
 systemctl show serra-water-level.service -p Result -p ExecMainStatus
 ```
@@ -232,14 +232,14 @@ systemctl show serra-water-level.service -p Result -p ExecMainStatus
 
 Per verificare il timer che invia `net off` dopo il boot del Raspberry:
 
-```bash
+```bash {.terminal-raspberry}
 systemctl status serra-netoff.timer --no-pager
 systemctl list-timers --all | grep -i serra
 ```
 
 Per verificare il timer di sincronizzazione e gli ultimi log:
 
-```bash
+```bash {.terminal-raspberry}
 systemctl status serra-state-sync.timer --no-pager
 systemctl list-timers --all | grep -i serra
 sudo journalctl -u serra-state-sync.service -n 50 --no-pager
@@ -247,17 +247,17 @@ sudo journalctl -u serra-state-sync.service -n 50 --no-pager
 
 Per elencare tutti i timer della serra:
 
-```bash
+```bash {.terminal-raspberry}
 systemctl list-timers --all | grep -i serra
 ```
 
 Se serve eseguire manualmente i servizi **dopo aver acceso la serra**, avviali uno alla volta:
 
-```bash
+```bash {.terminal-raspberry}
 sudo systemctl start serra-netoff.service
 ```
 
-```bash
+```bash {.terminal-raspberry}
 sudo systemctl start serra-state-sync.service
 ```
 
@@ -287,7 +287,7 @@ Da qui in poi:
 
 I file Python originali sono già nella repository. Se li hai modificati sul Raspberry, crea sul computer una cartella dedicata al backup e apri lì Terminale (macOS/Linux) o PowerShell (Windows). Con il client OpenSSH, gli stessi comandi funzionano sui tre sistemi e salvano i file nella **cartella corrente**:
 
-```text {.command-example}
+```text {.terminal-computer}
 scp pi@<RASPBERRY_IP>:/home/pi/serra_controller.py ./serra_controller_backup.py
 scp pi@<RASPBERRY_IP>:/home/pi/serra_mqtt_bridge.py ./serra_mqtt_bridge_backup.py
 ```

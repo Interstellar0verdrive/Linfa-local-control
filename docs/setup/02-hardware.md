@@ -139,7 +139,7 @@ La foto d'insieme mostra la scheda nella parte superiore della serra: **la frecc
 
 Verifica dal Raspberry:
 
-```bash
+```bash {.terminal-raspberry}
 ls -l /dev/ttyUSB* /dev/ttyACM*
 ```
 

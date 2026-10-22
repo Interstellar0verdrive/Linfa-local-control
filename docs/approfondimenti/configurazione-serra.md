@@ -13,7 +13,7 @@ In origine la serra ha uno **user-token** (`<ORIGINAL_DEVICE_TOKEN>`) e un **UUI
 
 Dopo aver collegato il computer alla rete temporanea creata dalla serra, il prototipo ha usato dal **terminale del computer** la richiesta seguente. Sostituisci i segnaposto nel comando prima di eseguirlo. L'endpoint `/credentials` e i nomi delle chiavi sono stati osservati su quel firmware; verifica che siano validi sulla tua versione prima di modificare la configurazione. Il comando originale usa la sintassi del terminale di **macOS/Linux**:
 
-```bash
+```bash {.terminal-computer}
 curl -i -X POST "http://<LOCAL_IP>/credentials" \
 -H "Content-Type: application/json" \
 -d '{"usr-token":"offline-token","SSID":"<WIFI_SSID>","security":"wpa2psk","password":"<WIFI_PASSWORD>","encryption":"AES"}'
@@ -21,7 +21,7 @@ curl -i -X POST "http://<LOCAL_IP>/credentials" \
 
 In **Windows PowerShell**, usa invece questa richiesta equivalente:
 
-```powershell
+```powershell {.terminal-computer}
 Invoke-RestMethod -Method Post -Uri 'http://<LOCAL_IP>/credentials' -ContentType 'application/json' -Body (@{ 'usr-token' = 'offline-token'; SSID = '<WIFI_SSID>'; security = 'wpa2psk'; password = '<WIFI_PASSWORD>'; encryption = 'AES' } | ConvertTo-Json -Compress)
 ```
 
@@ -39,7 +39,7 @@ Esempio di dati da verificare nel router:
 
 Ci si può connettere alla serra così:
 
-```bash
+```bash {.terminal-computer}
 ssh root@<SERRA_IP>
 ```
 
@@ -53,7 +53,7 @@ Inserisci la password root della serra quando richiesta.
 Con questo comando si deve vedere il token in uso.
 Se hai eseguito la richiesta `/credentials` qui sopra, il token potrebbe già essere `offline-token`; altrimenti leggi il valore effettivo prima di decidere se modificarlo.
 
-```bash
+```bash {.terminal-serra}
 hexdump -C /opt/data/token
 ```
 
@@ -63,13 +63,13 @@ Per ripristinare in seguito **il solo token**, conserva prima il suo valore orig
 
 Solo se hai conservato il token originale e hai deciso di modificarlo, imposta prima il valore fittizio:
 
-```bash
+```bash {.terminal-serra}
 TOKEN="offline-token"
 ```
 
 Scrivilo nel file e verifica il contenuto:
 
-```bash
+```bash {.terminal-serra}
 printf "%s" "$TOKEN" > /opt/data/token
 chmod 600 /opt/data/token
 sync
@@ -82,7 +82,7 @@ hexdump -C /opt/data/token
 
 Per ripristinare **il solo token** originale che hai conservato (non la configurazione Wi-Fi o la password root):
 
-```bash
+```bash {.terminal-serra}
 printf '%s' '<ORIGINAL_DEVICE_TOKEN>' > /opt/data/token
 chmod 600 /opt/data/token
 sync
