@@ -73,6 +73,8 @@ Ecco il cavo usato nel prototipo e due alternative con livelli dei segnali dichi
 
 Sono esempi di compatibilità **elettrica** dei segnali, non una garanzia che i terminali entrino direttamente nei pin della tua scheda. Il cavo FTDI ha fili liberi; DTech e Adafruit hanno connettori separati. Se usi un adattatore a schedina come quello delle foto più sotto, serve anche un cavo USB adatto alla sua presa: dalla sola foto di quella schedina non è possibile verificarne il livello logico. Se hai un multimetro, verifica anche che il TX dell'adattatore, alimentato via USB ma **non ancora collegato alla serra**, sia circa 3,3 V rispetto a GND a riposo. Per un'installazione stabile controlla spazio disponibile, isolamento e fermacavo.
 
+Nel **montaggio documentato**, i tre fili che escono dalla serra terminano in connettori femmina; anche il cavo USB → TTL DTech ha tre terminali femmina. Per unirli servono **tre cavetti jumper Dupont maschio–maschio**: uno per ciascuno dei soli segnali TX, RX e GND. Un adattatore con connettori diversi può richiedere cavetti diversi. Non aggiungere un quarto collegamento a VCC, anche se l'adattatore dispone di quel terminale.
+
 <div class="requirement-strip"><span class="requirement-label">REQUISITI ESSENZIALI</span><span>3,3 V TTL</span><span>TX</span><span>RX</span><span>GND</span><span class="struck">VCC non collegato</span></div>
 
 > [!CAUTION] Non alimentare il VoCore dall’adattatore
