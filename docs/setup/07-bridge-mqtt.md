@@ -97,6 +97,8 @@ Avvia e mantiene in esecuzione serra_mqtt_bridge.py (subscriber su serra/cmd →
 
 Nel passo 06 hai già copiato il [file pronto del servizio](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/systemd/serra-mqtt-bridge.service) in `/home/pi/`. Installalo:
 
+**Se l'utente del Raspberry non è `pi`:** prima di installare il file, modifica la copia nella tua home sostituendo `User=pi` e `/home/pi/serra_mqtt_bridge.py` con l'utente e il percorso effettivi. Usa lo stesso utente con cui hai eseguito `serra auth save` e adatta anche il percorso nel comando seguente.
+
 ```bash
 sudo install -m 644 /home/pi/serra-mqtt-bridge.service /etc/systemd/system/
 ```
