@@ -204,11 +204,30 @@ Ventole (su /dev/tty-local):
 - Fan “P” frontale OFF: printf 'VP00xxx\r\n' > /dev/tty-local
 - Velocità fan 1 (esempio): V180xxx / V140xxx
 
-Uscita sensori/telemetria (lettura passiva da /dev/tty-local):
+Uscita sensori/telemetria (osservata su `/dev/tty-local`):
 
-- cat /dev/tty-local | hexdump -C produce ASCII con righe tipo:
-"25.0,26.1,25.87,30.56,0\n..."
-(probabile: temperature/umidità/qualcosa; da decodificare)
+La lettura passiva documentata nel prototipo produceva righe CSV come
+`25.0,26.1,25.87,30.56,0`. L'analisi statica del lettore nel software
+originale `rcc.js` mostra che invia la richiesta `-------`, divide la risposta
+sulle virgole e converte i campi in numeri. La funzione `read-sensor` associa
+le posizioni così:
+
+| Posizione | Nome nel firmware | Valore nell'esempio |
+| --- | --- | ---: |
+| 1 | `T2-sensor` | 25.0 |
+| 2 | `T-LED-sensor` | 26.1 |
+| 3 | `T1-sensor` | 25.87 |
+| 4 | `Humidity-sensor` | 30.56 |
+| 5 | `Tachimetric-sensor` | 0 |
+
+Un'altra funzione del firmware usa `T1-sensor` come temperatura della camera
+della serra. I numeri sono quindi interpretabili come temperature, umidità e
+lettura tachimetrica; **unità, eventuali correzioni e precisione vanno ancora
+verificate su una serra accesa**, confrontando più letture con un sensore
+ambientale indipendente. Il controller di questo progetto non acquisisce né
+pubblica ancora questi valori. Non inviare la richiesta manualmente mentre
+il controller usa la stessa seriale: prima serve una lettura coordinata con
+il suo lock UART.
 
 Luci / switch (da `stress-test.sh`: su /dev/tty-local) — NON ancora validato in runtime ma molto probabile:
 
