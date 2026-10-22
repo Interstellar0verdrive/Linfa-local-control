@@ -337,6 +337,7 @@ h2 { margin: 0; font-size: clamp(26px, 2.6vw, 34px); font-weight: 750; letter-sp
 .markdown-body hr { height: 1px; margin: 64px 0 0; border: 0; background: var(--line); }
 .markdown-body hr + h2 { margin-top: 58px; }
 .markdown-body code:not(pre code) { padding: .12em .35em; border: 1px solid var(--line); border-radius: 5px; background: var(--accent-soft); color: var(--ink); font-size: .89em; overflow-wrap: anywhere; }
+.markdown-body code:not(pre code):has(.value-to-check) { padding: 0; border: 0; background: transparent; }
 .markdown-body pre { overflow: auto; max-width: 100%; margin: 0; padding: 23px 20px; border-radius: 0 0 11px 11px; background: var(--code-bg); color: var(--code-ink); font-size: 12px; line-height: 1.65; tab-size: 2; }
 .markdown-body pre code { color: inherit; font-size: inherit; }
 .markdown-body .highlight { overflow: hidden; margin: 28px 0; border: 1px solid var(--code-border); border-radius: 12px; background: var(--code-bg); }
