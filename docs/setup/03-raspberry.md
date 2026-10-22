@@ -64,9 +64,9 @@ sudo apt install -y \
   curl
 ```
 
-### Pacchetti “tooling” consigliati (debug/test)
+### Git e strumenti per le verifiche
 
-Non sono strettamente obbligatori, ma semplificano moltissimo test e troubleshooting:
+Git serve per scaricare la repository direttamente sul Raspberry nel passo 06; `mosquitto-clients` e `jq` servono per le verifiche descritte nei passi successivi. Installali se segui i comandi di questa guida:
 
 ```bash
 sudo apt install -y \
@@ -104,11 +104,16 @@ python3 -c "import serial; print('pyserial OK')"
 
 **Risposta attesa:** due righe, nell'ordine: `paho OK` e `pyserial OK`.
 
-Verifica presenza strumenti (se installati):
+Verifica che gli strumenti siano disponibili e individua quelli mancanti:
 
 ```bash
-which picocom python3 pip3 mosquitto_pub mosquitto_sub jq git || true
+for tool in python3 picocom git jq mosquitto_pub mosquitto_sub pip3; do
+  printf '%s: ' "$tool"
+  command -v "$tool" || printf 'non trovato\n'
+done
 ```
+
+**Risposta attesa:** una riga per strumento con il suo percorso, per esempio `picocom: /usr/bin/picocom`. `python3`, `picocom`, `git`, `jq`, `mosquitto_pub` e `mosquitto_sub` devono risultare disponibili per seguire tutti i passi della guida. `pip3: non trovato` è normale se hai saltato l'installazione facoltativa di pip. Se manca uno degli altri strumenti, installa il relativo pacchetto indicato sopra e ripeti la verifica.
 
 ---
 
