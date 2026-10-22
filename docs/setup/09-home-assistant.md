@@ -9,6 +9,10 @@
 
 Il broker MQTT e le sue credenziali sono stati predisposti nel [passo 07](07-bridge-mqtt.md).
 
+Per le future automazioni delle ventole, Home Assistant deve conoscere temperatura e umidità **dentro la serra** tramite un sensore ambientale già integrato in HA. Il prototipo usa un sensore Aqara Zigbee collocato nella serra: questi valori non arrivano dal VoCore né dai topic pubblicati dal controller.
+
+Le misure di temperatura e umidità della stanza (o le medie dei sensori di casa) permettono anche di evitare la ventilazione quando lo scambio d'aria non aiuterebbe a raffreddare o deumidificare. L'app in preparazione renderà selezionabili queste quattro entità nelle proprie Impostazioni. Per la sola prova MQTT di questo capitolo non serve aggiungere sensori.
+
 La [fotocamera interna](../approfondimenti/fotocamera.md) è facoltativa: la pipeline sul Raspberry scatta e trasferisce il JPEG via UART, mantenendo spenta la Wi-Fi della serra. Installa e prova prima lo script fotografico se vuoi usare pulsante e automazione foto nell'app Home Assistant.
 
 ---
