@@ -49,6 +49,33 @@ if ('IntersectionObserver' in window && tocLinks.length) {
   document.querySelectorAll('.markdown-body h2[id]').forEach(section => observer.observe(section));
 }
 
+function highlightValuesToCheck(code) {
+  const walker = document.createTreeWalker(code, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+
+  for (const node of nodes) {
+    const parts = node.textContent.split(/(<[A-Z][A-Z0-9_]*>|\/dev\/tty(?:USB|ACM)\d+)/g);
+    if (parts.length === 1) continue;
+
+    const fragment = document.createDocumentFragment();
+    parts.forEach((part, index) => {
+      if (!part) return;
+      if (index % 2 === 0) {
+        fragment.append(document.createTextNode(part));
+      } else {
+        const marker = document.createElement('span');
+        marker.className = 'value-to-check';
+        marker.textContent = part;
+        fragment.append(marker);
+      }
+    });
+    node.replaceWith(fragment);
+  }
+}
+
+document.querySelectorAll('.markdown-body code').forEach(highlightValuesToCheck);
+
 document.querySelectorAll('.markdown-body .highlight').forEach(block => {
   const header = block.querySelector(':scope > .code-header');
   if (header) return;
