@@ -23,6 +23,7 @@ import getpass
 import os
 import re
 import stat
+import subprocess
 import sys
 import time
 from dataclasses import dataclass, field
@@ -51,10 +52,14 @@ except Exception:  # pragma: no cover
 
 DEFAULT_SERIAL_PORT = os.environ.get("SERRA_UART_PORT", "/dev/ttyUSB0")
 DEFAULT_BAUDRATE = int(os.environ.get("SERRA_UART_BAUD", "115200"))
+DEFAULT_TRANSPORT = os.environ.get("SERRA_TRANSPORT", "uart").strip().lower()
+DEFAULT_PRIMARY_TRANSPORT = os.environ.get("SERRA_PRIMARY_TRANSPORT", "wifi").strip().lower()
+DEFAULT_SSH_HOST = os.environ.get("SERRA_SSH_HOST", "").strip()
+DEFAULT_SSH_PORT = int(os.environ.get("SERRA_SSH_PORT", "22"))
 
 # Lockfile per serializzare gli accessi concorrenti alla UART tra invocazioni
 # `serra` (bridge MQTT, timer systemd, comandi manuali via SSH).
-UART_LOCK_PATH = os.environ.get("SERRA_UART_LOCK", "/tmp/serra-uart.lock")
+UART_LOCK_PATH = os.environ.get("SERRA_DEVICE_LOCK", os.environ.get("SERRA_UART_LOCK", "/tmp/serra-uart.lock"))
 UART_LOCK_TIMEOUT_S = float(os.environ.get("SERRA_UART_LOCK_TIMEOUT", "20").strip() or "20")
 
 # Credenziali console serra (BusyBox login)
@@ -100,6 +105,11 @@ class SerraCommandError(SerraError):
 
 class SerraConnectionError(SerraError):
     """Errore di connessione/seriale/MQTT."""
+    pass
+
+
+class SerraUncertainError(SerraConnectionError):
+    """Il comando potrebbe essere stato eseguito: non ritentarlo su un altro canale."""
     pass
 
 
@@ -610,11 +620,9 @@ class SerraConsole:
         try:
             self._lock_fd = open(UART_LOCK_PATH, "w")
         except Exception as ex:
-            # Se non riusciamo nemmeno ad aprire il lockfile proseguiamo senza
-            # lock (meglio funzionare che bloccare), segnalandolo.
-            eprint(f"[uart] warning: impossibile aprire lockfile {UART_LOCK_PATH}: {ex}")
-            self._lock_fd = None
-            return
+            # UART e SSH condividono il lock: procedere senza serializzazione
+            # potrebbe sovrapporre comandi e lasciare lo stato hardware incerto.
+            raise SerraConnectionError(f"Impossibile aprire il lock {UART_LOCK_PATH}: {ex}") from ex
         end = time.time() + UART_LOCK_TIMEOUT_S
         while True:
             try:
@@ -783,6 +791,163 @@ class SerraConsole:
         ei = out.find(end, start)
         chunk = out[start:ei] if ei >= 0 else out[start:]
         return chunk.decode("utf-8", "replace")
+
+
+class SerraSSH(SerraConsole):
+    """Esegue sulla stessa shell del VoCore i comandi usati dalla console UART.
+
+    La chiave host deve essere gia' presente in ~/.ssh/known_hosts. La password
+    viaggia a sshpass su un file descriptor, mai negli argomenti del processo.
+    Ogni comando crea una sessione SSH; il lock comune copre l'intera sequenza.
+    """
+
+    def __init__(self, cfg: ConsoleConfig, host: str, port: int = 22):
+        super().__init__(cfg)
+        if not host or host.startswith("-") or any(ch.isspace() for ch in host):
+            raise SerraCommandError("SERRA_SSH_HOST deve contenere l'IP o il nome della serra")
+        if not 1 <= port <= 65535:
+            raise SerraCommandError("SERRA_SSH_PORT non valido")
+        self.host = host
+        self.port = port
+        self.active_transport = "wifi"
+
+    def _invoke(self, cmd: str, timeout: float, *, preflight: bool = False) -> subprocess.CompletedProcess:
+        if not self.cfg.password:
+            raise SerraCommandError("Password root della serra mancante: esegui serra auth save")
+        if not os.path.exists(os.path.expanduser("~/.ssh/known_hosts")):
+            raise SerraConnectionError("Chiave SSH della serra non registrata in ~/.ssh/known_hosts")
+        read_fd, write_fd = os.pipe()
+        argv = [
+            "sshpass", "-d", str(read_fd), "ssh", "-T",
+            "-o", "StrictHostKeyChecking=yes", "-o", "BatchMode=no",
+            "-o", "NumberOfPasswordPrompts=1", "-o", "PreferredAuthentications=password",
+            "-o", "PubkeyAuthentication=no", "-o", "ConnectTimeout=5",
+            "-p", str(self.port), "-l", self.cfg.user, self.host, cmd,
+        ]
+        try:
+            os.write(write_fd, (self.cfg.password + "\n").encode("utf-8"))
+            os.close(write_fd)
+            write_fd = -1
+            proc = subprocess.Popen(
+                argv, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE, pass_fds=(read_fd,),
+            )
+            try:
+                stdout, stderr = proc.communicate(timeout=max(1.0, timeout))
+            except subprocess.TimeoutExpired as exc:
+                proc.kill()
+                proc.communicate()
+                error = SerraConnectionError if preflight else SerraUncertainError
+                raise error("Timeout SSH: esito del comando sconosciuto" if not preflight else "Timeout SSH prima dell'invio") from exc
+            return subprocess.CompletedProcess(argv, proc.returncode, stdout, stderr)
+        except OSError as exc:
+            error = SerraConnectionError if preflight else SerraUncertainError
+            raise error(f"Impossibile avviare SSH: {exc}") from exc
+        finally:
+            os.close(read_fd)
+            if write_fd >= 0:
+                os.close(write_fd)
+
+    def open(self) -> None:
+        self._acquire_lock()
+        try:
+            result = self._invoke("true", 8, preflight=True)
+            if result.returncode:
+                detail = result.stderr.decode("utf-8", "replace").strip()[-240:]
+                raise SerraConnectionError(f"Accesso SSH alla serra fallito: {detail or result.returncode}")
+        except Exception:
+            self._release_lock()
+            raise
+
+    def ensure_root_prompt(self, timeout: float = 8.0) -> None:
+        # La prova SSH in open() ha gia' eseguito `true` come root.
+        return
+
+    def run_checked(self, cmd: str, timeout: float = 4.0) -> bool:
+        result = self._invoke(cmd, timeout + 5)
+        if result.returncode == 255:
+            raise SerraUncertainError("Connessione SSH interrotta: il comando potrebbe essere stato eseguito")
+        return result.returncode == 0
+
+    def run_capture(self, cmd: str, timeout: float = 6.0) -> str:
+        result = self._invoke(cmd, timeout + 5)
+        if result.returncode == 255:
+            raise SerraUncertainError("Connessione SSH interrotta durante la lettura")
+        if result.returncode:
+            raise SerraConnectionError(f"Lettura SSH fallita (exit {result.returncode})")
+        return result.stdout.decode("utf-8", "replace")
+
+    def run_binary(self, cmd: str, timeout: float = 30.0) -> bytes:
+        result = self._invoke(cmd, timeout + 5)
+        if result.returncode:
+            raise SerraUncertainError("Trasferimento binario SSH non completato")
+        return result.stdout
+
+    def close(self) -> None:
+        self._release_lock()
+
+
+class SerraAutoConsole:
+    """Seleziona il secondario solo durante l'apertura, prima del primo comando."""
+
+    def __init__(self, candidates):
+        self.candidates = candidates
+        self.active = None
+        self.active_transport = None
+
+    def open(self) -> None:
+        failures = []
+        for candidate in self.candidates:
+            try:
+                candidate.open()
+                candidate.ensure_root_prompt()
+                self.active = candidate
+                self.active_transport = candidate.active_transport
+                if failures:
+                    eprint(f"[transport] primario indisponibile ({failures[0]}); uso {self.active_transport}")
+                return
+            except SerraConnectionError as exc:
+                failures.append(str(exc))
+                candidate.close()
+        raise SerraConnectionError("Nessun trasporto disponibile: " + " | ".join(failures))
+
+    def ensure_root_prompt(self, timeout: float = 8.0) -> None:
+        return
+
+    def run_checked(self, cmd: str, timeout: float = 4.0) -> bool:
+        return self.active.run_checked(cmd, timeout)
+
+    def run_capture(self, cmd: str, timeout: float = 6.0) -> str:
+        return self.active.run_capture(cmd, timeout)
+
+    def run_binary(self, cmd: str, timeout: float = 30.0) -> bytes:
+        return self.active.run_binary(cmd, timeout)
+
+    def close(self) -> None:
+        if self.active is not None:
+            self.active.close()
+            self.active = None
+
+
+def make_console(cfg: ConsoleConfig, transport: str = DEFAULT_TRANSPORT,
+                 host: str = DEFAULT_SSH_HOST, ssh_port: int = DEFAULT_SSH_PORT,
+                 primary: str = DEFAULT_PRIMARY_TRANSPORT):
+    transport = transport.lower().strip()
+    if transport not in {"uart", "wifi", "auto"}:
+        raise SerraCommandError("SERRA_TRANSPORT deve essere uart, wifi o auto")
+    if transport == "uart":
+        console = SerraConsole(cfg)
+        console.active_transport = "uart"
+        return console
+    if transport == "wifi":
+        return SerraSSH(cfg, host, ssh_port)
+    if primary not in {"uart", "wifi"}:
+        raise SerraCommandError("SERRA_PRIMARY_TRANSPORT deve essere uart o wifi")
+    secondary = "uart" if primary == "wifi" else "wifi"
+    return SerraAutoConsole([
+        make_console(cfg, primary, host, ssh_port),
+        make_console(cfg, secondary, host, ssh_port),
+    ])
 
 
 # ---------------------------
@@ -992,6 +1157,9 @@ def step(
             print(f"❌ {title} (no marker/timeout)")
         sleep_s(wait_after)
         return ok
+    except SerraUncertainError:
+        # Non continuare sequenze di pompe/dosaggi dopo un esito sconosciuto.
+        raise
     except SerraError as ex:
         print(f"❌ {title}: {ex}")
         return False
@@ -1403,7 +1571,13 @@ def do_pump_main(console: SerraConsole, action: str, seconds: float) -> None:
 
     sec = int(clamp(int(seconds), 1, MAX_PUMP_DURATION_S))
     cmd = pump_main_cmd(sec)
-    ok = step(console, f"PUMP MAIN ON ({sec}s)", cmd)
+    try:
+        ok = step(console, f"PUMP MAIN ON ({sec}s)", cmd)
+    except SerraUncertainError:
+        # Il comando potrebbe aver avviato la pompa anche senza conferma SSH.
+        # Mantieni il backstop senza ritentare l'accensione.
+        _spawn_pump_deadman(time.time() + sec)
+        raise
 
     until_info = make_until_timestamps(sec)
     st: Dict[str, Any] = {
@@ -1643,6 +1817,8 @@ def do_net(console: SerraConsole, action: str, ntp: Optional[str]) -> bool:
     - off: spegne apcli0/ra0, stop udhcpc/udhcpd/apcliautoconnect, kill ntpd (default)
     - on:  avvia /etc/init.d/S45net start; NTP start via /etc/init.d/S70time start (default)
     """
+    if getattr(console, "active_transport", "uart") == "wifi":
+        raise SerraCommandError("serra net on/off richiede UART: non interrompere il canale SSH attivo")
     action = (action or "").strip().lower()
     if action not in ("on", "off"):
         raise SerraCommandError("Uso: serra net on|off [--ntp on|off]")
@@ -1901,19 +2077,30 @@ def do_uptime(console: SerraConsole) -> None:
     print(f"UPTIME: {int(up_s)}s (boot {payload['boot_iso']}){extra}")
 
 
-def do_foto() -> bool:
-    """Lancia in background la pipeline foto UART /usr/local/bin/serra-foto.
+def do_foto(transport: Optional[str] = None, host: Optional[str] = None,
+            ssh_port: Optional[int] = None, primary: Optional[str] = None) -> bool:
+    """Lancia in background la pipeline foto /usr/local/bin/serra-foto.
 
     Il comando torna subito. La pipeline cambia temporaneamente i LED,
-    scatta sul VoCore, ripristina le luci, trasferisce il JPEG via UART
+    scatta sul VoCore, ripristina le luci, trasferisce il JPEG via UART o SSH
     e lo pubblica su MQTT. Il log va in /tmp/serra-foto.log.
     """
     import subprocess
-    pipeline = "/usr/local/bin/serra-foto"
+    pipeline = os.environ.get("SERRA_FOTO_BIN", "/usr/local/bin/serra-foto")
     if not os.path.isfile(pipeline) or not os.access(pipeline, os.X_OK):
         raise SerraCommandError(f"Pipeline foto non installata o non eseguibile: {pipeline}")
+    photo_env = os.environ.copy()
+    if transport is not None:
+        photo_env["SERRA_TRANSPORT"] = transport
+    if host is not None:
+        photo_env["SERRA_SSH_HOST"] = host
+    if ssh_port is not None:
+        photo_env["SERRA_SSH_PORT"] = str(ssh_port)
+    if primary is not None:
+        photo_env["SERRA_PRIMARY_TRANSPORT"] = primary
     try:
-        check = subprocess.run([pipeline, "--check"], capture_output=True, text=True, timeout=15)
+        check = subprocess.run([pipeline, "--check"], capture_output=True,
+                               text=True, timeout=15, env=photo_env)
     except subprocess.TimeoutExpired as exc:
         raise SerraCommandError("Verifica della pipeline foto scaduta") from exc
     if check.returncode != 0:
@@ -1922,7 +2109,7 @@ def do_foto() -> bool:
         )
     with open("/tmp/serra-foto.log", "ab") as logf:
         subprocess.Popen([pipeline],
-                         stdout=logf, stderr=logf, start_new_session=True)
+                         stdout=logf, stderr=logf, start_new_session=True, env=photo_env)
     print("foto: pipeline avviata in background (log /tmp/serra-foto.log)")
     return True
 
@@ -2103,11 +2290,17 @@ def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="serra",
         formatter_class=argparse.RawTextHelpFormatter,
-        description="Serra Controller (CLI) - UART console root",
+        description="Serra Controller (CLI) - console root via UART o SSH locale",
         epilog=_load_help_text(),
     )
     p.add_argument("--port", default=DEFAULT_SERIAL_PORT, help=f"UART port (default: {DEFAULT_SERIAL_PORT})")
     p.add_argument("--baud", default=DEFAULT_BAUDRATE, type=int, help=f"UART baudrate (default: {DEFAULT_BAUDRATE})")
+    p.add_argument("--transport", choices=("uart", "wifi", "auto"), default=DEFAULT_TRANSPORT,
+                   help="canale verso la serra (default: SERRA_TRANSPORT o uart)")
+    p.add_argument("--ssh-host", default=DEFAULT_SSH_HOST, help="IP o nome della serra sulla LAN")
+    p.add_argument("--ssh-port", type=int, default=DEFAULT_SSH_PORT, help="porta SSH della serra")
+    p.add_argument("--primary", choices=("uart", "wifi"), default=DEFAULT_PRIMARY_TRANSPORT,
+                   help="canale preferito in modalita' auto (default: wifi)")
 
     sub = p.add_subparsers(dest="cmd", required=True)
 
@@ -2228,6 +2421,12 @@ def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
 
+    # I processi staccati (foto e dead-man) devono usare la stessa scelta della CLI.
+    os.environ["SERRA_TRANSPORT"] = args.transport
+    os.environ["SERRA_SSH_HOST"] = args.ssh_host
+    os.environ["SERRA_SSH_PORT"] = str(args.ssh_port)
+    os.environ["SERRA_PRIMARY_TRANSPORT"] = args.primary
+
     if args.cmd == "auth":
         try:
             do_auth_save()
@@ -2250,7 +2449,10 @@ def main() -> None:
         password=password,
     )
 
-    console = SerraConsole(cfg)
+    try:
+        console = make_console(cfg, args.transport, args.ssh_host, args.ssh_port, args.primary) if needs_console else None
+    except SerraError as exc:
+        parser.error(str(exc))
     # `state sync` è puramente logico (ricalcolo timestamp + publish MQTT): non
     # tocca la UART. Evitiamo di aprire la seriale e fare login inutilmente — e
     # soprattutto di contendere la porta col resto ogni 30 minuti (timer).
@@ -2325,7 +2527,7 @@ def main() -> None:
             do_uptime(console)
 
         elif args.cmd == "foto":
-            do_foto()
+            do_foto(args.transport, args.ssh_host, args.ssh_port, args.primary)
 
         else:
             raise SerraError("Comando non riconosciuto (bug parser).")
@@ -2349,7 +2551,8 @@ def main() -> None:
                 MQTTManager.get_instance().close()
             except Exception:
                 pass
-        console.close()
+        if console is not None:
+            console.close()
 
 
 if __name__ == "__main__":

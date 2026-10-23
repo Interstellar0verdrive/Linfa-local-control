@@ -16,7 +16,7 @@ La [documentazione navigabile](https://interstellar0verdrive.github.io/Linfa-loc
 
 Chi vuole replicare il setup può seguire direttamente questo percorso. L'analisi del traffico cloud, il dump del VoCore e le modifiche facoltative alla configurazione originale sono raccolti negli **approfondimenti**.
 
-Abbiamo anche [esplorato un percorso via Wi-Fi](https://interstellar0verdrive.github.io/Linfa-local-control/approfondimenti/percorso-wifi-sperimentale/): potrebbe evitare il cavo seriale permanente, ma l'accesso iniziale a una serra non modificata e l'integrazione nel controller restano da verificare. La guida installabile oggi usa USB–UART.
+Abbiamo anche [provato il controllo via Wi-Fi/SSH](https://interstellar0verdrive.github.io/Linfa-local-control/approfondimenti/percorso-wifi-sperimentale/) su una serra già modificata. Il controller include questa modalità in forma sperimentale; l'accesso iniziale a una serra mai modificata non è ancora verificato. La guida di installazione completa usa per ora USB–UART.
 
 **Prima dei test sui componenti:** verifica il servizio originale `robocontrol/rcc`. I due sistemi non sono stati provati in funzione contemporaneamente. Il [passo 06](https://interstellar0verdrive.github.io/Linfa-local-control/setup/06-controller-cli/#verifica-del-servizio-originale) contiene il controllo, la disattivazione reversibile e la verifica dopo il riavvio. La sequenza è stata ricostruita sui file del prototipo, ma non ancora provata da zero su una seconda serra.
 

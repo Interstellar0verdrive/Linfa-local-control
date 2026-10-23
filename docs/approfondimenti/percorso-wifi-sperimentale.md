@@ -1,6 +1,6 @@
 # Percorso Wi-Fi sperimentale
 
-**Stato: prova tecnica, non procedura completa di installazione.** I [capitoli 01–09](../index.md#percorso-essenziale-dalla-serra-a-home-assistant) usano USB–UART perché il controller disponibile nella repository comunica tramite la console seriale. Su una **Linfa Weezy già modificata** abbiamo verificato che il Raspberry può raggiungere la serra via Wi-Fi, entrare in SSH, inviare un comando alle luci e trasferire una foto. Non abbiamo ancora integrato questi passaggi nel controller e nel bridge MQTT.
+**Stato: trasporto Wi-Fi sperimentale, non procedura completa di installazione.** I [capitoli 01–09](../index.md#percorso-essenziale-dalla-serra-a-home-assistant) descrivono ancora il percorso USB–UART. Il controller nella repository ora offre anche `wifi` (SSH sulla LAN) e `auto` (un canale preferito e l'altro di riserva). Su una **Linfa Weezy già modificata** abbiamo provato comandi, fotografia e un percorso completo MQTT → bridge → controller → SSH → serra. L'installazione da zero via Wi-Fi e il passaggio dei servizi attuali del prototipo alla nuova modalità **non sono ancora stati verificati**.
 
 ## Cosa potrebbe cambiare per chi parte da zero
 
@@ -10,7 +10,7 @@ Il percorso ipotizzato è:
 2. Configurare SSID e password della Wi-Fi domestica tramite l'interfaccia locale della serra. **La LAN resta senza Internet** finché la serra non è stata isolata.
 3. Provare l'accesso SSH. Se funziona con credenziali note, preparare una configurazione di rete locale senza uscita verso Internet. Se non funziona, serve l'accesso alla console UART per indagare e configurare il dispositivo: non abbiamo una password universale da suggerire.
 4. Con la WAN ancora scollegata, verificare che la serra abbia una rotta per la LAN ma **nessuna rotta predefinita verso Internet**, anche dopo un rinnovo DHCP e un riavvio. Solo allora ricollegare Internet al router e verificare che la serra raggiunga il Raspberry ma non un indirizzo Internet.
-5. Usare un futuro controller che comunichi con la serra via rete e mantenga sincronizzati stati, blocchi e conferme MQTT. **Questo controller non è ancora pubblicato.**
+5. Configurare sul Raspberry il controller per SSH locale dopo aver verificato le credenziali e l'isolamento della serra. La guida dettagliata per installare questa modalità, inclusi i servizi automatici, è ancora da preparare e provare da zero.
 
 Il passaggio 3 è il tassello mancante: il nostro SSH via rete è stato provato **dopo** aver impostato la password root tramite UART. La password del firmware VoCore generico non dimostra quella del firmware Robonica. Il reset fisico del nostro dispositivo non ha modificato la password root, quindi ripeterlo sulla stessa serra non riproduce lo stato di fabbrica.
 
@@ -38,12 +38,15 @@ Questo metodo **richiede accesso amministrativo alla serra prima di applicarlo**
 | Rete temporanea dopo il reset sul nostro esemplare | Comparsa dopo aver riattivato la radio via UART |
 | Pairing con SSID e password della rete domestica | Riuscito tramite richiesta locale dal Raspberry |
 | SSH dalla rete temporanea e dalla LAN | Riuscito con password root **già impostata via UART** |
-| Controllo luci e trasferimento foto via Wi-Fi | Riusciti come prove dirette, fuori dal controller pubblicato |
+| Controllo luci, ventole, ring, letture e foto via Wi-Fi | Riusciti sul prototipo con una copia di prova del controller; pompe provate soltanto per pochi secondi |
+| Comando MQTT verso il bridge e risposta via SSH | Riuscito con un topic di prova isolato, senza modificare il servizio in uso |
 | Isolamento Internet configurato dentro la serra | Verificato sulla LAN del prototipo anche con WAN collegata e al rinnovo DHCP |
 | Accesso SSH iniziale su una serra mai modificata | **Non verificato**: credenziali originali sconosciute |
-| Controller Wi-Fi completo per Raspberry e Home Assistant | **Da sviluppare e provare** |
+| Controller Wi-Fi nel repository | **Sperimentale**: `SERRA_TRANSPORT=wifi` oppure `auto`; la configurazione del servizio in uso resta UART |
 
-Se l'accesso SSH iniziale non funziona, il collegamento UART resta il percorso per configurare la serra. Si potrebbe poi passare al controllo via Wi-Fi **senza lasciare collegato il cavo seriale**, ma soltanto dopo aver sviluppato e verificato la modalità di rete del controller. Chi vuole installare il progetto oggi deve seguire il [percorso USB–UART](../index.md#percorso-essenziale-dalla-serra-a-home-assistant).
+Il trasporto Wi-Fi usa `sshpass`, una credenziale root salvata sul Raspberry e la chiave host SSH della serra **verificata** in `~/.ssh/known_hosts`. In modalità `auto` il controller usa il canale secondario soltanto se il primario fallisce **prima** dell'invio del comando: se l'esito diventa incerto, non ritenta sull'altro canale. Così evita che un dosaggio o un ricircolo possa partire due volte. `serra net on/off` richiede UART, perché spegnere la rete interromperebbe lo stesso collegamento SSH; il timer `serra-netoff` va lasciato disabilitato nel percorso Wi-Fi. Il resto dell'interfaccia CLI e MQTT non cambia.
+
+Se l'accesso SSH iniziale non funziona, il collegamento UART resta il percorso per configurare la serra. Chi preferisce usare UART anche a regime può mantenerla. Chi vuole installare il progetto seguendo una procedura già documentata da inizio a fine deve usare per ora il [percorso USB–UART](../index.md#percorso-essenziale-dalla-serra-a-home-assistant).
 
 ---
 

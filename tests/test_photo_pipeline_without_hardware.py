@@ -2,6 +2,7 @@
 
 import importlib.machinery
 import importlib.util
+import hashlib
 import sys
 import types
 import unittest
@@ -13,6 +14,7 @@ PHOTO = Path(__file__).resolve().parents[1] / 'bridge' / 'serra-foto'
 controller = types.ModuleType('serra_controller')
 controller.ConsoleConfig = type('ConsoleConfig', (), {})
 controller.SerraConsole = Mock()
+controller.make_console = Mock()
 controller._channels_to_cmd = lambda channels, fade: 'restore-all-groups'
 paho = types.ModuleType('paho')
 paho_mqtt = types.ModuleType('paho.mqtt')
@@ -30,6 +32,18 @@ with patch.dict(sys.modules, {
 
 
 class PhotoPipelineWithoutHardwareTests(unittest.TestCase):
+    def test_wifi_photo_uses_binary_transfer_and_checks_digest(self):
+        raw = b'\xff\xd8' + b'x' * 6000 + b'\xff\xd9'
+        console = Mock(active_transport='wifi')
+        console.run_binary.return_value = raw
+        with patch.dict(photo.os.environ, {'SERRA_TRANSPORT': 'wifi'}), \
+                patch.object(photo, 'metadata', return_value=(len(raw), hashlib.sha256(raw).hexdigest())), \
+                patch.object(photo, 'connect_console', return_value=console), \
+                patch.object(photo, 'read_chunk') as uart_chunk:
+            self.assertEqual(photo.transfer(), raw)
+        uart_chunk.assert_not_called()
+        console.close.assert_called_once()
+
     def test_camera_failure_restores_leds_before_releasing_uart(self):
         console = Mock()
         mix = {ch: 0 for ch in photo.CHANNELS}

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fotografia Linfa via UART: profilo LED originale, JPEG integrale, Wi-Fi serra spenta."""
+"""Fotografia Linfa via UART o SSH: profilo LED originale, JPEG integrale."""
 import base64
 import fcntl
 import hashlib
@@ -13,8 +13,9 @@ from datetime import datetime
 
 import paho.mqtt.client as mqtt
 
-sys.path.insert(0, '/home/pi')
-from serra_controller import ConsoleConfig, SerraConsole, _channels_to_cmd
+CONTROLLER_DIR = os.environ.get('SERRA_CONTROLLER_DIR', '/home/pi')
+sys.path.insert(0, CONTROLLER_DIR)
+from serra_controller import ConsoleConfig, make_console, _channels_to_cmd
 
 HOST = os.environ.get('SERRA_MQTT_HOST', '').strip()
 PORT = int(os.environ.get('SERRA_MQTT_PORT', '1883'))
@@ -39,8 +40,11 @@ def check_config():
         raise RuntimeError('SERRA_MQTT_HOST mancante')
     if not BASE:
         raise RuntimeError('SERRA_MQTT_TOPIC vuoto')
-    if not os.path.isfile('/home/pi/serra_controller.py'):
+    if not os.path.isfile(os.path.join(CONTROLLER_DIR, 'serra_controller.py')):
         raise RuntimeError('controller Raspberry non trovato')
+    if os.environ.get('SERRA_TRANSPORT', 'uart').lower() in ('wifi', 'auto'):
+        if not os.environ.get('SERRA_SSH_HOST', '').strip():
+            raise RuntimeError('SERRA_SSH_HOST mancante per la foto via Wi-Fi')
 
 
 def mqtt_client():
@@ -116,11 +120,11 @@ def read_lights():
 
 def checked(console, command, timeout=15):
     if not console.run_checked(command, timeout=timeout):
-        raise RuntimeError('comando UART non confermato: ' + command[:80])
+        raise RuntimeError('comando sulla serra non confermato: ' + command[:80])
 
 
 def connect_console():
-    console = SerraConsole(ConsoleConfig())
+    console = make_console(ConsoleConfig())
     console.open()
     try:
         console.ensure_root_prompt()
@@ -204,6 +208,20 @@ def read_chunk(i):
 
 def transfer():
     size, digest = metadata()
+    raw = None
+    if os.environ.get('SERRA_TRANSPORT', 'uart').lower() in ('wifi', 'auto'):
+        console = connect_console()
+        try:
+            if getattr(console, 'active_transport', 'uart') == 'wifi':
+                raw = console.run_binary('cat ' + REMOTE, timeout=30)
+        finally:
+            console.close()
+    if raw is not None:
+        if len(raw) != size or hashlib.sha256(raw).hexdigest() != digest:
+            raise RuntimeError('JPEG via Wi-Fi incompleto o checksum diverso')
+        if not raw.startswith(b'\xff\xd8') or not raw.endswith(b'\xff\xd9'):
+            raise RuntimeError('JPEG incompleto')
+        return raw
     blocks = []
     for i in range((size + CHUNK - 1) // CHUNK):
         expected = min(CHUNK, size - i * CHUNK)
@@ -252,13 +270,13 @@ def publish_photo(raw):
     mqtt_publish(BASE + '/camera/latest', raw)
     mqtt_publish(BASE + '/camera/latest_ts', ts.strftime('%Y-%m-%dT%H:%M:%S%z'))
     os.remove(dated)  # Archivio definitivo in HA tramite camera.snapshot.
-    log('JPEG integrale pubblicato (%d byte); Wi-Fi VoCore non usata' % len(raw))
+    log('JPEG integrale pubblicato (%d byte)' % len(raw))
 
 
 def main():
     check_config()
     if sys.argv[1:] == ['--check']:
-        log('pipeline UART pronta')
+        log('pipeline foto pronta')
         return
     if len(sys.argv) != 1:
         raise RuntimeError('uso: serra-foto [--check]')

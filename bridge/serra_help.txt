@@ -4,8 +4,11 @@ SERRA CONTROLLER — GUIDA RAPIDA CLI
 SINTASSI GENERALE
   serra <categoria> <azione> [opzioni]
   serra --port /dev/ttyUSB1 --baud 115200 <categoria> <azione> [opzioni]
+  serra --transport wifi --ssh-host <IP_SERRA> <categoria> <azione> [opzioni]
+  serra --transport auto --primary wifi --ssh-host <IP_SERRA> <categoria> <azione> [opzioni]
 
-  --port e --baud sono opzioni globali: mettile PRIMA della categoria.
+  --port, --baud, --transport, --ssh-host, --ssh-port e --primary sono
+  opzioni globali: mettile PRIMA della categoria.
   serra --help mostra questa guida.
 
 CATEGORIE DISPONIBILI
@@ -31,6 +34,11 @@ INFORMAZIONI IMPORTANTI
   • state sync non interroga la serra: aggiorna solo lo stato logico locale.
   • foto richiede il programma esterno /usr/local/bin/serra-foto.
   • auth save si esegue una volta per utente sul Raspberry; non usa la UART.
+  • uart è il trasporto predefinito. wifi usa SSH locale verso il VoCore.
+  • auto sceglie il trasporto disponibile all'apertura; se un comando ha
+    esito incerto NON lo ritenta sull'altro, per evitare doppi dosaggi.
+  • La modalità wifi/auto richiede sshpass, chiave host SSH verificata e
+    SERRA_SSH_HOST. Il comando net on/off richiede il trasporto UART.
 
 PASSWORD PER I COMANDI MANUALI
   serra auth save  # Chiede la password due volte, senza mostrarla

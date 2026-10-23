@@ -8,6 +8,7 @@ import unittest
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
+from unittest.mock import Mock
 
 
 CONTROLLER = Path(__file__).resolve().parents[1] / "bridge" / "serra_controller.py"
@@ -17,6 +18,53 @@ spec.loader.exec_module(serra)
 
 
 class ControllerWithoutHardwareTests(unittest.TestCase):
+    def test_missing_shared_lock_fails_closed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            missing = str(Path(directory) / "missing" / "device.lock")
+            with patch.object(serra, "UART_LOCK_PATH", missing):
+                console = serra.SerraConsole(serra.ConsoleConfig(password="test"))
+                with self.assertRaisesRegex(serra.SerraConnectionError, "Impossibile aprire il lock"):
+                    console._acquire_lock()
+
+    def test_auto_falls_back_only_before_first_command(self):
+        wifi = Mock(active_transport="wifi")
+        uart = Mock(active_transport="uart")
+        wifi.open.side_effect = serra.SerraConnectionError("SSH non raggiungibile")
+        selected = serra.SerraAutoConsole([wifi, uart])
+        selected.open()
+        self.assertEqual(selected.active_transport, "uart")
+        selected.run_checked("echo test")
+        uart.run_checked.assert_called_once_with("echo test", 4.0)
+        wifi.run_checked.assert_not_called()
+        selected.close()
+
+        wifi = Mock(active_transport="wifi")
+        uart = Mock(active_transport="uart")
+        wifi.run_checked.side_effect = serra.SerraUncertainError("esito incerto")
+        selected = serra.SerraAutoConsole([wifi, uart])
+        selected.open()
+        with self.assertRaises(serra.SerraUncertainError):
+            selected.run_checked("echo P0,1,100 > /dev/tty-nebbia")
+        uart.open.assert_not_called()
+        selected.close()
+
+    def test_uncertain_pump_starts_deadman_without_repeating_command(self):
+        console = Mock()
+        console.run_checked.side_effect = serra.SerraUncertainError("timeout SSH")
+        with patch.object(serra, "_spawn_pump_deadman") as deadman, \
+                patch.object(serra, "_record") as record:
+            with self.assertRaises(serra.SerraUncertainError):
+                serra.do_pump_main(console, "on", 2)
+        self.assertEqual(console.run_checked.call_count, 1)
+        deadman.assert_called_once()
+        record.assert_not_called()
+
+    def test_wifi_mode_refuses_to_disable_its_own_network(self):
+        console = Mock(active_transport="wifi")
+        with self.assertRaisesRegex(serra.SerraCommandError, "richiede UART"):
+            serra.do_net(console, "off", None)
+        console.run_checked.assert_not_called()
+
     def test_manual_password_is_saved_privately_and_services_keep_env_priority(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "serra" / "root-password"
