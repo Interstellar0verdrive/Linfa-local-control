@@ -1,6 +1,6 @@
 # Foto della serra in locale
 
-La fotocamera è facoltativa. Nel percorso guidato USB–UART, il Raspberry fa scattare la webcam interna al VoCore tramite la console seriale, trasferisce il JPEG sulla stessa seriale e lo pubblica sul broker MQTT. **La Wi-Fi del VoCore resta spenta**; solo il Raspberry usa la rete domestica per parlare con Home Assistant. Il [trasporto Wi-Fi sperimentale](percorso-wifi-sperimentale.md) esegue lo stesso scatto via SSH locale e trasferisce il JPEG direttamente via rete.
+La fotocamera è facoltativa. Con UART il Raspberry fa scattare la webcam interna al VoCore tramite la console seriale e trasferisce il JPEG sulla stessa seriale, con Wi-Fi della serra spenta. Con il [trasporto Wi-Fi](../setup/02-wifi.md) esegue lo stesso scatto via SSH locale e trasferisce il JPEG sulla LAN. In entrambi i casi pubblica l'immagine sul broker MQTT.
 
 Questa procedura è stata verificata sulla serra dell'autore con firmware VoCore 1.4. Non è ancora stata provata su una seconda unità: prima di installarla, controlla che il tuo firmware abbia `fswebcam`, `uuencode`, `sha256sum` e `/dev/video0`. Il resto del controllo locale funziona anche se salti la fotocamera.
 
@@ -17,7 +17,7 @@ Questa procedura è stata verificata sulla serra dell'autore con firmware VoCore
 
 ## Verifiche preliminari
 
-Apri la console UART come nel [passo 04](../setup/04-uart.md) e, **nella shell del VoCore**, verifica senza cambiare nulla:
+Apri la shell del VoCore via UART come nel [passo 04](../setup/04-uart.md) oppure via SSH come nel [passo 02A](../setup/02-wifi.md) e verifica senza cambiare nulla:
 
 ```sh {.terminal-serra}
 command -v fswebcam
@@ -26,7 +26,7 @@ command -v sha256sum
 ls -l /dev/video0
 ```
 
-Esci dalla console prima di proseguire, in modo da liberare la porta seriale. Il [passo 03](../setup/03-raspberry.md) installa già `python3-serial` e `python3-paho-mqtt` sul Raspberry. Il [passo 06](../setup/06-controller-cli.md) mette `serra_controller.py` in `/home/pi/`; il [passo 07](../setup/07-bridge-mqtt.md) configura bridge, broker e credenziali private.
+Se usi UART, esci dalla console prima di proseguire per liberare la porta. Il [passo 03](../setup/03-raspberry.md) installa già `python3-serial` e `python3-paho-mqtt` sul Raspberry. Il [passo 06](../setup/06-controller-cli.md) mette `serra_controller.py` in `/home/pi/`; il [passo 07](../setup/07-bridge-mqtt.md) configura bridge, trasporto, broker e credenziali private.
 
 ## Installazione sul Raspberry
 

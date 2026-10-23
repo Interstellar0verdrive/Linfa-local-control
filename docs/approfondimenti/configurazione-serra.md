@@ -1,8 +1,8 @@
 # Wi-Fi, token e aggiornamenti della serra
 
-Questa pagina conserva le modifiche di configurazione esplorate durante lo sviluppo sulla **Linfa Weezy del prototipo**. Il token fittizio `offline-token` è **ancora presente** sul prototipo: lo abbiamo verificato nel file `/opt/data/token` senza pubblicare il token originale. Era stato impostato per ostacolare l'associazione al cloud originale. Cambiare token, credenziali Wi-Fi o permessi degli aggiornamenti **non è necessario** per usare il [controller locale via UART](../index.md). Gli endpoint e i file possono differire su altri firmware; non trattare questi esempi come passaggi di installazione universali.
+Questa pagina conserva le modifiche di configurazione esplorate durante lo sviluppo sulla **Linfa Weezy del prototipo**. Il token fittizio `offline-token` è **ancora presente** sul prototipo: lo abbiamo verificato nel file `/opt/data/token` senza pubblicare il token originale. Era stato impostato per ostacolare l'associazione al cloud originale. Cambiare token o permessi degli aggiornamenti **non è necessario** per usare il [controller locale](../index.md). Il [percorso Wi-Fi](../setup/02-wifi.md) richiede invece di associare la serra alla rete domestica se non lo è già. Gli endpoint e i file possono differire su altri firmware; non trattare questi esempi storici come passaggi di installazione universali.
 
-Un token fittizio **non spegne la radio né impedisce alla serra di tentare una connessione** se la rete viene riattivata; il cloud potrebbe usare altri identificativi. Sul prototipo la Wi-Fi è disabilitata all'avvio tramite `OFF_S45net`, come spiegato nel [passo 08](../setup/08-servizi-automatici.md#disabilitare-la-wi-fi-allavvio-della-serra). Il token è una misura aggiuntiva, non una prova di isolamento dalla rete.
+Un token fittizio **non spegne la radio né impedisce alla serra di tentare una connessione** se la rete viene riattivata; il cloud potrebbe usare altri identificativi. Sul prototipo la Wi-Fi era disabilitata all'avvio tramite `OFF_S45net` nel periodo di uso solo UART. Nelle prove successive è stata riattivata con `S45net` e isolamento senza gateway. Il token è una misura aggiuntiva, non una prova di isolamento dalla rete.
 
 > [!CAUTION] Modifiche facoltative e persistenti
 > Cambiare token, credenziali Wi-Fi o permessi di `/var/update` modifica il comportamento originale della serra. Conserva i valori e i permessi iniziali prima di intervenire; non eseguire questi comandi come parte automatica dell'installazione del controller. **Non esiste qui una procedura di ripristino completo verificata** per tutte le varianti della serra.
@@ -11,7 +11,7 @@ In origine la serra ha uno **user-token** (`<ORIGINAL_DEVICE_TOKEN>`) e un **UUI
 
 ## Cambiare la rete su cui si collega la serra
 
-Dopo aver collegato il computer alla rete temporanea creata dalla serra, il prototipo ha usato dal **terminale del computer** la richiesta seguente. Sostituisci i segnaposto nel comando prima di eseguirlo. L'endpoint `/credentials` e i nomi delle chiavi sono stati osservati su quel firmware; verifica che siano validi sulla tua versione prima di modificare la configurazione. Il comando originale usa la sintassi del terminale di **macOS/Linux**:
+Dopo aver collegato il computer alla rete temporanea creata dalla serra, il prototipo ha usato la richiesta seguente. È un **esempio storico che sostituisce il token con `offline-token`**: per un nuovo setup segui il [passo 02A](../setup/02-wifi.md#4-associa-la-rete-domestica-se-necessario), che conserva il token originale e chiede i segreti senza inserirli nella riga di comando. L'endpoint `/credentials` e i nomi delle chiavi sono stati osservati su quel firmware. Il comando storico usa la sintassi del terminale di **macOS/Linux**:
 
 ```bash {.terminal-computer}
 curl -i -X POST "http://<LOCAL_IP>/credentials" \

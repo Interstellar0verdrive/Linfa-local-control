@@ -4,13 +4,16 @@
 
 Obiettivo di questa sezione: preparare un Raspberry Pi “vergine” (solo OS + rete) con tutto l’ambiente necessario per:
 
-- aprire la console UART della serra (debug con picocom)
+- aprire la console UART della serra **solo se hai scelto quel percorso**
+- raggiungere la serra via SSH sulla LAN **solo se hai scelto Wi-Fi**
 - eseguire script Python (controller e bridge, che verranno copiati nel passo 06)
 - parlare con MQTT (lato Python + strumenti CLI per test)
 - predisporre permessi e cartelle standard
 
 > [!IMPORTANT] Da sapere prima di iniziare
-> Prima di iniziare: Raspberry con Debian/Raspberry Pi OS aggiornabile via APT, connesso alla rete domestica, adattatore USB→TTL a 3,3 V collegato e un utente con `sudo`. **Gli esempi usano l'utente `pi` e il percorso `/home/pi`: scegli `pi` durante la preparazione del sistema oppure sostituisci entrambi con il tuo nome utente e la tua home in tutti i comandi.** La password del Raspberry è distinta dalla password root della serra.
+> Prima di iniziare: Raspberry con Debian/Raspberry Pi OS aggiornabile via APT, connesso alla rete domestica e un utente con `sudo`. L'adattatore USB→TTL serve **solo se hai scelto UART**. **Gli esempi usano l'utente `pi` e il percorso `/home/pi`: scegli `pi` durante la preparazione del sistema oppure sostituisci entrambi con il tuo nome utente e la tua home in tutti i comandi.** La password del Raspberry è distinta dalla password root della serra.
+
+Se hai provato il passo 02A con la WAN del router scollegata e hai poi scelto UART, **ricollega Internet solo dopo aver spento la radio della serra oppure verificato il suo isolamento**. Per usare APT e GitHub il Raspberry deve invece poter raggiungere Internet. Se non puoi ancora isolarla, lascia spenta la serra o scollegala dall'alimentazione mentre prepari il Raspberry.
 
 ---
 
@@ -52,17 +55,30 @@ Se l'aggiornamento ha installato un nuovo kernel o richiede un riavvio, esegui `
 
 ### Pacchetti “core”
 
-Questi servono al funzionamento reale (UART, Python, dipendenze Python via APT):
+Questi servono al funzionamento reale del controller e del bridge su entrambi i percorsi:
 
 ```bash {.terminal-raspberry}
 sudo apt install -y \
   python3 \
   python3-serial \
   python3-paho-mqtt \
-  picocom \
   nano \
   curl
 ```
+
+Se hai scelto **UART**, installa anche `picocom`. Se hai scelto **Wi-Fi**, installa `openssh-client` e `sshpass`:
+
+```bash {.terminal-raspberry}
+sudo apt install -y picocom
+```
+
+**Esegui il blocco sopra solo per UART.** Per Wi-Fi esegui invece:
+
+```bash {.terminal-raspberry}
+sudo apt install -y openssh-client sshpass
+```
+
+Se vuoi tenere **entrambi** i collegamenti, installa tutti e tre i pacchetti.
 
 ### Git e strumenti per le verifiche
 
@@ -107,17 +123,19 @@ python3 -c "import serial; print('pyserial OK')"
 Verifica che gli strumenti siano disponibili e individua quelli mancanti:
 
 ```bash {.terminal-raspberry}
-for tool in python3 picocom git jq mosquitto_pub mosquitto_sub pip3; do
+for tool in python3 git jq mosquitto_pub mosquitto_sub pip3; do
   printf '%s: ' "$tool"
   command -v "$tool" || printf 'non trovato\n'
 done
 ```
 
-**Risposta attesa:** una riga per strumento con il suo percorso, per esempio `picocom: /usr/bin/picocom`. `python3`, `picocom`, `git`, `jq`, `mosquitto_pub` e `mosquitto_sub` devono risultare disponibili per seguire tutti i passi della guida. `pip3: non trovato` è normale se hai saltato l'installazione facoltativa di pip. Se manca uno degli altri strumenti, installa il relativo pacchetto indicato sopra e ripeti la verifica.
+**Risposta attesa:** una riga per strumento con il suo percorso. `python3`, `git`, `jq`, `mosquitto_pub` e `mosquitto_sub` devono essere disponibili. `pip3: non trovato` è normale se hai saltato pip. Per UART verifica anche `command -v picocom`; per Wi-Fi verifica `command -v ssh` e `command -v sshpass`.
 
 ---
 
-## Permessi seriale (dialout) e device UART
+## Solo UART: permessi seriale (dialout) e device
+
+Se hai scelto **solo Wi-Fi**, salta questa sezione e vai alla [predisposizione delle cartelle](#predisposizione-cartelle-e-convenzioni). Se userai UART come canale primario o di riserva, eseguila.
 
 ### Identifica la porta seriale
 
@@ -198,9 +216,9 @@ Alla fine di questo capitolo, il Raspberry deve avere:
 - ✅ sistema aggiornato
 - ✅ python3 funzionante
 - ✅ moduli python3-serial e python3-paho-mqtt disponibili (import OK)
-- ✅ picocom installato; il test della UART è nel passo 04
+- ✅ picocom installato per UART **oppure** `ssh` e `sshpass` per Wi-Fi
 - ✅ mosquitto-clients installato (per test futuri)
-- ✅ utente scelto per i servizi (negli esempi, `pi`) in gruppo `dialout`
+- ✅ utente scelto per i servizi (negli esempi, `pi`) in gruppo `dialout` **se usa UART**
 - ✅ cartelle predisposte per i file del progetto
 
 ---
@@ -208,11 +226,11 @@ Alla fine di questo capitolo, il Raspberry deve avere:
 ## Continua il percorso
 
 > [!TIP] Controllo
-> **Verifica prima di proseguire:** Python, picocom, i pacchetti richiesti e i permessi seriali sono pronti.
+> **Verifica prima di proseguire:** Python e i pacchetti richiesti sono pronti; seriale e gruppo `dialout` servono solo a chi usa UART.
 
 <table width="100%" class="step-nav">
   <tr>
-    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="02-hardware.md">← 02 · Hardware e collegamenti</a></td>
-    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="04-uart.md">04 · Verificare la console UART →</a></td>
+    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="02-wifi.md">← 02A · Wi-Fi</a><br><a href="02-hardware.md">← 02B · UART</a></td>
+    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="04-uart.md">04 · Solo UART →</a><br><a href="05-password-root.md">05 · Solo Wi-Fi →</a></td>
   </tr>
 </table>

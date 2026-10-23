@@ -50,7 +50,7 @@
     <circle cx="1018" cy="80" r="5" fill="#9fbb9f"/>
     <text x="1054" y="84" font-size="12" font-weight="650" fill="#4c7053">GUIDA / HARDWARE</text>
     <rect x="995" y="124" width="38" height="4" rx="2" fill="#6ba17a"/>
-    <text x="995" y="165" font-size="26" font-weight="800" fill="#203e2a">02. Hardware e collegamenti</text>
+    <text x="995" y="165" font-size="26" font-weight="800" fill="#203e2a">02B. Hardware e UART</text>
     <text x="995" y="190" font-size="13" fill="#6b806d">Cablaggio UART · console del VoCore2</text>
     <svg x="995" y="200" width="500" height="245" viewBox="0 0 800 392">
       <defs>

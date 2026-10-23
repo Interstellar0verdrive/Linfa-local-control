@@ -179,11 +179,11 @@ Per esempio, dopo la calibrazione `serra water level` stampa la percentuale e pu
 | Azione | Raspberry | Payload MQTT |
 | --- | --- | --- |
 | Leggere l'uptime della serra e del Raspberry | `serra uptime` | `uptime` |
-| Scattare una foto via UART | `serra foto` | `foto` |
+| Scattare una foto via UART o SSH | `serra foto` | `foto` |
 
-`uptime` apre la UART per leggere `/proc/uptime` della serra. Pubblica `serra/state/boot` e `serra/state/pi_boot` come messaggi retained se MQTT è configurato; un cambiamento del timestamp di avvio permette di rilevare un riavvio. Per esempio, puoi usarlo come verifica di sola lettura dopo aver configurato la password della console.
+`uptime` legge `/proc/uptime` della serra sul canale scelto. Pubblica `serra/state/boot` e `serra/state/pi_boot` come messaggi retained se MQTT è configurato; un cambiamento del timestamp di avvio permette di rilevare un riavvio. Per esempio, puoi usarlo come verifica di sola lettura dopo aver configurato la password della serra.
 
-`foto` restituisce subito il controllo: lo script `/usr/local/bin/serra-foto` scatta sul VoCore e trasferisce il JPEG via UART in background, poi pubblica immagine e timestamp via MQTT. La Wi-Fi della serra resta spenta. La funzione è facoltativa e richiede l'[installazione della pipeline fotografica](approfondimenti/fotocamera.md). Sul prototipo il trasferimento richiede alcune decine di secondi.
+`foto` restituisce subito il controllo: lo script `/usr/local/bin/serra-foto` scatta sul VoCore e trasferisce il JPEG via UART o SSH, secondo la configurazione del servizio, poi pubblica immagine e timestamp via MQTT. La funzione è facoltativa e richiede l'[installazione della pipeline fotografica](approfondimenti/fotocamera.md). Via UART il trasferimento può richiedere alcune decine di secondi.
 
 ## Topic MQTT, esito e conferma
 

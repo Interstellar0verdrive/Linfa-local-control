@@ -1,8 +1,8 @@
 # Rete della serra durante il setup
 
-Questa pagina conserva la configurazione di rete usata durante le prove originali. **Non devi collegare la serra alla Wi-Fi domestica** per seguire il [percorso essenziale](../index.md): è il Raspberry a comunicare in rete con MQTT e Home Assistant, mentre la serra è controllata via UART.
+Questa pagina conserva i riferimenti di rete usati nelle prove. Nel [percorso UART](../setup/02-hardware.md) la serra può restare senza Wi-Fi; nel [percorso Wi-Fi](../setup/02-wifi.md) resta sulla LAN domestica, isolata da Internet. In entrambi i casi il Raspberry comunica con MQTT e Home Assistant.
 
-Questa sezione fotografa la situazione **se scegli di configurare la Wi-Fi della serra**, con il collegamento UART già verificato, ma prima di attivare il controllo automatico.
+Gli indirizzi qui sotto sono esempi: usa sempre quelli assegnati alla tua rete.
 
 Serve come riferimento rapido per:
 
@@ -22,7 +22,7 @@ Caratteristiche:
 - **Utente SSH**: root
 - **Password root**: `<DEVICE_PASSWORD>` *(modificata manualmente)*
 
-Accesso SSH (quando la rete NON è ancora disabilitata):
+Accesso SSH (quando il Wi-Fi della serra è attivo):
 
 ```bash {.terminal-computer}
 ssh root@<SERRA_IP>
@@ -31,7 +31,7 @@ ssh root@<SERRA_IP>
 Sostituisci `<SERRA_IP>` con l'indirizzo trovato nel router e inserisci la password root della serra quando richiesta.
 
 > [!WARNING] Attenzione
-> L'accesso SSH alla serra via Wi-Fi serve solo per configurazione e verifica. Nel funzionamento normale il Raspberry spegne la rete della serra: prima di attivare il timer del passo 08, assicurati che la UART funzioni.
+> Se scegli UART con radio spenta, prima di disabilitare il Wi-Fi e attivare il timer del passo 08 verifica che la UART funzioni. Se scegli Wi-Fi, **non attivare** quel timer: interromperebbe il controllo via SSH.
 
 ---
 
@@ -64,13 +64,13 @@ ssh pi@<RASPBERRY_IP>
 
 Sostituisci `<RASPBERRY_IP>` con l'indirizzo trovato sopra. Se il nome locale è configurato, puoi usare `ssh pi@serra.local`. Inserisci la password dell'utente del Raspberry quando richiesta.
 
-Il Raspberry deve rimanere connesso alla rete di casa durante il funzionamento; è il punto di controllo locale tramite MQTT. Sul prototipo lo script Wi-Fi del VoCore è stato rinominato `OFF_S45net`, così non viene eseguito al boot. Il [passo 08](../setup/08-servizi-automatici.md#disabilitare-la-wi-fi-allavvio-della-serra) spiega come verificarlo. Il timer sul Raspberry invia `serra net off` dopo il proprio avvio, ma non rileva un riavvio successivo della sola serra.
+Il Raspberry deve rimanere connesso alla rete di casa durante il funzionamento; è il punto di controllo locale tramite MQTT. Sul prototipo lo script Wi-Fi del VoCore era stato rinominato `OFF_S45net` durante il funzionamento solo UART; per le prove Wi-Fi è tornato `S45net` con il gateway DHCP escluso. Il [passo 08](../setup/08-servizi-automatici.md) spiega le due policy. Il timer `serra-netoff` invia `net off` una sola volta dopo l'avvio del Raspberry e serve soltanto a chi usa UART con radio spenta.
 
 ---
 
 ## Wi-Fi domestica e segreti
 
-La serra e il Raspberry condividono la stessa rete locale **solo in fase di setup**.
+La serra e il Raspberry condividono la stessa rete locale durante il setup **e durante l'uso se scegli Wi-Fi**. Nel percorso UART la radio della serra può restare spenta.
 
 Parametri (da trattare come segreti):
 
@@ -80,15 +80,12 @@ Parametri (da trattare come segreti):
 
 ---
 
-## Stato di questo scenario facoltativo
+## Verifiche prima del controllo automatico
 
-A questo punto:
-
-- ✅ Raspberry operativo e raggiungibile via SSH
-- ✅ Serra configurata sulla Wi-Fi di casa
-- ✅ Collegamento UART attivo
-- ❌ Nessuna policy di rete applicata automaticamente
-- ❌ Nessun controllo attivo da Home Assistant
+- Raspberry operativo e raggiungibile dalla rete domestica.
+- Per Wi-Fi: serra raggiungibile via SSH, LAN funzionante, nessuna rotta Internet anche dopo il riavvio, timer `serra-netoff` disabilitato.
+- Per UART: collegamento seriale verificato; se vuoi la radio spenta, script di avvio Wi-Fi disabilitato e stato controllato dopo il riavvio.
+- In entrambi i casi: il controller e Home Assistant vanno configurati nei passi 06–09.
 
 ---
 

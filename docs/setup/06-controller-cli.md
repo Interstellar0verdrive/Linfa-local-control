@@ -2,11 +2,11 @@
 
 **Percorso guidato:** [Indice dei capitoli](../index.md)
 
-In questo passo copi gli script sul Raspberry e verifichi il **controller CLI** tramite UART. Il bridge MQTT e i servizi automatici saranno configurati nei passi 07 e 08.
+In questo passo copi gli script sul Raspberry e verifichi il **controller CLI** tramite il canale che hai scelto: UART oppure Wi-Fi/SSH. Il bridge MQTT e i servizi automatici saranno configurati nei passi 07 e 08.
 
 **Assunzioni in ingresso (stato iniziale):**
 
-- Raspberry pronto, con UART funzionante
+- Raspberry pronto, con UART funzionante **oppure** SSH sulla LAN e isolamento Internet verificati
 - Nessun file serra_*.py ancora installato
 - Nessun servizio serra-* attivo
 - Prima dei test sui componenti, il servizio originale `robocontrol/rcc` deve essere fermo. In questo capitolo verifichi e, se necessario, disattivi il suo avvio automatico.
@@ -16,12 +16,12 @@ Questi sono i file coinvolti nei passi 06–08:
 | FILE | DESCRIZIONE | NOTE |
 | --- | --- | --- |
 | /home/pi/serra_help.txt | **Help CLI**: è usato dal comando `serra --help` e deve stare accanto a `serra_controller.py`. | Va copiato sul Raspberry al primo setup. |
-| /home/pi/serra_controller.py | **Controller**: cuore logico del sistema (CLI, UART, stato, MQTT publish) | Va copiato sul Raspberry al primo setup. |
+| /home/pi/serra_controller.py | **Controller**: cuore logico del sistema (CLI, UART o SSH, stato, MQTT publish) | Va copiato sul Raspberry al primo setup. |
 | /home/pi/serra_mqtt_bridge.py | **MQTT Bridge**: si occupa di fare la traduzione MQTT → CLI | Va copiato sul Raspberry al primo setup. |
 | /home/pi/.serra_state.json | **Stato runtime (source of truth logica):** cache JSON con ultimo stato noto dei componenti + ultimi comandi. Viene aggiornata dalla CLI ad ogni comando e usata per pubblicare serra/state/... su MQTT (retained). | Viene creata/aggiornata automaticamente dal controller al primo comando (serra ...). Non va caricata manualmente al primo setup.  |
 | /etc/serra-mqtt.env | **Configurazione MQTT**: contiene segreti + parametri runtime | Va creato “a mano” nel Raspberry al primo setup. |
 | /etc/systemd/system/serra-mqtt-bridge.service | Avvia e mantiene attivo il bridge MQTT. | File pronto in `bridge/systemd/`, da installare nel passo 07. |
-| /etc/systemd/system/serra-netoff.service e .timer | Inviano lo spegnimento della rete dopo il boot del Raspberry; non sostituiscono la modifica dello script di avvio del VoCore. | File pronti in `bridge/systemd/`, da installare nel passo 08. |
+| /etc/systemd/system/serra-netoff.service e .timer | Solo percorso UART con radio spenta: inviano uno spegnimento aggiuntivo dopo il boot del Raspberry. | **Non installarli né abilitarli per Wi-Fi o `auto` con Wi-Fi disponibile.** |
 | /etc/systemd/system/serra-state-sync.service e .timer | Ripubblicano periodicamente lo stato logico. | File pronti in `bridge/systemd/`, da installare nel passo 08. |
 | /etc/systemd/system/serra-uptime.service e .timer | Controllano i riavvii della serra. | File pronti in `bridge/systemd/`, da installare nel passo 08. |
 | /etc/systemd/system/serra-water-level.service | Pubblica il livello acqua su richiesta, dopo la calibrazione. | File pronto in `bridge/systemd/`, da installare nel passo 08. |
@@ -105,7 +105,7 @@ Prima di introdurre il bridge MQTT, verificare che la CLI funzioni **localmente*
 
 ### Verifica del servizio originale
 
-Questi comandi vanno eseguiti nella **shell della serra** aperta con `picocom`, non nella shell del Raspberry. Sul prototipo esaminato, BusyBox `init` avvia `/usr/bin/start-rcc` tramite una voce `respawn` di `/etc/inittab`. Lo script lancia `/usr/bin/node rcc.js`. Il servizio era già fermo durante i primi test della CLI, quindi **la sequenza di arresto qui sotto è stata ricostruita e verificata sui file reali, ma non provata da zero su una seconda serra**. La convivenza tra `rcc` e il nostro controller non è stata verificata.
+Questi comandi vanno eseguiti nella **shell della serra**, aperta con `picocom` per UART o con `ssh root@<SERRA_IP>` per Wi-Fi. Sul prototipo esaminato, BusyBox `init` avvia `/usr/bin/start-rcc` tramite una voce `respawn` di `/etc/inittab`. Lo script lancia `/usr/bin/node rcc.js`. Il servizio era già fermo durante i primi test della CLI, quindi **la sequenza di arresto qui sotto è stata ricostruita e verificata sui file reali, ma non provata da zero su una seconda serra**. La convivenza tra `rcc` e il nostro controller non è stata verificata.
 
 Controlla versione, configurazione e processi prima di cambiare qualcosa:
 
@@ -156,7 +156,7 @@ Attendi almeno 15 secondi e ripeti `ps -o pid,args`: **non devono comparire né 
 
 #### Verificare dopo il riavvio e ripristinare se serve
 
-Riavvia la serra, riapri la console e ripeti `grep -n 'start-rcc' /etc/inittab` e `ps -o pid,args`. La voce deve essere ancora commentata e i due processi assenti. Questa prova è necessaria prima di considerare conclusa la disattivazione. Sul prototipo attuale la voce è commentata e `rcc` assente, ma il registro originale non conserva un test completo eseguito subito dopo la modifica.
+Riavvia la serra, rientra **con il canale scelto** e ripeti `grep -n 'start-rcc' /etc/inittab` e `ps -o pid,args`. La voce deve essere ancora commentata e i due processi assenti. Con Wi-Fi controlla anche che la LAN torni e che manchi la rotta verso Internet. Questa prova è necessaria prima di considerare conclusa la disattivazione. Sul prototipo attuale la voce è commentata e `rcc` assente, ma il registro originale non conserva un test completo eseguito subito dopo la modifica.
 
 Per tornare alla configurazione originale, **prima ferma il bridge e i timer della serra sul Raspberry**; evita che i due sistemi comandino i componenti insieme. Poi, nella shell della serra, controlla che `/etc/inittab.linfa.bak` sia il backup creato sopra e ripristinalo:
 
@@ -170,9 +170,9 @@ grep -n 'start-rcc' /etc/inittab
 
 La voce torna `::respawn:/usr/bin/start-rcc`. Dopo il riavvio, verifica con `ps -o pid,args` che il servizio originale parta. Non usare questo ripristino sul prototipo esaminato se hai soltanto `/etc/inittab.bak`: quel file è un backup precedente, non il backup dedicato creato dalla procedura qui sopra.
 
-Chiudi `picocom` con `Ctrl+A`, poi `Ctrl+X` prima di usare la CLI; altrimenti la porta resta occupata.
+Se usi UART, chiudi `picocom` con `Ctrl+A`, poi `Ctrl+X` prima di usare la CLI; altrimenti la porta resta occupata. Se usi Wi-Fi, esci dalla shell SSH della serra con `exit` e rimani nella shell del Raspberry.
 
-Il controller non contiene una password root predefinita. Salva **una volta sola** la password della console della tua serra in un file privato sul Raspberry, senza scriverla nella cronologia della shell:
+Il controller non contiene una password root predefinita. Salva **una volta sola** la password della tua serra in un file privato sul Raspberry, senza scriverla nella cronologia della shell:
 
 ```bash {.terminal-raspberry}
 serra auth save
@@ -180,13 +180,13 @@ serra auth save
 
 Il comando la chiede due volte senza mostrarla e crea `~/.config/serra/root-password` con accesso limitato al tuo utente (`600`; cartella `700`). Da quel momento puoi lanciare `serra uptime` e gli altri comandi manuali da nuove sessioni SSH senza reinserirla. Se cambi la password sulla serra, esegui di nuovo `serra auth save`. Non mettere questo file nella repository e non eseguire il comando con `sudo`, altrimenti la credenziale viene salvata per l'utente root del Raspberry.
 
-Se la porta individuata nel passo 03 non è `/dev/ttyUSB0`, imposta anche il percorso reale **nella stessa sessione** (esempio):
+**Solo UART:** se la porta individuata nel passo 03 non è `/dev/ttyUSB0`, imposta anche il percorso reale **nella stessa sessione** (esempio):
 
 ```bash {.terminal-raspberry}
 export SERRA_UART_PORT=/dev/ttyUSB1
 ```
 
-Nel passo 07 riporterai l'eventuale `SERRA_UART_PORT` anche nel file usato dai servizi.
+Nel passo 07 riporterai il canale scelto e l'eventuale `SERRA_UART_PORT` nel file usato dai servizi.
 
 I servizi automatici eseguiti come utente `pi` leggeranno la stessa password da questo file privato. Nel passo 07 `/etc/serra-mqtt.env` conterrà le credenziali del broker MQTT e gli altri parametri, senza duplicare la password della serra. Nessuno dei due file va caricato su GitHub.
 
@@ -198,13 +198,50 @@ serra --help
 
 Per cercare un'azione senza scorrere l'help nel terminale, consulta il [riferimento completo dei comandi](../riferimento-comandi.md): mostra anche il payload equivalente per Home Assistant.
 
-Test di apertura della console e login via UART, senza azionare i componenti:
+**Solo Wi-Fi:** prima di usare la CLI, registra sul Raspberry la chiave host SSH della serra. Da una connessione già verificata alla serra, annota l'impronta mostrata al primo login. Sul Raspberry crea un file candidato, controlla che l'impronta sia **identica** e solo allora aggiungilo a `known_hosts` dell'utente `pi`:
+
+```bash {.terminal-raspberry}
+mkdir -p ~/.ssh && chmod 700 ~/.ssh
+ssh-keyscan -T 5 -t ecdsa <SERRA_IP> > ~/.ssh/linfa-hostkey-candidate
+ssh-keygen -lf ~/.ssh/linfa-hostkey-candidate
+```
+
+La scansione da sola **non verifica l'identità** del dispositivo. Se l'impronta non coincide o non riesci a confrontarla con quella annotata durante il primo accesso, fermati. Se coincide:
+
+```bash {.terminal-raspberry}
+cat ~/.ssh/linfa-hostkey-candidate >> ~/.ssh/known_hosts
+chmod 600 ~/.ssh/known_hosts
+rm ~/.ssh/linfa-hostkey-candidate
+```
+
+Prova la lettura senza azionare componenti. Esegui **solo il blocco del tuo canale**:
+
+```bash {.terminal-raspberry}
+serra --transport uart uptime
+```
+
+Per Wi-Fi, invece:
+
+```bash {.terminal-raspberry}
+serra --transport wifi --ssh-host <SERRA_IP> uptime
+```
+
+Se usi entrambi, prova i due comandi separatamente prima di scegliere `auto` nel passo 07. `auto` passa al canale secondario solo se il primario fallisce **prima dell'invio**: non ripete un comando che potrebbe già essere stato eseguito.
+
+Per evitare di ripetere le opzioni nei comandi manuali della sessione corrente, **solo con Wi-Fi** imposta:
+
+```bash {.terminal-raspberry}
+export SERRA_TRANSPORT=wifi
+export SERRA_SSH_HOST=<SERRA_IP>
+```
+
+**Solo con UART** lascia il valore predefinito `uart`. La configurazione permanente per bridge e timer è nel passo 07.
 
 ```bash {.terminal-raspberry}
 serra uptime
 ```
 
-**Risposta attesa:** una riga `UPTIME: ...` con i secondi trascorsi dall'avvio della serra. Se fallisce, verifica porta, permessi e password prima di inviare comandi ai componenti.
+**Risposta attesa:** una riga `UPTIME: ...` con i secondi trascorsi dall'avvio della serra. Se fallisce, verifica porta e permessi UART **oppure** IP, chiave host e SSH; controlla la password prima di inviare comandi ai componenti.
 
 Per verificare separatamente il file di stato locale:
 
@@ -212,7 +249,7 @@ Per verificare separatamente il file di stato locale:
 serra state sync
 ```
 
-**Risposta attesa:** `STATE SYNC OK`. Questo comando **non apre la UART**: ricalcola solo lo stato logico registrato, perciò non verifica il login alla serra. In questo passo non hai configurato il broker MQTT, quindi non aspettarti nuovi topic finché non completi il passo 07.
+**Risposta attesa:** `STATE SYNC OK`. Questo comando **non apre UART né SSH**: ricalcola solo lo stato logico registrato, perciò non verifica il login alla serra. In questo passo non hai configurato il broker MQTT, quindi non aspettarti nuovi topic finché non completi il passo 07.
 
 Esegui questi comandi di prova **uno alla volta**, osservando il risultato dopo ciascuno.
 
@@ -270,7 +307,7 @@ cat /home/pi/.serra_state.json | jq .
 ## Continua il percorso
 
 > [!TIP] Controllo
-> **Verifica prima di proseguire:** `serra uptime` riesce a leggere la console via UART e `serra state sync` aggiorna lo stato locale.
+> **Verifica prima di proseguire:** `serra uptime` riesce sul canale scelto e `serra state sync` aggiorna lo stato locale.
 
 <table width="100%" class="step-nav">
   <tr>

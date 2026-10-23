@@ -26,7 +26,8 @@ nav:
   - Inizia qui: index.md
   - Percorso guidato:
       - '01 · Panoramica e obiettivi': setup/01-panoramica.md
-      - '02 · Hardware e collegamenti': setup/02-hardware.md
+      - '02A · Primo accesso via Wi-Fi': setup/02-wifi.md
+      - '02B · Hardware e UART': setup/02-hardware.md
       - '03 · Preparare il Raspberry Pi': setup/03-raspberry.md
       - '04 · Verificare la console UART': setup/04-uart.md
       - '05 · Impostare la password root': setup/05-password-root.md
@@ -37,8 +38,8 @@ nav:
   - Riferimento:
       - Riferimento comandi: riferimento-comandi.md
   - Approfondimenti facoltativi:
-      - Percorso Wi-Fi sperimentale: approfondimenti/percorso-wifi-sperimentale.md
-      - Foto della serra via UART: approfondimenti/fotocamera.md
+      - Prove e limiti del percorso Wi-Fi: approfondimenti/percorso-wifi-sperimentale.md
+      - Foto della serra: approfondimenti/fotocamera.md
       - Wi-Fi, token e aggiornamenti: approfondimenti/configurazione-serra.md
       - Rete della serra durante il setup: approfondimenti/rete-serra.md
       - Analisi del traffico cloud: approfondimenti/traffico-cloud.md

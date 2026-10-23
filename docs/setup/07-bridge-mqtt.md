@@ -69,12 +69,23 @@ SERRA_MQTT_USER=<MQTT_USER>
 SERRA_MQTT_PASS=<MQTT_PASSWORD>
 SERRA_MQTT_TOPIC=serra
 SERRA_CLI=/usr/local/bin/serra
+SERRA_TRANSPORT=uart
 SERRA_UART_LOCK_TIMEOUT=60
 SERRA_CMD_TIMEOUT=120
 SERRA_MQTT_CONNECT_TIMEOUT=4
 ```
 
-Se la seriale non è `/dev/ttyUSB0`, aggiungi `SERRA_UART_PORT=/dev/ttyUSB1` sostituendo il percorso con quello trovato sul tuo Raspberry. `SERRA_UART_LOCK_TIMEOUT=60` è il valore usato sul prototipo: lascia tempo ai comandi concorrenti di aspettare la UART. Il bridge interrompe i comandi dopo `SERRA_CMD_TIMEOUT` secondi e limita a `SERRA_MQTT_CONNECT_TIMEOUT` secondi la verifica di raggiungibilità del broker. Se una password contiene spazi, apici o barre inverse, scrivila secondo la [sintassi dei file `EnvironmentFile`](https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html#EnvironmentFile=): non copiare letteralmente i segnaposto tra `<` e `>`.
+**Scegli il trasporto nello stesso file:**
+
+| Collegamento provato nel passo 06 | Righe da impostare in `/etc/serra-mqtt.env` |
+| --- | --- |
+| Solo UART | `SERRA_TRANSPORT=uart`; se la porta non è `/dev/ttyUSB0`, aggiungi `SERRA_UART_PORT=/dev/ttyUSB1` usando il percorso reale. |
+| Solo Wi-Fi | Sostituisci con `SERRA_TRANSPORT=wifi` e aggiungi `SERRA_SSH_HOST=<SERRA_IP>` e `SERRA_SSH_PORT=22`. La serra deve restare raggiungibile in LAN **senza rotta Internet**. |
+| Entrambi disponibili | Usa `SERRA_TRANSPORT=auto`, `SERRA_PRIMARY_TRANSPORT=wifi` (oppure `uart`), `SERRA_SSH_HOST=<SERRA_IP>` e l'eventuale `SERRA_UART_PORT`. Prova **prima separatamente** i due canali. |
+
+La scelta è esplicita: il bridge non riconosce da solo la presenza di un cavo. In `auto` il secondo canale viene usato soltanto se il primo fallisce **prima dell'invio del comando**; un dosaggio o ricircolo dall'esito incerto non viene ripetuto. `SERRA_UART_LOCK_TIMEOUT=60` è il valore usato sul prototipo: lascia tempo ai comandi concorrenti di aspettare il lock comune. Il bridge interrompe i comandi dopo `SERRA_CMD_TIMEOUT` secondi e limita a `SERRA_MQTT_CONNECT_TIMEOUT` secondi la verifica di raggiungibilità del broker. Se una password contiene spazi, apici o barre inverse, scrivila secondo la [sintassi dei file `EnvironmentFile`](https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html#EnvironmentFile=): non copiare letteralmente i segnaposto tra `<` e `>`.
+
+Il file di ambiente è letto dai **servizi systemd**, non da una nuova shell SSH interattiva sul Raspberry. Per i comandi manuali Wi-Fi usa ancora `--transport wifi --ssh-host <SERRA_IP>` oppure esporta le variabili come nel passo 06. Il file privato creato con `serra auth save` fornisce la stessa password root a entrambi i trasporti.
 
 Permessi:
 

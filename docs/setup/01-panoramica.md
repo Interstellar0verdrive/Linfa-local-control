@@ -6,12 +6,19 @@
 
 Questa documentazione descrive un setup per **controllare in locale** la serra Linfa Weezy (Robonica) **senza dipendere dal cloud**.
 
-I capitoli 01–09 descrivono il collegamento USB–UART usato dal controller pubblicato. Esiste una [possibile alternativa via Wi-Fi](../approfondimenti/percorso-wifi-sperimentale.md): abbiamo verificato rete locale, SSH e comandi su una serra **già modificata**, ma l'accesso iniziale e l'installazione completa su una serra originale restano da provare. Se l'SSH iniziale non è accessibile, la console UART può servire per configurare la serra; una volta predisposto un controllo via rete, il cavo seriale non dovrebbe restare collegato. Il software attuale, però, comunica ancora via UART.
+Tra serra e Raspberry puoi usare [Wi-Fi locale/SSH](02-wifi.md) oppure [USB–UART](02-hardware.md). Il controller pubblicato offre entrambi; Home Assistant vede gli stessi topic MQTT in ogni caso. Sul nostro esemplare già modificato abbiamo provato il trasporto Wi-Fi, ma **non conosciamo l'accesso SSH iniziale di una serra originale**. Puoi tentarlo senza aprirla; se fallisce, usa UART per il primo accesso. Puoi anche scegliere UART dall'inizio e mantenerla come collegamento permanente.
+
+| Scelta iniziale | Cosa comporta |
+| --- | --- |
+| **02A · Wi-Fi** | Provi SSH senza aprire la serra. Se entri, prepari il collegamento LAN e verifichi l'isolamento da Internet. Il login iniziale su un esemplare originale resta da confermare. |
+| **02B · UART** | Apri la parte superiore e colleghi TX, RX e GND. Puoi usare UART sempre, oppure usarla per impostare la password root e poi passare a Wi-Fi. |
+
+Dal passo 03 le istruzioni tornano comuni, con i soli comandi che dipendono dal collegamento segnalati nel punto in cui servono.
 
 <figure class="system-diagram">
   <svg viewBox="0 0 420 515" role="img" aria-labelledby="system-diagram-title system-diagram-description" xmlns="http://www.w3.org/2000/svg">
     <title id="system-diagram-title">Schema del controllo locale della serra</title>
-    <desc id="system-diagram-description">Dall'alto verso il basso: serra Linfa, Raspberry Pi, broker MQTT e Home Assistant. La serra è collegata al Raspberry Pi via USB UART a 3,3 volt; il Raspberry Pi e Home Assistant comunicano tramite il broker MQTT. I comandi risalgono verso la serra e gli stati scendono verso Home Assistant.</desc>
+    <desc id="system-diagram-description">Dall'alto verso il basso: serra Linfa, Raspberry Pi, broker MQTT e Home Assistant. La serra è collegata al Raspberry Pi via USB UART a 3,3 volt oppure Wi-Fi locale tramite SSH; il Raspberry Pi e Home Assistant comunicano tramite il broker MQTT. I comandi risalgono verso la serra e gli stati scendono verso Home Assistant.</desc>
 
     <rect class="flow-card" x="20" y="18" width="380" height="88" rx="14" />
     <circle class="flow-number" cx="55" cy="62" r="18" />
@@ -20,7 +27,7 @@ I capitoli 01–09 descrivono il collegamento USB–UART usato dal controller pu
     <text class="flow-caption" x="87" y="82">Luci, ventole, pompe e LED</text>
 
     <path class="flow-link" d="M210 113v28m-5-23 5-6 5 6m-10 18 5 6 5-6" />
-    <text class="flow-link-label" x="229" y="132">USB → UART · 3,3 V</text>
+    <text class="flow-link-label" x="229" y="132">UART / Wi-Fi</text>
 
     <rect class="flow-card flow-card-controller" x="20" y="148" width="380" height="88" rx="14" />
     <circle class="flow-number" cx="55" cy="192" r="18" />
@@ -52,7 +59,7 @@ I capitoli 01–09 descrivono il collegamento USB–UART usato dal controller pu
 In sintesi:
 
 - La serra è basata su un **VoCore2 (Linux/BusyBox)** che gestisce fisicamente luci, ventole, pompe e LED ring.
-- Un **Raspberry Pi esterno** si collega alla serra tramite **console UART** e invia comandi “come se fossimo da terminale” (login `root`).
+- Un **Raspberry Pi esterno** raggiunge la shell della serra via **UART** oppure **SSH sulla Wi-Fi locale** e invia i comandi con l'utente `root`.
 - Un **bridge MQTT** sul Raspberry permette a **Home Assistant** (o qualunque client MQTT) di:
     - inviare comandi alla serra pubblicando su topic MQTT
     - leggere l'ultimo stato **logico stimato** dei componenti tramite topic MQTT “retained”
@@ -68,7 +75,7 @@ Obiettivo pratico del progetto:
 - Comandi affidabili da CLI (`serra ...`) sul Raspberry
 - Comandi equivalenti via MQTT (`serra/cmd`)
 - Stati consistenti e leggibili via MQTT (`serra/state/...`)
-- La Wi-Fi della serra disabilitata all'avvio del VoCore, con un comando del Raspberry come controllo aggiuntivo
+- Con UART: Wi-Fi della serra spenta anche dopo il riavvio. Con Wi-Fi: LAN attiva ma nessuna rotta dalla serra verso Internet.
 
 ---
 
@@ -90,16 +97,16 @@ Questa guida **presuppone esperienza di base con elettronica e saldatura**: devi
 | **Serra Linfa** | La procedura è stata provata su Linfa Weezy; la Linfa standard non è ancora verificata. |
 | **Computer** | Windows, macOS o Linux, con browser e client SSH, per seguire la guida e collegarti al Raspberry durante l'installazione. Deve poter raggiungere il Raspberry sulla rete locale; non serve tenerlo acceso quando il sistema è operativo. |
 | **Raspberry Pi** | Il prototipo usa un Pi 3B. Servono microSD da almeno 16 GB, alimentatore adatto al modello e connessione alla rete domestica. Un Pi Zero 2 W richiede anche un adattatore USB OTG per collegare la seriale. |
-| **Adattatore USB → UART/TTL** | I segnali TX e RX devono essere a **3,3 V**; servono anche GND e una connessione USB al Raspberry. Il pin di alimentazione VCC non si collega alla serra. Vedi [i criteri e gli esempi nel passo 02](02-hardware.md#ladattatore-usb-ttl). |
-| **Tre cavetti jumper Dupont maschio–maschio** | Nel montaggio mostrato, sia i tre fili che escono dalla serra sia i terminali del cavo USB → TTL DTech sono **femmina**: servono tre jumper maschio–maschio, uno per TX, uno per RX e uno per GND. Se scegli un adattatore diverso, controlla i connettori reali prima di acquistare i cavetti. Per l'installazione definitiva, i tre collegamenti devono essere saldi e isolati. **Non serve un quarto cavetto per VCC.** |
-| **Cavo USB** | Serve se l'adattatore ha una presa USB; non serve un secondo cavo se l'adattatore è già un cavo USB → UART integrato. Scegli la lunghezza in base alla posizione del Raspberry. |
-| **Per il montaggio definitivo** | Attrezzi per aprire la serra, saldatore e materiale isolante se saldi i fili; protezione del bordo e fermacavo se fai passare i fili da un foro nella scocca. |
+| **Solo percorso UART: adattatore USB → UART/TTL** | I segnali TX e RX devono essere a **3,3 V**; servono anche GND e una connessione USB al Raspberry. VCC non si collega alla serra. Vedi [criteri ed esempi nel passo 02B](02-hardware.md#ladattatore-usb-ttl). |
+| **Solo percorso UART: tre cavetti jumper Dupont maschio–maschio** | Nel montaggio mostrato sia i fili che escono dalla serra sia i terminali del cavo DTech sono femmina: servono tre jumper, uno per TX, uno per RX e uno per GND. **Non serve un quarto cavetto per VCC.** |
+| **Solo percorso UART: cavo USB e attrezzi** | Un cavo USB se l'adattatore non è già integrato; attrezzi per aprire la serra, materiale per fissare e isolare i fili e, se necessario, saldatore e protezione del foro. |
+| **Solo percorso Wi-Fi: accesso alla rete** | Router configurabile, computer con client SSH e Python 3 per il pairing locale se l'app originale non è disponibile. Sul Raspberry servirà `sshpass`. Prepara un modo per scollegare temporaneamente la WAN durante il primo setup. |
 | **Software e rete** | Raspberry Pi OS con Python 3.10 o successivo, un broker MQTT raggiungibile da Raspberry e Home Assistant, e l'integrazione MQTT di Home Assistant. Git si installa sul Raspberry nel passo 03. Il controller e il bridge sono già nella repository. |
 | **Per le automazioni climatiche di Home Assistant** | Un sensore di temperatura e umidità compatibile con Home Assistant, collocato **dentro la serra**. Il prototipo usa un Aqara Zigbee: il controller sul Raspberry non pubblica ancora le misure dei sensori interni originali della serra. Sensori di temperatura e umidità della stanza sono utili per decidere se ventilare può raffreddare o deumidificare, ma non sono necessari per i comandi di base. |
 
-La modifica fisica illustrata in questa guida è stata realizzata nella **parte superiore della serra, dove si trovano le luci e il VoCore**, con **fili saldati** e un **foro nella scocca per il passaggio dei fili del cavo seriale**. Il [passo 02](02-hardware.md#cablaggio-uart) descrive i collegamenti e mostra il foro. Non è disponibile una foto ravvicinata delle saldature: prima di richiudere verifica che i collegamenti siano saldi e isolati.
+Nel percorso UART, la modifica fisica illustrata è stata realizzata nella **parte superiore della serra, dove si trovano le luci e il VoCore**, con fili saldati e un foro nella scocca. Il [passo 02B](02-hardware.md#cablaggio-uart) descrive i collegamenti e mostra il foro. Non è disponibile una foto ravvicinata delle saldature.
 
-Per ottenere lo stesso controllo locale **non devi ripetere l'analisi MITM, il dump del modulo o le prove delle API originali**: sono documentati negli approfondimenti. La [modifica del token, delle credenziali Wi-Fi e dei permessi degli aggiornamenti](../approfondimenti/configurazione-serra.md) è separata dal percorso essenziale, perché il controller comunica con la serra via UART. Se vuoi che **anche la radio della serra resti spenta dopo un riavvio della sola serra**, segui invece la verifica dello script di avvio nel [passo 08](08-servizi-automatici.md#disabilitare-la-wi-fi-allavvio-della-serra).
+Per ottenere il controllo locale **non devi ripetere l'analisi MITM, il dump del modulo o le prove delle API originali**: sono documentati negli approfondimenti. Se scegli Wi-Fi, il [passo 02A](02-wifi.md) include pairing e isolamento; se scegli UART, il [passo 08](08-servizi-automatici.md#disabilitare-la-wi-fi-allavvio-della-serra) spiega come tenere spenta la radio. Le altre modifiche storiche di token e aggiornamenti restano [approfondimenti facoltativi](../approfondimenti/configurazione-serra.md).
 
 > [!WARNING] Servizio originale da verificare
 > Nel prototipo, `robocontrol/rcc` era già fermo durante i test dei comandi. I file attuali confermano che il suo avvio automatico è disattivato. **Non è verificato** che il controller e il servizio originale possano comandare contemporaneamente gli stessi componenti. Il [passo 06](06-controller-cli.md#verifica-del-servizio-originale) spiega come controllare, disattivare e ripristinare il servizio prima di azionare luci, ventole o pompe. La sequenza è stata ricostruita sul prototipo, ma non ancora provata da zero su una seconda serra.
@@ -108,13 +115,13 @@ Per ottenere lo stesso controllo locale **non devi ripetere l'analisi MITM, il d
 
 ## Vincoli di sicurezza e modifiche alla serra
 
-Il percorso essenziale **non sostituisce il firmware** né richiede il dump del filesystem. L'apertura della serra, il collegamento seriale e l'impostazione della password root sono comunque interventi reali sul dispositivo: valuta prima il rischio e conserva le informazioni necessarie per un eventuale ripristino.
+Il percorso essenziale **non sostituisce il firmware** né richiede il dump del filesystem. Il percorso UART apre e modifica fisicamente la serra; il percorso Wi-Fi modifica la sua configurazione di rete. Entrambi richiedono di gestire la password root: valuta prima i rischi e conserva le informazioni necessarie per un eventuale ripristino.
 
 Vincoli/assunzioni:
 
-- La password root della console viene impostata nel passo 05 perché il controller attuale la richiede.
-- Nel prototipo lo script che avvia la Wi-Fi sul VoCore è già stato rinominato `OFF_S45net`: il boot non lo esegue. Il [passo 08](08-servizi-automatici.md#disabilitare-la-wi-fi-allavvio-della-serra) spiega come verificare e riprodurre questa modifica, e come ripristinarla. Il timer sul Raspberry invia inoltre `serra net off` dopo il proprio avvio; da solo non copre un successivo riavvio della sola serra.
-- Sul prototipo è ancora impostato anche il token fittizio `offline-token`, introdotto per ostacolare l'associazione della serra al servizio originale. È una [misura aggiuntiva documentata nell'approfondimento](../approfondimenti/configurazione-serra.md#cambiare-il-token-della-serra), non un prerequisito per il controllo via UART e non una garanzia che il cloud non possa identificare il dispositivo con altri dati. La disattivazione della radio è ciò che impedisce alla serra di comunicare tramite Wi-Fi.
+- La password root viene verificata o impostata nel passo 05 perché il controller la richiede su entrambi i canali.
+- Con UART, il [passo 08](08-servizi-automatici.md#disabilitare-la-wi-fi-allavvio-della-serra) spiega come impedire l'avvio della radio. Con Wi-Fi, lo script di rete deve invece avviarsi e l'isolamento senza gateway va verificato dopo il boot; il timer `serra-netoff` deve restare disabilitato.
+- Sul prototipo è ancora impostato il token fittizio `offline-token`, ma non è una protezione di rete: non sostituisce lo spegnimento radio nel percorso UART né l'isolamento nel percorso Wi-Fi.
 - Il blocco degli aggiornamenti è una [modifica facoltativa documentata a parte](../approfondimenti/configurazione-serra.md#bloccare-gli-aggiornamenti-automatici), non un prerequisito dei passi 06–09. La gestione del servizio originale `rcc` richiede invece il controllo e, se attivo, la disattivazione descritta nel passo 06.
 - Conserva un modo sicuro per ripristinare le modifiche che scegli di applicare. Il collegamento saldato e il foro nella scocca richiedono anche un intervento fisico per tornare alla configurazione originale.
 
@@ -125,21 +132,21 @@ Implicazioni:
 
 ---
 
-## Architettura (VoCore2 + Raspberry + UART + MQTT + HA)
+## Architettura (VoCore2 + Raspberry + MQTT + HA)
 
 Componenti e responsabilità:
 
 **1) Serra (VoCore2)**
 
 - Esegue fisicamente le azioni (luci, ventole, pompe nutrienti, pompa principale, LED ring).
-- Espone una console root accessibile via **UART seriale** (tipicamente 115200 baud).
-- La rete Wi-Fi della serra può essere attivata/disattivata, ma in questo progetto viene gestita dall’esterno (Raspberry).
+- Espone una console root via **UART seriale** (tipicamente 115200 baud) e, sul firmware provato, anche una shell **SSH** quando la rete è attiva.
+- Con UART la radio può restare spenta; con Wi-Fi rimane sulla LAN senza rotta verso Internet.
 
 **2) Raspberry Pi (controller)**
 
-- Connessione fisica: USB → TTL 3.3V → UART console del VoCore (tramite cavo seriale FTDI USB a TTL con 3 vie di uscita flying leads Tx, Rx e GND, con chip FT232)
+- Collegamento scelto: USB → TTL 3,3 V → UART, oppure Wi-Fi domestica → SSH locale.
 - Esegue lo script/CLI serra (Python) che:
-    - apre la console seriale
+    - apre la console seriale o una sessione SSH
     - invia comandi
     - aggiorna uno stato locale (JSON)
     - pubblica stati e status su MQTT
@@ -164,11 +171,11 @@ Esempio di flusso dei comandi (due sorgenti possibili):
 
 - **Comando locale (SSH sul Raspberry):**
 
-    `serra lights on` → VoCore via UART → update state.json → publish MQTT state/status
+    `serra lights on` → VoCore via UART o SSH → update state.json → publish MQTT state/status
 
 - **Comando da Home Assistant (MQTT):**
 
-    HA → `serra/cmd` pubblico `lights on` → bridge → `serra lights on` → VoCore via UART → update state.json → publish MQTT state/status
+    HA → `serra/cmd` pubblico `lights on` → bridge → `serra lights on` → VoCore via UART o SSH → update state.json → publish MQTT state/status
 
 
 Punti chiave:
@@ -181,11 +188,11 @@ Punti chiave:
 ## Continua il percorso
 
 > [!TIP] Controllo
-> **Verifica prima di proseguire:** Hai compreso il ruolo di serra, Raspberry, UART, MQTT e Home Assistant.
+> **Verifica prima di proseguire:** Hai scelto Wi-Fi o UART e compreso il ruolo di serra, Raspberry, MQTT e Home Assistant.
 
 <table width="100%" class="step-nav">
   <tr>
     <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="../index.md">← Indice completo</a></td>
-    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="02-hardware.md">02 · Hardware e collegamenti →</a></td>
+    <td width="50%" align="right"><strong>Scegli il passo 02</strong><br><a href="02-wifi.md">02A · Wi-Fi →</a><br><a href="02-hardware.md">02B · UART →</a></td>
   </tr>
 </table>

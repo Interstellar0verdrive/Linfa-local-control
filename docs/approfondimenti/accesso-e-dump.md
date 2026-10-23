@@ -1,6 +1,6 @@
 # Accesso e dump facoltativi
 
-Queste operazioni servono per l'esplorazione tecnica. Il percorso principale usa la [verifica UART](../setup/04-uart.md) e la [password root](../setup/05-password-root.md).
+Queste operazioni servono per l'esplorazione tecnica. Per il setup segui il [primo accesso via Wi-Fi](../setup/02-wifi.md) oppure il [collegamento UART](../setup/02-hardware.md), poi la [verifica della password root](../setup/05-password-root.md).
 
 > [!CAUTION] Alimentazione durante le prove
 > Collega o modifica la UART soltanto dopo aver scollegato la spina della serra e l'adattatore USB → TTL dal computer/Raspberry. Alimenta la serra per leggere la console solo quando i fili sono fissati e isolati, la scocca è richiusa e i componenti elettrici sono asciutti e lontani da acqua e pompe. Se devi intervenire di nuovo sul cablaggio, scollega prima entrambe le alimentazioni. Vedi le [precauzioni complete](../setup/01-panoramica.md#prima-di-intervenire-sicurezza-elettrica-e-acqua).
@@ -13,7 +13,7 @@ Queste operazioni servono per l'esplorazione tecnica. Il percorso principale usa
     ssh root@<SERRA_AP_IP>
     ```
 
-    Nella rete temporanea iniziale l'accesso potrebbe non chiedere una password.
+    **Non conosciamo le credenziali SSH di una serra originale.** Sul prototipo l'accesso SSH ha richiesto la password impostata in precedenza via UART; il reset fisico non l'ha cancellata. Se non riesci a entrare, continua via UART.
 
 2. Oppure dal terminale del computer collegarsi al Raspberry (collegato via UART) tramite SSH:
 
@@ -62,7 +62,7 @@ Queste operazioni servono per l'esplorazione tecnica. Il percorso principale usa
 
     Sostituisci `<RASPBERRY_IP>` con l'indirizzo reale del Raspberry.
 
-8. Per entrare nella serra usa `root` e la password effettiva del dispositivo: nel prototipo iniziale poteva essere vuota o `vocore`; dopo il passo 05 è quella che hai impostato tu.
+8. Per entrare nella serra usa `root` e la password effettiva del dispositivo. Un vecchio appunto menzionava una console seriale senza password, ma non abbiamo verificato una password di fabbrica universale; `vocore` non è stata confermata. Dopo il passo 05 è quella che hai impostato tu.
 9. Per testare se funziona, dare come comando: `echo OK` e premere invio. Si dovrebbe ricevere indietro “OK”
 10. Per vedere i processi in corso, usa `ps` (la BusyBox del dispositivo potrebbe non accettare le opzioni `aux`).
 

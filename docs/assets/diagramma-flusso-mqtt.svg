@@ -1,6 +1,6 @@
 <svg class="technical-diagram" xmlns="http://www.w3.org/2000/svg" width="800" height="432" viewBox="0 0 800 432" role="img" aria-labelledby="title desc">
   <title id="title">Ciclo di un comando tra Home Assistant e la serra</title>
-  <desc id="desc">Home Assistant pubblica un comando MQTT sul broker. Il bridge sul Raspberry lo passa al controller CLI e via UART2 alla serra. Il Raspberry pubblica l'esito e gli stati logici sul broker, che Home Assistant legge; gli stati non sono telemetria hardware diretta.</desc>
+  <desc id="desc">Home Assistant pubblica un comando MQTT sul broker. Il bridge sul Raspberry lo passa al controller CLI e via UART2 o SSH locale alla serra. Il Raspberry pubblica l'esito e gli stati logici sul broker, che Home Assistant legge; gli stati non sono telemetria hardware diretta.</desc>
   <defs>
     <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#15271b"/><stop offset="1" stop-color="#203a28"/></linearGradient>
     <style>
@@ -23,7 +23,7 @@
   <text x="50" y="146" class="title">Home Assistant</text><text x="50" y="169" class="sub">Pubblica il payload</text>
   <text x="240" y="146" class="title">Broker MQTT</text><text x="240" y="169" class="tag">serra/cmd</text>
   <text x="430" y="146" class="title">Raspberry Pi</text><text x="430" y="169" class="sub">Bridge → CLI</text>
-  <text x="620" y="146" class="title">Serra Linfa</text><text x="620" y="169" class="sub">Console UART2</text>
+  <text x="620" y="146" class="title">Serra Linfa</text><text x="620" y="169" class="sub">UART2 o SSH</text>
   <g fill="none" stroke="#a8dfa9" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
     <path d="M196 158h22m-8-6 8 6-8 6"/>
     <path d="M386 158h22m-8-6 8 6-8 6"/>

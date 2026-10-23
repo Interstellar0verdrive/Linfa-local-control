@@ -3,7 +3,7 @@
 **Percorso guidato:** [Indice dei capitoli](../index.md)
 
 > [!NOTE] Nota
-> Home Assistant comunica con il broker MQTT, non direttamente con la serra. Il Raspberry traduce i comandi MQTT in comandi UART.
+> Home Assistant comunica con il broker MQTT, non direttamente con la serra. Il Raspberry traduce i comandi MQTT e li invia sulla UART o via SSH locale, secondo la scelta fatta nel passo 07. L'interfaccia MQTT resta la stessa.
 
 ---
 
@@ -13,7 +13,7 @@ Per le future automazioni delle ventole, Home Assistant deve conoscere temperatu
 
 Le misure di temperatura e umidità della stanza (o le medie dei sensori di casa) permettono anche di evitare la ventilazione quando lo scambio d'aria non aiuterebbe a raffreddare o deumidificare. L'app in preparazione renderà selezionabili queste quattro entità nelle proprie Impostazioni. Per la sola prova MQTT di questo capitolo non serve aggiungere sensori.
 
-La [fotocamera interna](../approfondimenti/fotocamera.md) è facoltativa: la pipeline sul Raspberry scatta e trasferisce il JPEG via UART, mantenendo spenta la Wi-Fi della serra. Installa e prova prima lo script fotografico se vuoi usare pulsante e automazione foto nell'app Home Assistant.
+La [fotocamera interna](../approfondimenti/fotocamera.md) è facoltativa: la pipeline sul Raspberry scatta e trasferisce il JPEG tramite il canale configurato, UART o SSH locale. Installa e prova prima lo script fotografico se vuoi usare pulsante e automazione foto nell'app Home Assistant.
 
 ---
 
@@ -121,7 +121,7 @@ Pubblica il comando e verifica che le ventole si avviino e che compaiano messagg
 2. MQTT Bridge sul Raspberry riceve il messaggio
 3. Il bridge invoca: `serra ...`
 4. Il controller:
-    - esegue il comando via UART
+    - esegue il comando via UART o SSH locale
     - aggiorna `.serra_state.json`
     - pubblica nuovi stati su MQTT
 5. Home Assistant riceve lo stato logico pubblicato, se il collegamento MQTT è operativo
@@ -133,7 +133,7 @@ Pubblica il comando e verifica che le ventole si avviino e che compaiano messagg
 A questo punto il percorso di base è completo:
 
 - ✅ Home Assistant può ascoltare gli stati e pubblicare comandi MQTT senza passare dal cloud Robonica
-- ✅ Il Raspberry traduce i comandi MQTT in istruzioni UART per la serra
+- ✅ Il Raspberry traduce i comandi MQTT in istruzioni sul canale scelto per la serra
 - ✅ Gli ultimi stati **logici** noti e gli esiti dei comandi sono osservabili nei topic MQTT
 - ℹ️ L'app completa con controlli e dashboard è pronta e in fase di test, ma non è ancora disponibile nella repository
 

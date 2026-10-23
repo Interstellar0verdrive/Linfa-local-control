@@ -2,13 +2,25 @@
 
 **Percorso guidato:** [Indice dei capitoli](../index.md)
 
-Con il bridge già funzionante, verifica che la Wi-Fi della serra non venga avviata al boot e installa i servizi copiati nel passo 06. I timer inviano un comando aggiuntivo di spegnimento della rete, ripubblicano lo stato logico e controllano se la serra è stata riavviata. Un servizio separato può leggere il livello dell'acqua su richiesta.
+Con il bridge già funzionante, verifica la **policy di rete corrispondente al trasporto scelto** e installa i servizi comuni copiati nel passo 06. Solo chi usa UART con radio spenta installa il timer che invia un comando aggiuntivo `net off`. Gli altri timer ripubblicano lo stato logico e rilevano i riavvii; un servizio separato legge il livello dell'acqua su richiesta.
 
-**Se l'utente del Raspberry non è `pi`:** prima di installare i file, modifica la copia dei quattro servizi `serra-netoff`, `serra-state-sync`, `serra-uptime` e `serra-water-level` sostituendo `User=pi` con l'utente che ha eseguito `serra auth save`. Adatta anche i percorsi `/home/pi/` nei comandi di installazione qui sotto.
+**Se l'utente del Raspberry non è `pi`:** prima di installare i file dei servizi che userai, sostituisci `User=pi` con l'utente che ha eseguito `serra auth save`. Adatta anche i percorsi `/home/pi/` nei comandi di installazione qui sotto.
 
-## Disabilitare la Wi-Fi all'avvio della serra
+## Solo Wi-Fi (o `auto`): conserva la rete locale
 
-Sul **VoCore del prototipo** abbiamo verificato via UART che `/etc/init.d/S45net` non esiste e che è presente `/etc/init.d/OFF_S45net`. Quest'ultimo è lo script che caricherebbe `mt_wifi` e avvierebbe le interfacce Wi-Fi. Lo script di avvio `/etc/init.d/rcS` esegue soltanto i file che corrispondono a `S??*`, quindi **`OFF_S45net` non parte al boot**. Nel controllo effettuato con la serra accesa, `mt_wifi` non risultava caricato. Questo descrive il prototipo; verifica i file sulla tua versione prima di modificarli.
+Se nel passo 07 hai scelto `wifi` oppure `auto` e vuoi tenere la rete disponibile, **salta le due sezioni UART qui sotto** e vai a [state sync periodico](#service-timer-state-sync-periodico). Lo script `/etc/init.d/S45net` deve avviare la radio con il client DHCP configurato nel [passo 02A](02-wifi.md#3-prepara-lisolamento-locale-con-wan-scollegata). Dopo un riavvio controllato della serra, verifica dalla sua shell che `apcli0` raggiunga il Raspberry e che `/proc/net/route` non contenga una riga con destinazione `00000000`; ripeti il controllo dopo aver ricollegato la WAN. Se non è così, non lasciare la serra collegata a Internet.
+
+Sul **Raspberry**, se un precedente setup aveva installato il timer di spegnimento, disabilitalo:
+
+```bash {.terminal-raspberry}
+if systemctl list-unit-files serra-netoff.timer --no-legend | grep -q '^serra-netoff.timer'; then sudo systemctl disable --now serra-netoff.timer; fi
+```
+
+Poi controlla con `systemctl is-enabled serra-netoff.timer`: **risposta attesa** `disabled` se il timer era installato. Se la risposta è `not-found`, non occorre installarlo. Non avviare manualmente `serra-netoff.service` e non usare `serra net off` mentre il controller deve raggiungere la serra via Wi-Fi. Sul prototipo il timer era ancora abilitato dopo le prove; lo abbiamo disabilitato perché al successivo avvio del Raspberry avrebbe spento il Wi-Fi, anche con la serra correttamente configurata.
+
+## Solo UART: disabilitare la Wi-Fi all'avvio della serra {#disabilitare-la-wi-fi-allavvio-della-serra}
+
+Quando il prototipo usava **solo UART**, `/etc/init.d/S45net` era stato rinominato `/etc/init.d/OFF_S45net`: lo script `/etc/init.d/rcS` esegue soltanto i file `S??*`, quindi la radio non partiva al boot. Durante le successive prove Wi-Fi abbiamo riabilitato `S45net`, con isolamento dal gateway: **lo stato attuale del prototipo non è più `OFF_S45net`**. Verifica sempre i file sulla tua versione prima di modificarli.
 
 Esegui i prossimi comandi **nella console root della serra via UART**, non nella shell del Raspberry. Conserva il collegamento UART: dopo questa modifica la serra potrebbe non essere più raggiungibile via Wi-Fi. Controlla quali script esistono:
 
@@ -46,7 +58,9 @@ Sul prototipo è presente anche il token fittizio `offline-token`, verificato ne
 
 ---
 
-## Service + timer: controllo aggiuntivo della rete VoCore
+## Solo UART: timer di spegnimento aggiuntivo
+
+**Se hai scelto Wi-Fi o `auto`, non eseguire alcun comando in questa sezione.** Il timer interromperebbe il trasporto di rete, anche se `auto` usa UART come canale preferito.
 
 Questo service invia alla serra il comando `serra net off`. Il timer lo esegue **una sola volta, circa 60 secondi dopo l'avvio del Raspberry**: è un controllo aggiuntivo, utile anche se la rete è stata riattivata durante la sessione, ma non sostituisce la modifica dello script sul VoCore. Se abiliti il timer quando il Raspberry è acceso da più di 60 secondi, systemd può eseguirlo subito.
 
@@ -182,13 +196,13 @@ systemctl list-timers --all | grep serra
 journalctl -u serra-state-sync.service -n 50 --no-pager
 ```
 
-**Risposta attesa:** nell'elenco compaiono `serra-state-sync.timer` associato a `serra-state-sync.service` e `serra-netoff.timer` associato a `serra-netoff.service`. Il log del servizio di sincronizzazione deve contenere `STATE SYNC OK` e una conclusione senza errori. Date e intervalli sono variabili. Questo sync ricalcola gli stati registrati, **non legge lo stato fisico** della serra.
+**Risposta attesa:** nell'elenco compare `serra-state-sync.timer` associato a `serra-state-sync.service`; `serra-netoff.timer` compare **solo** se hai scelto UART con radio spenta. Il log del servizio di sincronizzazione deve contenere `STATE SYNC OK` e una conclusione senza errori. Date e intervalli sono variabili. Questo sync ricalcola gli stati registrati, **non legge lo stato fisico** della serra.
 
 ---
 
 ## Service + timer: rilevare i riavvii della serra
 
-`serra uptime` legge via UART il tempo trascorso dall'avvio della serra e pubblica `serra/state/boot` e `serra/state/pi_boot`. Il timer presente sul Raspberry di riferimento lo esegue ai minuti **:10 e :40 di ogni ora**. È una lettura: non riavvia la serra e non modifica luci, ventole o pompe. Richiede che la serra sia accesa quando parte; se la lettura fallisce, consulta il log e riprova dopo aver verificato il collegamento.
+`serra uptime` legge tramite il canale scelto nel passo 07 il tempo trascorso dall'avvio della serra e pubblica `serra/state/boot` e `serra/state/pi_boot`. Il timer presente sul Raspberry di riferimento lo esegue ai minuti **:10 e :40 di ogni ora**. È una lettura: non riavvia la serra e non modifica luci, ventole o pompe. Richiede che la serra sia accesa quando parte; se la lettura fallisce, consulta il log e riprova dopo aver verificato il collegamento.
 
 Installa i file pronti [service](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/systemd/serra-uptime.service) e [timer](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/systemd/serra-uptime.timer):
 
@@ -230,7 +244,7 @@ systemctl show serra-water-level.service -p Result -p ExecMainStatus
 
 ### Comandi utili per verificare i timer e services
 
-Per verificare il timer che invia `net off` dopo il boot del Raspberry:
+**Solo UART con radio spenta:** per verificare il timer che invia `net off` dopo il boot del Raspberry:
 
 ```bash {.terminal-raspberry}
 systemctl status serra-netoff.timer --no-pager
@@ -251,7 +265,7 @@ Per elencare tutti i timer della serra:
 systemctl list-timers --all | grep -i serra
 ```
 
-Se serve eseguire manualmente i servizi **dopo aver acceso la serra**, avviali uno alla volta:
+Se usi UART con radio spenta e serve inviare manualmente il comando aggiuntivo **dopo aver acceso la serra**:
 
 ```bash {.terminal-raspberry}
 sudo systemctl start serra-netoff.service
@@ -268,10 +282,10 @@ sudo systemctl start serra-state-sync.service
 A questo punto questo dovrebbe essere lo stato attuale:
 
 - ✅ comando serra funzionante
-- ✅ controllo serra via UART
+- ✅ controllo serra via UART o Wi-Fi locale, secondo la scelta del passo 07
 - ✅ bridge MQTT attivo e resiliente
 - ✅ topic di stato MQTT pubblicati; coerenza logica da verificare dopo riavvii o comandi non osservati
-- ✅ script di avvio Wi-Fi del VoCore disabilitato e verificato sulla tua serra; comando aggiuntivo dal Raspberry con esito da verificare
+- ✅ con UART: script di avvio Wi-Fi del VoCore disabilitato e timer aggiuntivo verificato; con Wi-Fi: radio avviata, LAN raggiungibile, assenza di rotta Internet e timer `serra-netoff` disabilitato
 - ✅ state sync periodico attivo
 - ✅ timer di controllo dei riavvii attivo
 - ✅ servizio livello acqua disponibile su richiesta (dopo la calibrazione)
