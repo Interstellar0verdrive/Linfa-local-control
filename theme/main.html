@@ -34,7 +34,7 @@
       </div>
       <div class="sidebar-scroll">
         <div class="sidebar-label">DOCUMENTAZIONE</div>
-        <p class="sidebar-intro">Dalla modifica hardware al controllo locale con Home Assistant.</p>
+        <p class="sidebar-intro">Dal collegamento alla serra al controllo locale con Home Assistant.</p>
         <nav class="chapter-nav" aria-label="Indice della documentazione">
           <a href="{{ ''|url }}"{% if is_home %} class="is-active" aria-current="page"{% endif %}><span aria-hidden="true">⌂</span>Indice completo</a>
         </nav>
@@ -69,11 +69,11 @@
 
       <div class="content-layout">
         <main id="contenuto" class="article" tabindex="-1">
-          <div class="reading-progress" aria-label="{% if step %}Passo {{ step.number }} della guida{% else %}Indice della guida{% endif %}"><span style="width: {% if step %}{{ (step.number|int / (steps|length) * 100)|round(1) }}{% else %}100{% endif %}%"></span></div>
+          <div class="reading-progress" aria-label="{% if step %}Passo {{ step.number }} della guida{% else %}Indice della guida{% endif %}"><span style="width: {% if step %}{{ step.progress|round(1) }}{% else %}100{% endif %}%"></span></div>
           <div class="eyebrow"><span class="eyebrow-square" aria-hidden="true"></span>{% if step %}PASSO {{ step.number }}{% else %}LINFA LOCAL CONTROL{% endif %}<span class="eyebrow-line"></span>{{ page_phase }}</div>
           <h1>{% if step %}<span class="hero-number">{{ step.number }}.</span> {% endif %}{{ page_title }}</h1>
           <p class="lead">{{ page_summary }}</p>
-          {% if is_home or (step and step.number == '02') %}<div class="hero-meta"><span class="meta-chip">◉ &nbsp;Verificato su Linfa Weezy</span><span class="meta-chip muted">Linfa standard da verificare</span></div>{% endif %}
+          {% if is_home or (step and step.number == '02B') %}<div class="hero-meta"><span class="meta-chip">◉ &nbsp;Verificato su Linfa Weezy</span><span class="meta-chip muted">Linfa standard da verificare</span></div>{% endif %}
 
           {% if toc_items and not is_home %}
           <nav class="quick-jump" aria-label="In questa pagina">
@@ -82,7 +82,7 @@
           </nav>
           {% endif %}
 
-          {% if step and step.number == '02' %}
+          {% if step and step.number == '02B' %}
           <div class="overview" aria-label="I tre componenti del sistema">
             <div class="overview-item"><span class="overview-number">01</span><strong>Serra</strong><span>VoCore2 e dispositivi interni</span></div>
             <div class="overview-item"><span class="overview-number">02</span><strong>Raspberry Pi</strong><span>Controller esterno</span></div>
@@ -95,8 +95,14 @@
           {% if step %}
           <aside class="completion-callout"><span class="completion-mark" aria-hidden="true">✓</span><div><strong>{% if step_next %}Prima di proseguire{% else %}Percorso completato{% endif %}</strong><p>{{ step.check }}</p></div></aside>
           <nav class="step-nav" aria-label="Passi della guida">
-            <a href="{{ (step_prev.url if step_prev else '')|url }}"><small>← {% if step_prev %}PASSO PRECEDENTE{% else %}TORNA ALL'INDICE{% endif %}</small><strong>{{ step_prev.title if step_prev else 'Indice completo' }}</strong></a>
-            <a href="{{ (step_next.url if step_next else '')|url }}"><small>{% if step_next %}PASSO SUCCESSIVO{% else %}TORNA ALL'INDICE{% endif %} →</small><strong>{{ step_next.title if step_next else 'Indice completo' }}</strong></a>
+            <div class="step-nav-group">
+              <a href="{{ (step_prev.url if step_prev else '')|url }}"><small>← {% if step_prev %}PASSO PRECEDENTE{% else %}TORNA ALL'INDICE{% endif %}</small><strong>{{ step_prev.title if step_prev else 'Indice completo' }}</strong></a>
+              {% for alternative in step_prev_alt %}<a href="{{ alternative.url|url }}"><small>← ALTRO PERCORSO</small><strong>{{ alternative.title }}</strong></a>{% endfor %}
+            </div>
+            <div class="step-nav-group">
+              <a href="{{ (step_next.url if step_next else '')|url }}"><small>{% if step.number == '01' %}VIA WI-FI{% elif step.number == '03' %}SOLO UART{% elif step_next %}PASSO SUCCESSIVO{% else %}TORNA ALL'INDICE{% endif %} →</small><strong>{{ step_next.title if step_next else 'Indice completo' }}</strong></a>
+              {% for alternative in step_next_alt %}<a href="{{ alternative.url|url }}"><small>{% if step.number == '01' %}VIA UART{% elif step.number == '02A' %}SE SSH NON FUNZIONA · UART{% elif step.number == '03' %}SOLO WI-FI{% else %}ALTRO PERCORSO{% endif %} →</small><strong>{{ alternative.title }}</strong></a>{% endfor %}
+            </div>
           </nav>
           {% elif is_home %}
           <nav class="step-nav single" aria-label="Inizia la guida"><a href="{{ steps[0].url|url }}"><small>INIZIA IL PERCORSO →</small><strong>01 · Panoramica e obiettivi</strong></a></nav>
