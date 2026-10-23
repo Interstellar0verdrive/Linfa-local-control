@@ -37,6 +37,7 @@ nav:
   - Riferimento:
       - Riferimento comandi: riferimento-comandi.md
   - Approfondimenti facoltativi:
+      - Percorso Wi-Fi sperimentale: approfondimenti/percorso-wifi-sperimentale.md
       - Foto della serra via UART: approfondimenti/fotocamera.md
       - Wi-Fi, token e aggiornamenti: approfondimenti/configurazione-serra.md
       - Rete della serra durante il setup: approfondimenti/rete-serra.md

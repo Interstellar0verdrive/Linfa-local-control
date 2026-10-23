@@ -6,6 +6,8 @@
 
 Questa documentazione descrive un setup per **controllare in locale** la serra Linfa Weezy (Robonica) **senza dipendere dal cloud**.
 
+I capitoli 01–09 descrivono il collegamento USB–UART usato dal controller pubblicato. Esiste una [possibile alternativa via Wi-Fi](../approfondimenti/percorso-wifi-sperimentale.md): abbiamo verificato rete locale, SSH e comandi su una serra **già modificata**, ma l'accesso iniziale e l'installazione completa su una serra originale restano da provare. Se l'SSH iniziale non è accessibile, la console UART può servire per configurare la serra; una volta predisposto un controllo via rete, il cavo seriale non dovrebbe restare collegato. Il software attuale, però, comunica ancora via UART.
+
 <figure class="system-diagram">
   <svg viewBox="0 0 420 515" role="img" aria-labelledby="system-diagram-title system-diagram-description" xmlns="http://www.w3.org/2000/svg">
     <title id="system-diagram-title">Schema del controllo locale della serra</title>

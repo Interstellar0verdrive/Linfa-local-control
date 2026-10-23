@@ -1,4 +1,6 @@
-Questa guida accompagna la preparazione di una serra Robonica Linfa per il controllo locale con Raspberry Pi, UART, MQTT e Home Assistant. **Per replicare il sistema, segui i capitoli 01–09 nell'ordine:** ogni passo termina con una verifica e il collegamento al successivo.
+Questa guida accompagna la preparazione di una serra Robonica Linfa per il controllo locale con Raspberry Pi, UART, MQTT e Home Assistant. **Il percorso documentato e disponibile oggi usa USB–UART: segui i capitoli 01–09 nell'ordine.** Ogni passo termina con una verifica e il collegamento al successivo.
+
+Stiamo verificando anche un [percorso via Wi-Fi](approfondimenti/percorso-wifi-sperimentale.md), che potrebbe evitare il collegamento seriale permanente e, se l'accesso SSH iniziale funziona su una serra originale, perfino l'apertura della scocca. **Non è ancora una procedura installabile da questa guida:** non conosciamo le credenziali SSH di una serra mai modificata e il controller pubblicato usa ancora la seriale.
 
 > [!WARNING] Limite di verifica del percorso
 > Sul prototipo, `robocontrol/rcc` era già fermo quando sono stati provati i comandi del controller. Abbiamo ricostruito dai file reali come disattivarne l'avvio automatico, ma **la sequenza non è stata provata da zero su una seconda serra**. L'uso contemporaneo dei due sistemi non è verificato: prima di azionare i componenti, segui il [controllo e la procedura reversibile del passo 06](setup/06-controller-cli.md#verifica-del-servizio-originale), inclusa la verifica dopo il riavvio.
@@ -52,6 +54,7 @@ Nei comandi e nei blocchi di configurazione, il giallo segnala le parti <mark cl
 Questi contenuti documentano scelte facoltative e l'indagine tecnica originale. Non servono per completare il percorso essenziale:
 
 - [Wi-Fi, token e aggiornamenti della serra](approfondimenti/configurazione-serra.md)
+- [Percorso Wi-Fi sperimentale: prove e limiti](approfondimenti/percorso-wifi-sperimentale.md)
 - [Rete della serra durante il setup](approfondimenti/rete-serra.md)
 - [Analisi del traffico cloud](approfondimenti/traffico-cloud.md)
 - [Accesso e dump del modulo](approfondimenti/accesso-e-dump.md)
