@@ -21,6 +21,7 @@ STEPS = [
 ]
 
 EXTRAS = {
+    "approfondimenti/percorso-wifi-sperimentale.md": ("Percorso Wi-Fi sperimentale", "Prove via rete locale, accesso iniziale non verificato e limiti del controller attuale."),
     "approfondimenti/configurazione-serra.md": ("Wi-Fi, token e aggiornamenti", "Modifiche facoltative alla configurazione interna della serra usate nel prototipo."),
     "approfondimenti/rete-serra.md": ("Rete della serra durante il setup", "Indirizzi e accesso Wi-Fi della serra durante le prove originali."),
     "approfondimenti/traffico-cloud.md": ("Analisi del traffico cloud", "Come è stato osservato il dialogo originale tra la serra e il servizio remoto."),

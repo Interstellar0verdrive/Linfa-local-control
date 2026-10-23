@@ -47,4 +47,4 @@ Se l'accesso SSH iniziale non funziona, il collegamento UART resta il percorso p
 
 ---
 
-<nav class="step-nav single" aria-label="Torna alla guida"><a href="../index.md">← Torna all'indice della guida</a></nav>
+[Torna all’indice della guida](../index.md).
