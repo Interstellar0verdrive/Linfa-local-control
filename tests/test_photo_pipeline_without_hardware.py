@@ -32,6 +32,17 @@ with patch.dict(sys.modules, {
 
 
 class PhotoPipelineWithoutHardwareTests(unittest.TestCase):
+    def test_photo_requires_confirmed_complete_light_mix(self):
+        channels = {key: 0 for key in 'AGBRD'}
+        with patch.object(photo, 'mqtt_receive', return_value='{"state":{"channels":{"A":0,"G":0,"B":0,"R":0,"D":0}},"last":{"ok":false}}'), \
+                patch.object(photo.time, 'sleep'):
+            with self.assertRaisesRegex(RuntimeError, 'mix luci ignoto'):
+                photo.read_lights()
+        import json
+        payload = json.dumps({'state': {'channels': channels}, 'last': {'ok': True}})
+        with patch.object(photo, 'mqtt_receive', return_value=payload):
+            self.assertEqual(photo.read_lights(), {key.lower(): 0 for key in 'AGBRD'})
+
     def test_wifi_photo_uses_binary_transfer_and_checks_digest(self):
         raw = b'\xff\xd8' + b'x' * 6000 + b'\xff\xd9'
         console = Mock(active_transport='wifi')

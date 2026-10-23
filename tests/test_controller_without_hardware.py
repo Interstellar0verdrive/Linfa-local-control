@@ -86,6 +86,32 @@ class ControllerWithoutHardwareTests(unittest.TestCase):
         self.assertEqual(command.count("/dev/tty-local"), 5)
         self.assertEqual(command.count(" && sleep "), 4)
 
+    def test_lights_off_clears_every_channel_and_records_restorable_mix(self):
+        with patch.object(serra, "step", return_value=True) as step, \
+                patch.object(serra, "_record") as record:
+            serra.do_lights(None, "off", None, 0, 0)
+        command = step.call_args.args[2]
+        self.assertEqual(command.count("/dev/tty-local"), 5)
+        self.assertEqual(record.call_args.args[2]["channels"],
+                         {key: 0 for key in "AGBRD"})
+
+    def test_single_channel_light_change_preserves_only_known_mix(self):
+        prior = {"lights": {"state": {"channels": {key: 0 for key in "AGBRD"}},
+                            "last": {"ok": True}}}
+        with patch.object(serra, "_load_state", return_value=prior), \
+                patch.object(serra, "step", return_value=True), \
+                patch.object(serra, "_record") as record:
+            serra.do_lights(None, "set", "G", 35, 0)
+        self.assertEqual(record.call_args.args[2]["channels"],
+                         {"A": 0, "G": 35, "B": 0, "R": 0, "D": 0})
+        self.assertEqual(prior["lights"]["state"]["channels"]["G"], 0)
+
+        with patch.object(serra, "_load_state", return_value={"lights": {"state": {}, "last": {"ok": False}}}), \
+                patch.object(serra, "step", return_value=True), \
+                patch.object(serra, "_record") as record:
+            serra.do_lights(None, "set", "G", 35, 0)
+        self.assertNotIn("channels", record.call_args.args[2])
+
     def test_mix_failure_is_reported_to_mqtt_bridge(self):
         with patch.object(serra, "step", return_value=False), patch.object(serra, "_record") as record:
             with self.assertRaises(serra.SerraCommandError):

@@ -1,15 +1,15 @@
-# Foto della serra via UART
+# Foto della serra in locale
 
-La fotocamera è facoltativa. Sul prototipo, il Raspberry fa scattare la webcam interna al VoCore tramite la console USB/UART, trasferisce il JPEG sulla stessa seriale e lo pubblica sul broker MQTT. **La Wi-Fi del VoCore resta spenta**; solo il Raspberry usa la rete domestica per parlare con Home Assistant.
+La fotocamera è facoltativa. Nel percorso guidato USB–UART, il Raspberry fa scattare la webcam interna al VoCore tramite la console seriale, trasferisce il JPEG sulla stessa seriale e lo pubblica sul broker MQTT. **La Wi-Fi del VoCore resta spenta**; solo il Raspberry usa la rete domestica per parlare con Home Assistant. Il [trasporto Wi-Fi sperimentale](percorso-wifi-sperimentale.md) esegue lo stesso scatto via SSH locale e trasferisce il JPEG direttamente via rete.
 
 Questa procedura è stata verificata sulla serra dell'autore con firmware VoCore 1.4. Non è ancora stata provata su una seconda unità: prima di installarla, controlla che il tuo firmware abbia `fswebcam`, `uuencode`, `sha256sum` e `/dev/video0`. Il resto del controllo locale funziona anche se salti la fotocamera.
 
 ## Come avviene uno scatto
 
 1. Il pulsante nell'app Home Assistant richiama `script.serra_foto_scatta`, che pubblica `foto` su `serra/cmd/ha`. Il bridge MQTT sul Raspberry esegue `serra foto`.
-2. La pipeline [`serra-foto`](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/serra-foto) legge il mix luci corrente. Se manca anche un solo canale, annulla lo scatto prima di toccare i LED.
+2. La pipeline [`serra-foto`](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/bridge/serra-foto) legge il mix luci corrente e verifica che l'ultimo comando luce sia riuscito. Se manca anche un solo canale, annulla lo scatto prima di toccare i LED.
 3. Spegne temporaneamente i canali normali, accende solo le sottosezioni **B2 e B5** al 100%, attende un secondo e scatta con `fswebcam` a **640×480, JPEG qualità 95, rotazione 180° e bilanciamento del bianco automatico**. È il profilo fotografico diurno individuato nel firmware originale 1.4. Non ritaglia né corregge i colori.
-4. Ripristina le luci in ogni caso, anche se lo scatto fallisce. Il JPEG passa dal VoCore al Raspberry in blocchi UART; ogni blocco rilascia la seriale per permettere agli altri comandi di procedere. Il Raspberry controlla la dimensione e lo SHA-256 prima di pubblicarlo.
+4. Ripristina le luci in ogni caso, anche se lo scatto fallisce. Nel percorso UART il JPEG passa al Raspberry in blocchi che rilasciano la seriale fra un trasferimento e l'altro; nel percorso Wi-Fi sperimentale passa come file binario su SSH. Il Raspberry controlla la dimensione e lo SHA-256 prima di pubblicarlo.
 5. Il Raspberry pubblica il file integrale su `serra/camera/latest` e il timestamp su `serra/camera/latest_ts`. Home Assistant lo mostra tramite `camera.serra_foto` e, nella configurazione dell'autore, lo copia nell'archivio con `camera.snapshot`.
 
 > [!WARNING] Prima prova
@@ -39,7 +39,7 @@ sudo systemd-run --wait --collect --pipe -p User=pi \
   /usr/local/bin/serra-foto --check
 ```
 
-`--check` deve mostrare `pipeline UART pronta`: verifica dipendenze e variabili, **senza scattare o modificare le luci**. La password della console resta nel file privato `~/.config/serra/root-password`, creato al passo 06; non pubblicarlo. Non serve configurare un indirizzo IP della serra o installare `sshpass`, Pillow o un encoder WebP.
+`--check` deve mostrare `pipeline foto pronta`: verifica dipendenze e variabili, **senza scattare o modificare le luci**. La password della console resta nel file privato `~/.config/serra/root-password`, creato al passo 06; non pubblicarlo. Nel percorso UART non serve configurare un indirizzo IP della serra né installare `sshpass`, Pillow o un encoder WebP.
 
 ## Prima prova
 
@@ -50,6 +50,8 @@ tail -f /tmp/serra-foto.log
 ```
 
 Attendi il messaggio `JPEG integrale pubblicato`. Verifica che le luci siano tornate allo stato precedente e che `camera.serra_foto` mostri la nuova immagine. Sul prototipo il JPEG archiviato da Home Assistant era identico byte per byte a quello sul Raspberry, sempre 640×480. Se lo scatto fallisce, controlla il log e il ripristino delle luci prima di riprovare.
+
+Se il log dice `mix luci ignoto`, lo scatto si è fermato **prima** di accendere i LED fotografici. La fotografia richiede uno stato completo e confermato dei cinque canali: non inventare i valori mancanti. Se hai già verificato che **tutte** le luci sono spente, `serra lights off` imposta esplicitamente tutti i canali a zero e ne registra il mix; altrimenti applica con `serra lights mix` i valori che vuoi mantenere, poi riprova. Una mancata foto può attivare l'avviso d'errore e il ring rosso nell'app Home Assistant dell'autore: risolvi la causa prima di azzerare l'avviso.
 
 ---
 

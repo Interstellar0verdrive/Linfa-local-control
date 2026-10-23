@@ -1250,7 +1250,21 @@ def do_lights(
     intensity = int(clamp(intensity, 0, 100))
     fade = float(max(0.0, fade))
 
-    def _mk_state(ch: str, intensity_pct: int, fade_s: float) -> Dict[str, Any]:
+    def _known_channels() -> Optional[Dict[str, int]]:
+        previous = (_load_state().get("lights", {}) or {})
+        if (previous.get("last") or {}).get("ok") is not True:
+            return None
+        channels = (previous.get("state") or {}).get("channels")
+        if not isinstance(channels, dict):
+            return None
+        try:
+            result = {key: int(channels[key]) for key in ("A", "G", "B", "R", "D")}
+        except (KeyError, TypeError, ValueError):
+            return None
+        return result if all(0 <= value <= 100 for value in result.values()) else None
+
+    def _mk_state(ch: str, intensity_pct: int, fade_s: float,
+                  channels: Optional[Dict[str, int]] = None) -> Dict[str, Any]:
         t = now_ts()
         st: Dict[str, Any] = {
             "channel": ch,
@@ -1259,6 +1273,8 @@ def do_lights(
             "on": bool(intensity_pct > 0),
             **t,
         }
+        if channels is not None:
+            st["channels"] = channels
         if fade_s and fade_s > 0:
             st.update({"transition": "fading"})
             st.update(make_until_timestamps(fade_s))
@@ -1268,22 +1284,29 @@ def do_lights(
         ch = "A"
         cmd = light_cmd(ch, intensity if intensity is not None else 100, fade)
         ok = step(console, f"LIGHTS ON (A, intensity {intensity}%, fade ~{fade}s)", cmd)
+        channels = _known_channels()
+        if channels is not None:
+            channels[ch] = intensity
         _record(
             "lights",
             ok,
-            _mk_state(ch, intensity, fade),
+            _mk_state(ch, intensity, fade, channels if ok else None),
             {"ok": ok, "action": "on", "cmd": cmd, **now_ts()},
         )
         return
 
     if action == "off":
         ch = "A"
-        cmd = light_cmd(ch, 0, fade)
-        ok = step(console, f"LIGHTS OFF (fade ~{fade}s)", cmd)
+        # Lo spegnimento promette TUTTI i LED: invia tutti e cinque i canali.
+        # Un solo `0A...` non prova che G/B/R/D siano spenti e lascia la foto
+        # senza una mappa affidabile da ripristinare dopo lo scatto.
+        channels = {key: 0 for key in ("A", "G", "B", "R", "D")}
+        cmd = _channels_to_cmd(channels, fade)
+        ok = step(console, f"LIGHTS OFF (fade ~{fade}s)", cmd, timeout=6.0)
         _record(
             "lights",
             ok,
-            _mk_state(ch, 0, fade),
+            _mk_state(ch, 0, fade, channels if ok else None),
             {"ok": ok, "action": "off", "cmd": cmd, **now_ts()},
         )
         return
@@ -1297,10 +1320,13 @@ def do_lights(
     ch = channel.upper()
     cmd = light_cmd(ch, intensity, fade)
     ok = step(console, f"LIGHTS SET {ch} (intensity {intensity}%, fade ~{fade}s)", cmd)
+    channels = _known_channels()
+    if channels is not None:
+        channels[ch] = intensity
     _record(
         "lights",
         ok,
-        _mk_state(ch, intensity, fade),
+        _mk_state(ch, intensity, fade, channels if ok else None),
         {"ok": ok, "action": "set", "cmd": cmd, **now_ts()},
     )
 

@@ -107,6 +107,8 @@ def read_lights():
         if raw:
             try:
                 data = json.loads(raw)
+                if (data.get('last') or {}).get('ok') is not True:
+                    raise ValueError('ultimo comando luci non confermato')
                 channels = (data.get('state') or data)['channels']
                 mix = {ch: int(channels[ch.upper()]) for ch in CHANNELS}
                 if all(0 <= v <= 100 for v in mix.values()):
