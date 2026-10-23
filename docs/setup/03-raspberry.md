@@ -133,9 +133,9 @@ done
 
 ---
 
-## Solo UART: permessi seriale (dialout) e device
+## Solo USB: permessi seriale (dialout) e device
 
-Se hai scelto **solo Wi-Fi**, salta questa sezione e vai alla [predisposizione delle cartelle](#predisposizione-cartelle-e-convenzioni). Se userai UART come canale primario o di riserva, eseguila.
+Se hai scelto **solo Wi-Fi**, salta questa sezione e vai alla [predisposizione delle cartelle](#predisposizione-cartelle-e-convenzioni). Se userai USB come canale primario o di riserva, eseguila.
 
 ### Identifica la porta seriale
 
@@ -230,7 +230,7 @@ Alla fine di questo capitolo, il Raspberry deve avere:
 
 <table width="100%" class="step-nav">
   <tr>
-    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="02-wifi.md">← 02A · Wi-Fi</a><br><a href="02-hardware.md">← 02B · UART</a></td>
-    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="04-uart.md">04 · Solo UART →</a><br><a href="05-password-root.md">05 · Solo Wi-Fi →</a></td>
+    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="02-wifi.md">← 02A · Wi-Fi</a><br><a href="02-hardware.md">← 02B · USB</a></td>
+    <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="04-uart.md">04 · Solo USB →</a><br><a href="05-password-root.md">05 · Solo Wi-Fi →</a></td>
   </tr>
 </table>

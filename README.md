@@ -2,7 +2,7 @@
 
 > **English:** The documentation is currently in Italian because Linfa is an Italian product. If an English translation would help you, [open an issue](https://github.com/Interstellar0verdrive/Linfa-local-control/issues/new) or get in touch; I'm happy to translate it if there's interest.
 
-**Una serra Linfa, sotto il tuo controllo.** Questo progetto collega la serra a un Raspberry Pi tramite UART oppure Wi-Fi locale/SSH e porta comandi e stati su MQTT, per usarla con Home Assistant senza dipendere dal cloud per il normale funzionamento.
+**Una serra Linfa, sotto il tuo controllo.** Questo progetto collega la serra a un Raspberry Pi tramite cavo USB seriale oppure Wi-Fi locale e porta comandi e stati su MQTT, per usarla con Home Assistant senza dipendere dal cloud per il normale funzionamento.
 
 La procedura è stata provata su **Linfa Weezy**. Potrebbe funzionare anche sulla Linfa standard, ma questa variante non è ancora stata verificata.
 
@@ -10,13 +10,13 @@ La procedura è stata provata su **Linfa Weezy**. Potrebbe funzionare anche sull
 
 ## La guida
 
-[![Mockup delle pagine 01 Panoramica e obiettivi, 02B Hardware e UART e 07 Bridge MQTT](docs/assets/readme-guide.svg)](https://interstellar0verdrive.github.io/Linfa-local-control/)
+[![Mockup delle pagine 01 Panoramica e obiettivi, 02B Collegamento USB e 07 Bridge MQTT](docs/assets/readme-guide.svg)](https://interstellar0verdrive.github.io/Linfa-local-control/)
 
-La [documentazione navigabile](https://interstellar0verdrive.github.io/Linfa-local-control/) è organizzata in **nove passi, numerati da 01 a 09**. Al passo 02 puoi [provare il Wi-Fi](https://interstellar0verdrive.github.io/Linfa-local-control/setup/02-wifi/) oppure [scegliere UART](https://interstellar0verdrive.github.io/Linfa-local-control/setup/02-hardware/); dal Raspberry in poi il percorso torna comune. Ogni passo termina con una verifica e il collegamento al successivo.
+La [documentazione navigabile](https://interstellar0verdrive.github.io/Linfa-local-control/) è organizzata in **nove passi, numerati da 01 a 09**. Al passo 02 puoi [provare il Wi-Fi](https://interstellar0verdrive.github.io/Linfa-local-control/setup/02-wifi/) oppure [scegliere il cavo USB](https://interstellar0verdrive.github.io/Linfa-local-control/setup/02-hardware/); dal Raspberry in poi il percorso torna comune. Ogni passo termina con una verifica e il collegamento al successivo.
 
 Chi vuole replicare il setup può seguire direttamente questo percorso. L'analisi del traffico cloud, il dump del VoCore e le modifiche facoltative alla configurazione originale sono raccolti negli **approfondimenti**.
 
-Il [controllo via Wi-Fi/SSH](https://interstellar0verdrive.github.io/Linfa-local-control/approfondimenti/percorso-wifi-sperimentale/) è stato provato su una serra **già modificata**, anche dopo il riavvio. L'accesso SSH iniziale a una serra mai modificata **non è verificato**: se non riesce, la guida porta al collegamento UART, che puoi mantenere anche a regime.
+Il [controllo via Wi-Fi/SSH](https://interstellar0verdrive.github.io/Linfa-local-control/approfondimenti/percorso-wifi-sperimentale/) è stato provato su una serra **già modificata**, anche dopo il riavvio. L'accesso SSH iniziale a una serra mai modificata **non è verificato**: se non riesce, la guida porta al collegamento USB, che puoi mantenere anche a regime.
 
 **Prima dei test sui componenti:** verifica il servizio originale `robocontrol/rcc`. I due sistemi non sono stati provati in funzione contemporaneamente. Il [passo 06](https://interstellar0verdrive.github.io/Linfa-local-control/setup/06-controller-cli/#verifica-del-servizio-originale) contiene il controllo, la disattivazione reversibile e la verifica dopo il riavvio. La sequenza è stata ricostruita sui file del prototipo, ma non ancora provata da zero su una seconda serra.
 

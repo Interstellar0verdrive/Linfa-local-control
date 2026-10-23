@@ -100,8 +100,8 @@
               {% for alternative in step_prev_alt %}<a href="{{ alternative.url|url }}"><small>← ALTRO PERCORSO</small><strong>{{ alternative.title }}</strong></a>{% endfor %}
             </div>
             <div class="step-nav-group">
-              <a href="{{ (step_next.url if step_next else '')|url }}"><small>{% if step.number == '01' %}VIA WI-FI{% elif step.number == '03' %}SOLO UART{% elif step_next %}PASSO SUCCESSIVO{% else %}TORNA ALL'INDICE{% endif %} →</small><strong>{{ step_next.title if step_next else 'Indice completo' }}</strong></a>
-              {% for alternative in step_next_alt %}<a href="{{ alternative.url|url }}"><small>{% if step.number == '01' %}VIA UART{% elif step.number == '02A' %}SE SSH NON FUNZIONA · UART{% elif step.number == '03' %}SOLO WI-FI{% else %}ALTRO PERCORSO{% endif %} →</small><strong>{{ alternative.title }}</strong></a>{% endfor %}
+              <a href="{{ (step_next.url if step_next else '')|url }}"><small>{% if step.number == '01' %}VIA WI-FI{% elif step.number == '03' %}SOLO USB{% elif step_next %}PASSO SUCCESSIVO{% else %}TORNA ALL'INDICE{% endif %} →</small><strong>{{ step_next.title if step_next else 'Indice completo' }}</strong></a>
+              {% for alternative in step_next_alt %}<a href="{{ alternative.url|url }}"><small>{% if step.number == '01' %}VIA USB{% elif step.number == '02A' %}SE SSH NON FUNZIONA · USB{% elif step.number == '03' %}SOLO WI-FI{% else %}ALTRO PERCORSO{% endif %} →</small><strong>{{ alternative.title }}</strong></a>{% endfor %}
             </div>
           </nav>
           {% elif is_home %}

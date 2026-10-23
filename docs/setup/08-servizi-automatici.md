@@ -16,11 +16,11 @@ Sul **Raspberry**, se un precedente setup aveva installato il timer di spegnimen
 if systemctl list-unit-files serra-netoff.timer --no-legend | grep -q '^serra-netoff.timer'; then sudo systemctl disable --now serra-netoff.timer; fi
 ```
 
-Poi controlla con `systemctl is-enabled serra-netoff.timer`: **risposta attesa** `disabled` se il timer era installato. Se la risposta è `not-found`, non occorre installarlo. Non avviare manualmente `serra-netoff.service` e non usare `serra net off` mentre il controller deve raggiungere la serra via Wi-Fi. Sul prototipo il timer era ancora abilitato dopo le prove; lo abbiamo disabilitato perché al successivo avvio del Raspberry avrebbe spento il Wi-Fi, anche con la serra correttamente configurata.
+Poi controlla con `systemctl is-enabled serra-netoff.timer`: **risposta attesa** `disabled` se il timer era installato. Se la risposta è `not-found`, non occorre installarlo. Non avviare manualmente `serra-netoff.service` e non usare `serra net off` mentre il controller deve raggiungere la serra via Wi-Fi. Sul prototipo il timer era ancora abilitato dopo le prove; l'ho disabilitato perché al successivo avvio del Raspberry avrebbe spento il Wi-Fi, anche con la serra correttamente configurata.
 
-## Solo UART: disabilitare la Wi-Fi all'avvio della serra {#disabilitare-la-wi-fi-allavvio-della-serra}
+## Solo USB: disabilitare la Wi-Fi all'avvio della serra {#disabilitare-la-wi-fi-allavvio-della-serra}
 
-Quando il prototipo usava **solo UART**, `/etc/init.d/S45net` era stato rinominato `/etc/init.d/OFF_S45net`: lo script `/etc/init.d/rcS` esegue soltanto i file `S??*`, quindi la radio non partiva al boot. Durante le successive prove Wi-Fi abbiamo riabilitato `S45net`, con isolamento dal gateway: **lo stato attuale del prototipo non è più `OFF_S45net`**. Verifica sempre i file sulla tua versione prima di modificarli.
+Quando il prototipo usava **solo USB**, `/etc/init.d/S45net` era stato rinominato `/etc/init.d/OFF_S45net`: lo script `/etc/init.d/rcS` esegue soltanto i file `S??*`, quindi la radio non partiva al boot. Durante le successive prove Wi-Fi ho riabilitato `S45net`, con isolamento dal gateway: **lo stato attuale del prototipo non è più `OFF_S45net`**. Verifica sempre i file sulla tua versione prima di modificarli.
 
 Esegui i prossimi comandi **nella console root della serra via UART**, non nella shell del Raspberry. Conserva il collegamento UART: dopo questa modifica la serra potrebbe non essere più raggiungibile via Wi-Fi. Controlla quali script esistono:
 
@@ -54,11 +54,11 @@ sync
 
 La rete originale tornerà ad avviarsi al successivo riavvio della serra.
 
-Sul prototipo è presente anche il token fittizio `offline-token`, verificato nel file `/opt/data/token`. Era stato impostato per ostacolare l'associazione al cloud originale. È una misura distinta: non spegne la Wi-Fi e non garantisce da sola che il cloud non possa riconoscere la serra tramite altri identificativi. La [procedura per il token e il suo ripristino](../approfondimenti/configurazione-serra.md#cambiare-il-token-della-serra) è facoltativa per il controllo locale via UART; conserva il valore originale prima di modificarlo.
+Sul prototipo è presente anche il token fittizio `offline-token`, verificato nel file `/opt/data/token`. Era stato impostato per ostacolare l'associazione al cloud originale. È una misura distinta: non spegne la Wi-Fi e non garantisce da sola che il cloud non possa riconoscere la serra tramite altri identificativi. La [procedura per il token e il suo ripristino](../approfondimenti/configurazione-serra.md#cambiare-il-token-della-serra) è facoltativa per il controllo locale via USB; conserva il valore originale prima di modificarlo.
 
 ---
 
-## Solo UART: timer di spegnimento aggiuntivo
+## Solo USB: timer di spegnimento aggiuntivo
 
 **Se hai scelto Wi-Fi o `auto`, non eseguire alcun comando in questa sezione.** Il timer interromperebbe il trasporto di rete, anche se `auto` usa UART come canale preferito.
 
@@ -244,7 +244,7 @@ systemctl show serra-water-level.service -p Result -p ExecMainStatus
 
 ### Comandi utili per verificare i timer e services
 
-**Solo UART con radio spenta:** per verificare il timer che invia `net off` dopo il boot del Raspberry:
+**Solo USB con radio spenta:** per verificare il timer che invia `net off` dopo il boot del Raspberry:
 
 ```bash {.terminal-raspberry}
 systemctl status serra-netoff.timer --no-pager

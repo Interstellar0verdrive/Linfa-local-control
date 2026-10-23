@@ -27,9 +27,9 @@ nav:
   - Percorso guidato:
       - '01 · Panoramica e obiettivi': setup/01-panoramica.md
       - '02A · Primo accesso via Wi-Fi': setup/02-wifi.md
-      - '02B · Hardware e UART': setup/02-hardware.md
+      - '02B · Collegamento USB': setup/02-hardware.md
       - '03 · Preparare il Raspberry Pi': setup/03-raspberry.md
-      - '04 · Verificare la console UART': setup/04-uart.md
+      - '04 · Verificare la connessione USB': setup/04-uart.md
       - '05 · Impostare la password root': setup/05-password-root.md
       - '06 · Installare il controller CLI': setup/06-controller-cli.md
       - '07 · Configurare il bridge MQTT': setup/07-bridge-mqtt.md

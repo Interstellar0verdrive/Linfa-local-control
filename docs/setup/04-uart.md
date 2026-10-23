@@ -1,10 +1,10 @@
-# 04 · Verificare la console UART
+# 04 · Verificare la connessione USB
 
 **Percorso guidato:** [Indice dei capitoli](../index.md)
 
-**Questo passo serve solo se hai scelto UART** nel [passo 02B](02-hardware.md), anche se intendi passare al Wi-Fi in seguito. Se sei già entrato via SSH nel [passo 02A](02-wifi.md) e userai solo Wi-Fi, [salta al passo 05](05-password-root.md).
+**Questo passo serve solo se hai scelto USB** nel [passo 02B](02-hardware.md), anche se intendi passare al Wi-Fi in seguito. Se sei già entrato via SSH nel [passo 02A](02-wifi.md) e userai solo Wi-Fi, [salta al passo 05](05-password-root.md).
 
-Prima di eseguire **qualsiasi comando di controllo**, script o policy, è fondamentale verificare che il collegamento UART tra Raspberry e serra funzioni correttamente.
+Prima di eseguire **qualsiasi comando di controllo**, script o policy, è fondamentale verificare che il collegamento USB seriale tra Raspberry e serra funzioni correttamente.
 
 Questa è una **prova con alimentazione**: avviala soltanto dopo aver completato e isolato il cablaggio, richiuso la parte superiore e verificato che elettronica, cavi e alimentatori siano asciutti e lontani da acqua, serbatoi, tubi e pompe. Se devi correggere un collegamento, **scollega prima la spina della serra e l'adattatore USB → TTL dal Raspberry/computer**; non spostare i fili mentre il sistema è alimentato.
 
@@ -46,7 +46,7 @@ Se vedi il boot, hai verificato la **ricezione** dal VoCore verso il Raspberry. 
 
 ---
 
-## Login sulla serra via UART
+## Login sulla serra via USB
 
 Comportamento atteso:
 
@@ -57,13 +57,13 @@ Comportamento atteso:
 
 - Login:
     - user: `root`
-    - password: quella già nota della tua serra; nell'esportazione storica del nostro esemplare era annotata inizialmente come vuota
+    - password: quella già nota della tua serra; nell'esportazione storica del mio esemplare era annotata inizialmente come vuota
 
 Più avanti imposterai una password scelta da te per la serra. Qui `<DEVICE_PASSWORD>` indica quella password se è già stata cambiata.
 
 Alla richiesta di login, inserire `root`
 
-Password: se la serra non è mai stata modificata puoi provare prima **solo INVIO**, come registrato nelle note storiche. Se è stata cambiata, usa la password nota. `vocore` è una credenziale citata per firmware VoCore generici: **non abbiamo verificato che sia quella della Linfa**. Se il login fallisce, non continuare a tentare password casuali; documenta il firmware e chiedi aiuto prima di modificare la serra.
+Password: se la serra non è mai stata modificata puoi provare prima **solo INVIO**, come registrato nelle note storiche. Se è stata cambiata, usa la password nota. `vocore` è una credenziale citata per firmware VoCore generici: **non ho verificato che sia quella della Linfa**. Se il login fallisce, non continuare a tentare password casuali; documenta il firmware e chiedi aiuto prima di modificare la serra.
 
 Se il login va a buon fine, ci si trova **dentro la serra**, senza passare da Wi-Fi o cloud.
 
@@ -136,7 +136,7 @@ Se la console non risponde:
 - ✅ Nessuna modifica persistente sulla serra
 - ✅ Pronti per il controllo esterno via Raspberry
 
-Nel passo 05 userai ancora questa console per impostare la password root della serra. Poi sceglierai se il controller sul Raspberry invierà i comandi via UART, via Wi-Fi o con entrambi disponibili.
+Nel passo 05 userai ancora questa console per impostare la password root della serra. Poi sceglierai se il controller sul Raspberry invierà i comandi via USB, via Wi-Fi o con entrambi disponibili.
 
 ---
 

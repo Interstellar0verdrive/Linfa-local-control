@@ -1,14 +1,14 @@
 # 02A · Primo accesso via Wi-Fi
 
-**Percorso guidato:** [Indice dei capitoli](../index.md) · [Preferisci UART?](02-hardware.md)
+**Percorso guidato:** [Indice dei capitoli](../index.md) · [Preferisci USB?](02-hardware.md)
 
-Qui prepari la **rete locale della serra** e provi a entrare nella sua shell via SSH, senza aprirla. Comandi e foto passeranno poi tra Raspberry e serra sulla LAN; gli stati MQTT sono ricostruiti dal controller sul Raspberry. Home Assistant continuerà a parlare solo con il broker MQTT. Sul nostro esemplare già modificato abbiamo verificato SSH, comandi, foto e isolamento da Internet anche dopo un riavvio. **Non abbiamo verificato le credenziali SSH di una serra originale:** se il login iniziale non riesce, [scegli il collegamento UART](02-hardware.md), anche se vorrai usare il Wi-Fi in seguito.
+Qui prepari la **rete locale della serra** e provi a entrare nella sua shell via SSH, senza aprirla. Comandi e foto passeranno poi tra Raspberry e serra sulla LAN; gli stati MQTT sono ricostruiti dal controller sul Raspberry. Home Assistant continuerà a parlare solo con il broker MQTT. Sul mio esemplare già modificato ho verificato SSH, comandi, foto e isolamento da Internet anche dopo un riavvio. **Non ho verificato le credenziali SSH di una serra originale:** se il login iniziale non riesce, [scegli il collegamento USB](02-hardware.md), anche se vorrai usare il Wi-Fi in seguito.
 
 > [!IMPORTANT] Prima di iniziare
 > Tieni pronti un computer con SSH e Python 3 e accesso al pannello del router; il Raspberry sarà preparato nel passo 03. Scarica la repository sul computer **prima** di scollegare Internet, tramite **Code → Download ZIP** nella pagina GitHub, poi estraila: ti servirà `tools/pair_linfa_wifi.py` soltanto se devi ripetere il pairing. Annota le impostazioni che cambi. Durante il primo collegamento alla rete domestica, **scollega fisicamente la WAN/Internet dal router** e lascia attive la rete locale e l'alimentazione della serra. Non fare affidamento sul solo token fittizio per bloccare Internet.
 
 > [!WARNING] Limite di recupero
-> Senza UART non abbiamo una procedura di recupero verificata se la serra smette di accettare SSH o non torna sulla rete dopo una modifica. Leggi ogni sezione prima di applicarla; se file o risposte sono diversi da quelli descritti, fermati e passa alla [console UART](02-hardware.md).
+> Senza collegamento USB non è stata verificata una procedura di recupero se la serra smette di accettare SSH o non torna sulla rete dopo una modifica. Leggi ogni sezione prima di applicarla; se file o risposte sono diversi da quelli descritti, fermati e passa al [collegamento USB](02-hardware.md).
 
 La serra e il Raspberry devono essere nella **stessa sottorete IPv4** e potersi raggiungere direttamente: la configurazione qui sotto toglie alla serra la rotta verso altre reti. Una rete ospiti che isola i dispositivi tra loro, o una VLAN diversa, non è adatta a questi comandi senza una configurazione di routing ulteriore.
 
@@ -20,17 +20,17 @@ Se la serra era già associata al Wi-Fi di casa, trova il suo indirizzo IP nell'
 ssh root@<SERRA_IP>
 ```
 
-L'indirizzo `<SERRA_IP>` è quello della **serra**, non del Raspberry. Confronta la chiave host mostrata al primo accesso con quella che hai già registrato, se disponibile; se SSH segnala che una chiave nota è cambiata, non ignorare l'avviso. Usa la password root della tua serra. **Non conosciamo una password SSH universale del firmware Robonica.** Se il login funziona, resta nella shell della serra e vai alla [verifica del firmware](#2-verifica-il-firmware-e-conserva-il-token). Se non conosci la password o il server rifiuta il login, passa a [02B · Hardware e UART](02-hardware.md): il reset fisico sul nostro esemplare non ha cancellato la password root.
+L'indirizzo `<SERRA_IP>` è quello della **serra**, non del Raspberry. Confronta la chiave host mostrata al primo accesso con quella che hai già registrato, se disponibile; se SSH segnala che una chiave nota è cambiata, non ignorare l'avviso. Usa la password root della tua serra. **Non conosco una password SSH universale del firmware Robonica.** Se il login funziona, resta nella shell della serra e vai alla [verifica del firmware](#2-verifica-il-firmware-e-conserva-il-token). Se non conosci la password o il server rifiuta il login, passa a [02B · Collegamento USB](02-hardware.md): il reset fisico sul mio esemplare non ha cancellato la password root.
 
 ## Se la serra non è sulla rete: access point temporaneo
 
-La procedura originale mostrava una rete `LINFA_…` per il pairing. Sul nostro esemplare è comparsa dopo il reset **e dopo aver riattivato la radio via UART**, perché l'avevamo disabilitata in precedenza. Una serra originale potrebbe comportarsi diversamente.
+La procedura originale mostrava una rete `LINFA_…` per il pairing. Sul mio esemplare è comparsa dopo il reset **e dopo aver riattivato la radio tramite la console USB**, perché l'avevo disabilitata in precedenza. Una serra originale potrebbe comportarsi diversamente.
 
 1. Con la WAN ancora scollegata, cerca sul computer o sul telefono una rete `LINFA_…`. Se compare, connettiti e annota indirizzo IP e gateway assegnati. Sul firmware provato la serra rispondeva a `192.168.247.1`, ma non assumere che valga per ogni variante.
-2. Se non compare e la serra era già configurata, valuta il pulsante di reset **solo dopo aver letto questa avvertenza**: sul nostro esemplare una pressione prolungata fino al lampeggio bianco ha cancellato i dati di pairing, ripristinato file del software originale e riavviato la serra. Non è un semplice «reset del Wi-Fi». Senza backup potresti perdere impostazioni che non sai ricostruire. Se accetti questo effetto, usa la procedura del [video originale](https://www.youtube.com/watch?v=fwavCyGuwOw), una sola volta, e attendi la rete `LINFA_…`; se non appare, passa a UART.
-3. Collegato alla rete temporanea, prova dal **terminale del computer** `ssh root@<IP_AP_SERRA>` usando come IP il gateway osservato (nell'esemplare provato, `192.168.247.1`). Questa prova **deve riuscire prima** di trattare il Wi-Fi come percorso senza apertura. Se SSH chiede una password che non conosci, rifiuta la password vuota o non è disponibile, passa a UART; ripetere il reset non cambierà necessariamente le credenziali.
+2. Se non compare e la serra era già configurata, valuta il pulsante di reset **solo dopo aver letto questa avvertenza**: sul mio esemplare una pressione prolungata fino al lampeggio bianco ha cancellato i dati di pairing, ripristinato file del software originale e riavviato la serra. Non è un semplice «reset del Wi-Fi». Senza backup potresti perdere impostazioni che non sai ricostruire. Se accetti questo effetto, usa la procedura del [video originale](https://www.youtube.com/watch?v=fwavCyGuwOw), una sola volta, e attendi la rete `LINFA_…`; se non appare, passa al collegamento USB.
+3. Collegato alla rete temporanea, prova dal **terminale del computer** `ssh root@<IP_AP_SERRA>` usando come IP il gateway osservato (nell'esemplare provato, `192.168.247.1`). Questa prova **deve riuscire prima** di trattare il Wi-Fi come percorso senza apertura. Se SSH chiede una password che non conosci, rifiuta la password vuota o non è disponibile, passa al collegamento USB; ripetere il reset non cambierà necessariamente le credenziali.
 
-> [!NOTE] Perché non suggeriamo `vocore` come password certa
+> [!NOTE] Perché `vocore` non è una password certa
 > La password di un firmware VoCore generico non dimostra quella del firmware Robonica. Nell'esportazione storica è annotato un login seriale iniziale senza password, ma il server SSH osservato non è configurato per accettare password vuote. Per questo l'accesso senza apertura resta **da confermare su una serra mai modificata**.
 
 ## 2. Verifica il firmware e conserva il token
@@ -45,7 +45,7 @@ grep -n 'default.script.d' /usr/share/udhcpc/default.script
 ls -l /opt/data/token 2>&1
 ```
 
-Sul firmware provato `uname -m` indica `mips`, `S45net` esiste e contiene **una sola** riga `udhcpc -b -p /var/run/udhcpc.pid -i apcli0` (senza `-s`); `default.script` esegue gli script in `default.script.d`. Se la struttura è diversa, **non applicare i comandi seguenti**: documenta la variante e usa UART per indagarla. Se il token esiste, conservalo in un luogo privato prima del pairing: puoi leggerlo nella tua sessione con `cat /opt/data/token`, ma non copiarlo in issue o screenshot. **Dopo il reset il file può mancare**: sul nostro esemplare `/opt/data` era vuota. Il CGI `/credentials` esaminato accetta e salva qualsiasi token non vuoto; in tal caso scegli un nuovo valore privato per la tua serra e conservalo. Non riutilizzare un token condiviso come `offline-token`.
+Sul firmware provato `uname -m` indica `mips`, `S45net` esiste e contiene **una sola** riga `udhcpc -b -p /var/run/udhcpc.pid -i apcli0` (senza `-s`); `default.script` esegue gli script in `default.script.d`. Se la struttura è diversa, **non applicare i comandi seguenti**: documenta la variante e usa il collegamento USB per indagarla. Se il token esiste, conservalo in un luogo privato prima del pairing: puoi leggerlo nella tua sessione con `cat /opt/data/token`, ma non copiarlo in issue o screenshot. **Dopo il reset il file può mancare**: sul mio esemplare `/opt/data` era vuota. Il CGI `/credentials` esaminato accetta e salva qualsiasi token non vuoto; in tal caso scegli un nuovo valore privato per la tua serra e conservalo. Non riutilizzare un token condiviso come `offline-token`.
 
 Se devi generarne uno, dal **terminale del computer** puoi usare `python3 -c "import secrets; print(secrets.token_urlsafe(24))"` (su Windows, `py -3 -c "import secrets; print(secrets.token_urlsafe(24))"`). Salva il valore in un gestore di password, poi inseriscilo quando lo script di pairing lo chiede. **Non è la password root SSH**: cambiarlo non dà accesso alla shell.
 
@@ -53,7 +53,7 @@ Puoi già [impostare la tua password root nel passo 05](05-password-root.md) tra
 
 ## 3. Prepara l'isolamento locale, con WAN scollegata
 
-Questi comandi sono per la **shell root della serra** e sono stati verificati sulla struttura del firmware del nostro esemplare. Il primo script impedisce al client DHCP di installare il gateway; il secondo elimina un eventuale gateway comparso durante `bound` o `renew`. La serra conserva così l'accesso agli indirizzi della propria sottorete. Il blocco del router, se disponibile, può aggiungere una protezione indipendente.
+Questi comandi sono per la **shell root della serra** e sono stati verificati sulla struttura del firmware del mio esemplare. Il primo script impedisce al client DHCP di installare il gateway; il secondo elimina un eventuale gateway comparso durante `bound` o `renew`. La serra conserva così l'accesso agli indirizzi della propria sottorete. Il blocco del router, se disponibile, può aggiungere una protezione indipendente.
 
 Verifica che la riga da cambiare sia presente **una sola volta** e crea una copia dello script iniziale, fuori da `/etc/init.d`:
 
@@ -137,12 +137,12 @@ ping -c 1 -W 2 <ROUTER_IP>
 Quando LAN e assenza delle rotte esterne sono confermate, ricollega la WAN. Dal computer verifica che Internet funzioni; dalla serra ripeti la lettura delle rotte e prova `ping -c 1 -W 2 1.1.1.1`: sul prototipo la risposta era `Network unreachable`. Un semplice timeout **non** equivale a isolamento verificato. Sul prototipo il Wi-Fi e l'isolamento sono rimasti attivi dopo un riavvio; un rinnovo DHCP ha causato una breve interruzione della LAN, poi recuperata.
 
 > [!TIP] Vuoi UART comunque?
-> Anche se SSH funziona, puoi scegliere [02B · Hardware e collegamenti](02-hardware.md) e tenere UART come canale permanente. Se colleghi entrambi, nel passo 07 potrai scegliere una precedenza; il controller non ripete sull'altro canale un comando dal risultato incerto.
+> Anche se SSH funziona, puoi scegliere [02B · Collegamento USB](02-hardware.md) e tenere il cavo come canale permanente. Se colleghi entrambi, nel passo 07 potrai scegliere una precedenza; il controller non ripete sull'altro canale un comando dal risultato incerto.
 
 ## Continua il percorso
 
 > [!TIP] Controllo
-> **Verifica prima di proseguire:** puoi entrare via SSH come root, conosci la password, la serra raggiunge la LAN e non ha una rotta verso Internet anche dopo il riavvio. Se il primo SSH non è riuscito, continua da [02B · Hardware e collegamenti](02-hardware.md).
+> **Verifica prima di proseguire:** puoi entrare via SSH come root, conosci la password, la serra raggiunge la LAN e non ha una rotta verso Internet anche dopo il riavvio. Se il primo SSH non è riuscito, continua da [02B · Collegamento USB](02-hardware.md).
 
 <table width="100%" class="step-nav">
   <tr>

@@ -1,8 +1,8 @@
-# 02B · Hardware e collegamenti UART
+# 02B · Collegamento USB
 
 **Percorso guidato:** [Indice dei capitoli](../index.md) · [Prova il Wi-Fi](02-wifi.md)
 
-Scegli questa pagina se vuoi usare UART dall'inizio, anche come collegamento permanente, oppure se il [primo accesso SSH](02-wifi.md) non è riuscito. Dopo il cablaggio potrai mantenere UART o preparare il Wi-Fi tramite la console; la scelta del trasporto operativo si fa nel passo 07.
+Scegli questa pagina se vuoi usare il collegamento **USB** dall'inizio, anche in modo permanente, oppure se il [primo accesso Wi-Fi tramite SSH](02-wifi.md) non è riuscito. Il cavo USB dà accesso alla console seriale interna, chiamata **UART**. Dopo il cablaggio puoi mantenere questo collegamento oppure preparare il Wi-Fi tramite la console; la scelta del canale operativo si fa nel passo 07.
 
 > [!CAUTION] Prima di toccare la scheda
 > **Stacca la spina della serra dalla presa e scollega l'adattatore USB → TTL dal Raspberry/computer.** Fallo prima di aprire la parte superiore, identificare o collegare i pin, saldare e forare. Tieni la scheda e i collegamenti lontani da acqua, serbatoi, tubi e pompe. [Leggi tutte le precauzioni](01-panoramica.md#prima-di-intervenire-sicurezza-elettrica-e-acqua) prima di iniziare.
@@ -27,7 +27,7 @@ Il progetto non installa un nuovo firmware; il percorso cambia però la password
 </div>
 
 > [!NOTE] Comportamento originale
-> Il percorso UART non richiede di cambiare token o permessi di `/var/update`, ma **cambia la password root** e può comportare saldature e un foro nella scocca. Nel passo 08 sceglierai se spegnere la radio o mantenerla per il trasporto Wi-Fi. Per tornare alla configurazione precedente occorre ripristinare anche le modifiche fisiche.
+> Il percorso USB non richiede di cambiare token o permessi di `/var/update`, ma **cambia la password root** e può comportare saldature e un foro nella scocca. Nel passo 08 sceglierai se spegnere la radio o mantenerla per il trasporto Wi-Fi. Per tornare alla configurazione precedente occorre ripristinare anche le modifiche fisiche.
 
 Per i dettagli sul modulo: [specifiche VoCore2](https://vocore.io/v2.html).
 
@@ -45,7 +45,7 @@ Il Raspberry Pi è il **controller esterno** e il punto di integrazione con MQTT
 
 - Comunica con la serra via USB → UART; dopo la configurazione puoi scegliere anche SSH via Wi-Fi locale.
 - Esegue la CLI `serra` e il bridge MQTT.
-- Se scegli UART con radio spenta, può inviare il comando aggiuntivo di spegnimento della rete dopo l'avvio del Raspberry. **Non installare quel timer se userai Wi-Fi.**
+- Se scegli USB con radio spenta, può inviare il comando aggiuntivo di spegnimento della rete dopo l'avvio del Raspberry. **Non installare quel timer se userai Wi-Fi.**
 - Pubblica stati e comandi su MQTT.
 
 ## L’adattatore USB → TTL

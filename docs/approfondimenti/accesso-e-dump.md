@@ -13,7 +13,7 @@ Queste operazioni servono per l'esplorazione tecnica. Per il setup segui il [pri
     ssh root@<SERRA_AP_IP>
     ```
 
-    **Non conosciamo le credenziali SSH di una serra originale.** Sul prototipo l'accesso SSH ha richiesto la password impostata in precedenza via UART; il reset fisico non l'ha cancellata. Se non riesci a entrare, continua via UART.
+    **Non conosco le credenziali SSH di una serra originale.** Sul prototipo l'accesso SSH ha richiesto la password impostata in precedenza via UART; il reset fisico non l'ha cancellata. Se non riesci a entrare, continua via UART.
 
 2. Oppure dal terminale del computer collegarsi al Raspberry (collegato via UART) tramite SSH:
 
@@ -62,7 +62,7 @@ Queste operazioni servono per l'esplorazione tecnica. Per il setup segui il [pri
 
     Sostituisci `<RASPBERRY_IP>` con l'indirizzo reale del Raspberry.
 
-8. Per entrare nella serra usa `root` e la password effettiva del dispositivo. Un vecchio appunto menzionava una console seriale senza password, ma non abbiamo verificato una password di fabbrica universale; `vocore` non è stata confermata. Dopo il passo 05 è quella che hai impostato tu.
+8. Per entrare nella serra usa `root` e la password effettiva del dispositivo. Un vecchio appunto menzionava una console seriale senza password, ma non ho verificato una password di fabbrica universale; `vocore` non è stata confermata. Dopo il passo 05 è quella che hai impostato tu.
 9. Per testare se funziona, dare come comando: `echo OK` e premere invio. Si dovrebbe ricevere indietro “OK”
 10. Per vedere i processi in corso, usa `ps` (la BusyBox del dispositivo potrebbe non accettare le opzioni `aux`).
 

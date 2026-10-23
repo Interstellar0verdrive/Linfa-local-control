@@ -21,7 +21,7 @@ Questi sono i file coinvolti nei passi 06–08:
 | /home/pi/.serra_state.json | **Stato runtime (source of truth logica):** cache JSON con ultimo stato noto dei componenti + ultimi comandi. Viene aggiornata dalla CLI ad ogni comando e usata per pubblicare serra/state/... su MQTT (retained). | Viene creata/aggiornata automaticamente dal controller al primo comando (serra ...). Non va caricata manualmente al primo setup.  |
 | /etc/serra-mqtt.env | **Configurazione MQTT**: contiene segreti + parametri runtime | Va creato “a mano” nel Raspberry al primo setup. |
 | /etc/systemd/system/serra-mqtt-bridge.service | Avvia e mantiene attivo il bridge MQTT. | File pronto in `bridge/systemd/`, da installare nel passo 07. |
-| /etc/systemd/system/serra-netoff.service e .timer | Solo percorso UART con radio spenta: inviano uno spegnimento aggiuntivo dopo il boot del Raspberry. | **Non installarli né abilitarli per Wi-Fi o `auto` con Wi-Fi disponibile.** |
+| /etc/systemd/system/serra-netoff.service e .timer | Solo percorso USB con radio spenta: inviano uno spegnimento aggiuntivo dopo il boot del Raspberry. | **Non installarli né abilitarli per Wi-Fi o `auto` con Wi-Fi disponibile.** |
 | /etc/systemd/system/serra-state-sync.service e .timer | Ripubblicano periodicamente lo stato logico. | File pronti in `bridge/systemd/`, da installare nel passo 08. |
 | /etc/systemd/system/serra-uptime.service e .timer | Controllano i riavvii della serra. | File pronti in `bridge/systemd/`, da installare nel passo 08. |
 | /etc/systemd/system/serra-water-level.service | Pubblica il livello acqua su richiesta, dopo la calibrazione. | File pronto in `bridge/systemd/`, da installare nel passo 08. |
@@ -105,7 +105,7 @@ Prima di introdurre il bridge MQTT, verificare che la CLI funzioni **localmente*
 
 ### Verifica del servizio originale
 
-Questi comandi vanno eseguiti nella **shell della serra**, aperta con `picocom` per UART o con `ssh root@<SERRA_IP>` per Wi-Fi. Sul prototipo esaminato, BusyBox `init` avvia `/usr/bin/start-rcc` tramite una voce `respawn` di `/etc/inittab`. Lo script lancia `/usr/bin/node rcc.js`. Il servizio era già fermo durante i primi test della CLI, quindi **la sequenza di arresto qui sotto è stata ricostruita e verificata sui file reali, ma non provata da zero su una seconda serra**. La convivenza tra `rcc` e il nostro controller non è stata verificata.
+Questi comandi vanno eseguiti nella **shell della serra**, aperta con `picocom` per UART o con `ssh root@<SERRA_IP>` per Wi-Fi. Sul prototipo esaminato, BusyBox `init` avvia `/usr/bin/start-rcc` tramite una voce `respawn` di `/etc/inittab`. Lo script lancia `/usr/bin/node rcc.js`. Il servizio era già fermo durante i primi test della CLI, quindi **la sequenza di arresto qui sotto è stata ricostruita e verificata sui file reali, ma non provata da zero su una seconda serra**. La convivenza tra `rcc` e il controller di questo progetto non è stata verificata.
 
 Controlla versione, configurazione e processi prima di cambiare qualcosa:
 
@@ -180,7 +180,7 @@ serra auth save
 
 Il comando la chiede due volte senza mostrarla e crea `~/.config/serra/root-password` con accesso limitato al tuo utente (`600`; cartella `700`). Da quel momento puoi lanciare `serra uptime` e gli altri comandi manuali da nuove sessioni SSH senza reinserirla. Se cambi la password sulla serra, esegui di nuovo `serra auth save`. Non mettere questo file nella repository e non eseguire il comando con `sudo`, altrimenti la credenziale viene salvata per l'utente root del Raspberry.
 
-**Solo UART:** se la porta individuata nel passo 03 non è `/dev/ttyUSB0`, imposta anche il percorso reale **nella stessa sessione** (esempio):
+**Solo USB:** se la porta individuata nel passo 03 non è `/dev/ttyUSB0`, imposta anche il percorso reale **nella stessa sessione** (esempio):
 
 ```bash {.terminal-raspberry}
 export SERRA_UART_PORT=/dev/ttyUSB1
@@ -288,7 +288,7 @@ Il controller usa un file JSON per mantenere lo stato logico: `/home/pi/.serra_s
 Il file viene **creato automaticamente** al primo comando serra.
 
 Non serve quindi caricarlo a mano ora.
-Nel passaggio precedente abbiamo già dato alcuni comandi di test, quindi dovrebbe già esistere.
+Nel passaggio precedente hai già dato alcuni comandi di test, quindi dovrebbe già esistere.
 
 Verifica:
 

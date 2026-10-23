@@ -10,12 +10,12 @@ from urllib.parse import urlsplit
 
 STEPS = [
     ("01", "Panoramica e obiettivi", "setup/01-panoramica.md", "Il progetto in breve: componenti, collegamenti possibili e limiti del controllo locale.", "ORIENTAMENTO", "Hai compreso il ruolo di serra, Raspberry, MQTT e Home Assistant e hai scelto quale collegamento provare."),
-    ("02A", "Primo accesso via Wi-Fi", "setup/02-wifi.md", "Prova SSH, configura la rete locale e verifica che la serra non abbia accesso a Internet.", "RETE LOCALE", "La serra è raggiungibile via SSH sulla LAN, senza rotta verso Internet; oppure hai scelto il percorso UART."),
-    ("02B", "Hardware e UART", "setup/02-hardware.md", "Prepara il collegamento seriale a 3,3 V, dall'adattatore ai pin della scheda superiore.", "COLLEGAMENTO FISICO", "Hai identificato TX, RX e GND, usi un adattatore TTL a 3,3 V e hai lasciato VCC scollegato."),
-    ("03", "Preparare il Raspberry Pi", "setup/03-raspberry.md", "Prepara il sistema e i pacchetti necessari per il collegamento scelto.", "PREPARAZIONE", "Python e i pacchetti richiesti sono pronti; porta seriale e permessi servono solo se userai UART."),
-    ("04", "Verificare la console UART", "setup/04-uart.md", "Se usi UART, apri la console seriale e controlla che il VoCore risponda.", "CONNESSIONE", "La console UART risponde e il login funziona; se usi solo Wi-Fi, hai saltato questo passo."),
-    ("05", "Impostare la password root", "setup/05-password-root.md", "Verifica o imposta la password root tramite la shell raggiunta via UART o SSH.", "CONNESSIONE", "Conosci e hai verificato la password root della serra sul canale scelto."),
-    ("06", "Installare il controller CLI", "setup/06-controller-cli.md", "Installa il controller sul Raspberry e prova i comandi via UART o SSH locale.", "CONTROLLO", "Il controller raggiunge la serra sul canale scelto e hai osservato i comandi di prova."),
+    ("02A", "Primo accesso via Wi-Fi", "setup/02-wifi.md", "Prova SSH, configura la rete locale e verifica che la serra non abbia accesso a Internet.", "RETE LOCALE", "La serra è raggiungibile via SSH sulla LAN, senza rotta verso Internet; oppure hai scelto il percorso USB."),
+    ("02B", "Collegamento USB", "setup/02-hardware.md", "Prepara il collegamento seriale a 3,3 V, dall'adattatore ai pin della scheda superiore.", "COLLEGAMENTO FISICO", "Hai identificato TX, RX e GND, usi un adattatore TTL a 3,3 V e hai lasciato VCC scollegato."),
+    ("03", "Preparare il Raspberry Pi", "setup/03-raspberry.md", "Prepara il sistema e i pacchetti necessari per il collegamento scelto.", "PREPARAZIONE", "Python e i pacchetti richiesti sono pronti; porta seriale e permessi servono solo se userai USB."),
+    ("04", "Verificare la connessione USB", "setup/04-uart.md", "Se usi USB, apri la console seriale e controlla che il VoCore risponda.", "CONNESSIONE", "La console seriale risponde e il login funziona; se usi solo Wi-Fi, hai saltato questo passo."),
+    ("05", "Impostare la password root", "setup/05-password-root.md", "Verifica o imposta la password root tramite la shell raggiunta via USB o Wi-Fi.", "CONNESSIONE", "Conosci e hai verificato la password root della serra sul canale scelto."),
+    ("06", "Installare il controller CLI", "setup/06-controller-cli.md", "Installa il controller sul Raspberry e prova i comandi via USB o Wi-Fi locale.", "CONTROLLO", "Il controller raggiunge la serra sul canale scelto e hai osservato i comandi di prova."),
     ("07", "Configurare il bridge MQTT", "setup/07-bridge-mqtt.md", "Collega il controller al broker MQTT e verifica stati e comandi end-to-end.", "INTEGRAZIONE", "Il servizio bridge è attivo e i topic di stato e comando rispondono."),
     ("08", "Attivare i servizi automatici", "setup/08-servizi-automatici.md", "Verifica la policy di rete del canale scelto e attiva la sincronizzazione periodica dello stato.", "AUTOMAZIONE", "La policy di rete scelta e i servizi periodici sono verificati."),
     ("09", "Collegare Home Assistant", "setup/09-home-assistant.md", "Completa il percorso portando stati e comandi MQTT in Home Assistant.", "COMPLETAMENTO", "Home Assistant riceve gli stati MQTT e puoi inviare un comando di prova."),
@@ -23,7 +23,7 @@ STEPS = [
 
 EXTRAS = {
     "approfondimenti/percorso-wifi-sperimentale.md": ("Prove e limiti del Wi-Fi", "Prove via rete locale, accesso iniziale non verificato e limiti osservati sul prototipo."),
-    "approfondimenti/fotocamera.md": ("Foto della serra", "Scatto e trasferimento della fotografia tramite UART o SSH locale."),
+    "approfondimenti/fotocamera.md": ("Foto della serra", "Scatto e trasferimento della fotografia tramite USB o Wi-Fi locale."),
     "approfondimenti/configurazione-serra.md": ("Wi-Fi, token e aggiornamenti", "Modifiche facoltative alla configurazione interna della serra usate nel prototipo."),
     "approfondimenti/rete-serra.md": ("Rete della serra durante il setup", "Indirizzi, accesso locale e policy di rete secondo il collegamento scelto."),
     "approfondimenti/traffico-cloud.md": ("Analisi del traffico cloud", "Come è stato osservato il dialogo originale tra la serra e il servizio remoto."),

@@ -79,7 +79,7 @@ SERRA_MQTT_CONNECT_TIMEOUT=4
 
 | Collegamento provato nel passo 06 | Righe da impostare in `/etc/serra-mqtt.env` |
 | --- | --- |
-| Solo UART | `SERRA_TRANSPORT=uart`; se la porta non è `/dev/ttyUSB0`, aggiungi `SERRA_UART_PORT=/dev/ttyUSB1` usando il percorso reale. |
+| Solo USB | `SERRA_TRANSPORT=uart`; se la porta non è `/dev/ttyUSB0`, aggiungi `SERRA_UART_PORT=/dev/ttyUSB1` usando il percorso reale. |
 | Solo Wi-Fi | Sostituisci con `SERRA_TRANSPORT=wifi` e aggiungi `SERRA_SSH_HOST=<SERRA_IP>` e `SERRA_SSH_PORT=22`. La serra deve restare raggiungibile in LAN **senza rotta Internet**. |
 | Entrambi disponibili | Usa `SERRA_TRANSPORT=auto`, `SERRA_PRIMARY_TRANSPORT=wifi` (oppure `uart`), `SERRA_SSH_HOST=<SERRA_IP>` e l'eventuale `SERRA_UART_PORT`. Prova **prima separatamente** i due canali. |
 
