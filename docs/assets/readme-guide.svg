@@ -36,7 +36,7 @@
   <path d="M0 836C348 770 480 824 747 880M1170 0c45 192 185 220 430 223" fill="none" stroke="#a3dca9" stroke-opacity=".11" stroke-width="2"/>
   <text x="73" y="56" class="micro" fill="#b9e6bf">LINFA LOCAL CONTROL <tspan fill="#759c7b"> / </tspan> DOCUMENTAZIONE</text>
   <text x="74" y="858" font-size="15" font-weight="650" fill="#bbd1bd">Dal collegamento fisico al controllo locale.</text>
-  <text x="1532" y="858" text-anchor="end" class="micro" fill="#8fb696">CAPITOLI 01—09</text>
+  <text x="1532" y="858" text-anchor="end" class="micro" fill="#8fb696">INSTALLAZIONE 01—09</text>
 
   <!-- Capitolo 02: il cablaggio UART presente nella guida, con ogni collegamento su una riga distinta. -->
   <g transform="translate(48 0)">
@@ -149,7 +149,7 @@
     <text x="95" y="258" class="micro" fill="#94a998">DOCUMENTAZIONE</text>
     <text x="95" y="291" class="sidebar">Indice completo</text>
     <path d="M95 311h150" stroke="#354a39"/>
-    <text x="95" y="340" class="micro" fill="#94a998">CAPITOLI</text>
+    <text x="95" y="340" class="micro" fill="#94a998">INSTALLAZIONE</text>
     <rect x="86" y="355" width="169" height="37" rx="7" fill="#2b4731" stroke="#719d77"/>
     <text x="96" y="379" class="sidebar" fill="#d2efd1">01</text>
     <text x="121" y="379" class="sidebar" fill="#e6f6e4">Panoramica</text>

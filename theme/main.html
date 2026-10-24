@@ -39,8 +39,8 @@
           <a href="{{ ''|url }}"{% if is_home %} class="is-active" aria-current="page"{% endif %}><span aria-hidden="true">⌂</span>Indice completo</a>
         </nav>
         <div class="sidebar-divider"></div>
-        <div class="sidebar-label sidebar-group-label">CAPITOLI</div>
-        <nav class="chapter-nav" aria-label="Capitoli">
+        <div class="sidebar-label sidebar-group-label">INSTALLAZIONE</div>
+        <nav class="chapter-nav" aria-label="Passi di installazione">
           {% for item in steps %}
           <a href="{{ item.url|url }}"{% if step and step.number == item.number %} class="is-active" aria-current="page"{% endif %}><span class="chapter-number">{{ item.number }}</span><span class="chapter-title">{{ item.title }}</span><span class="path-tags" aria-label="Percorso: {{ 'Wi-Fi e USB' if item.paths|length == 2 else 'Wi-Fi' if item.paths[0] == 'wifi' else 'USB' }}">{% for path in item.paths %}<span class="path-tag path-tag-{{ path }}" aria-hidden="true">{{ 'Wi-Fi' if path == 'wifi' else 'USB' }}</span>{% endfor %}</span></a>
           {% endfor %}
