@@ -10,15 +10,15 @@ Questa versione è **sperimentale**. È stata preparata a partire dall'app in us
 
 ## I file necessari
 
-L'app usa anche tre file nella cartella di configurazione di Home Assistant. Sono nella [cartella `ha-config`](ha-config/README.md):
+L'app usa anche tre file nella cartella di configurazione di Home Assistant. Sono nella [cartella `ha-config`](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/app/ha-config/README.md):
 
 | Sorgente | Destinazione in Home Assistant |
 | --- | --- |
-| [`serra_mqtt.yaml`](ha-config/serra_mqtt.yaml) | `/config/packages/linfa_local_control.yaml` |
-| [`serra_piano_parse.py`](ha-config/serra_piano_parse.py) | `/config/serra_piano_parse.py` |
-| [`serra_piano.yaml`](ha-config/serra_piano.yaml) | `/config/serra_piano.yaml` |
+| [`serra_mqtt.yaml`](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/app/ha-config/serra_mqtt.yaml) | `/config/packages/linfa_local_control.yaml` |
+| [`serra_piano_parse.py`](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/app/ha-config/serra_piano_parse.py) | `/config/serra_piano_parse.py` |
+| [`serra_piano.yaml`](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/app/ha-config/serra_piano.yaml) | `/config/serra_piano.yaml` |
 
-Il piano distribuito è quello completo del progetto, derivato da cicli svolti con la serra e adattato dall'autore. Comprende fasi, attività giornaliere, luci, ricircoli, dosi, testi e riferimenti alle guide. Non è una copia integrale di un piano pubblicato da Robonica. Un [piano inattivo](ha-config/serra_piano.example.yaml) è disponibile per una prima prova senza azioni programmate.
+Il piano distribuito è quello completo del progetto, derivato da cicli svolti con la serra e adattato dall'autore. Comprende fasi, attività giornaliere, luci, ricircoli, dosi, testi e riferimenti alle guide. Non è una copia integrale di un piano pubblicato da Robonica. Un [piano inattivo](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/app/ha-config/serra_piano.example.yaml) è disponibile per una prima prova senza azioni programmate.
 
 Home Assistant deve caricare i package. Se non è già configurato, aggiungi in `configuration.yaml`:
 

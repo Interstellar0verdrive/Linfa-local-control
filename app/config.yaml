@@ -1,5 +1,5 @@
 name: Linfa Local Control
-version: "0.9.19"
+version: "0.9.20"
 slug: linfa_local_control
 description: App Home Assistant per la gestione locale delle serre Linfa
 url: https://github.com/Interstellar0verdrive/Linfa-local-control/tree/main/app

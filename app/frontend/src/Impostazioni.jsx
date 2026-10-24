@@ -718,7 +718,7 @@ export default function Impostazioni({ attiva, model, onToast, onNav, onRefresh,
                 sarebbero un doppione. Della vecchia colonna resta solo il
                 wi-fi, che e' un componente della serra come gli altri. */}
             <Riga label="Wi-Fi della serra"
-              hint="Acceso solo quando serve: la centralina lo tiene spento per consumare meno"
+              hint="Se controlli la serra via Wi-Fi, lascialo acceso. Con il cavo USB puoi spegnerlo quando non serve."
               info="È lo stato dell’ultimo comando inviato. Dopo un riavvio della sola serra può restare “attivo” con la radio già spenta: basta rifare il comando.">
               <Toggle on={isOn(st(E.wifi))} disabled={busy || !c1(E.wifi)} assente={!c1(E.wifi)}
                 onChange={(v) => setBool(E.wifi, v, 'Wi-Fi della serra')} />
