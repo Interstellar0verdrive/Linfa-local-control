@@ -1,0 +1,335 @@
+/* Sezione IMPOSTAZIONI — porting design v3 (Fase 4).
+
+   PERCHÉ UN FILE A PARTE: come stato.css / controllo.css / diario.css — il
+   diff della sezione resta disgiunto e i prefissi (.im-*) sono separati per
+   costruzione. Vite concatena tutto in un CSS solo in build.
+
+   I TOKEN restano quelli di app.css (:root globale): qui NON si dichiara
+   nessun colore nuovo. L'accento dei cursori arriva per variabile
+   (--im-accent, default --verde) e le velature si ottengono con color-mix
+   sulla superficie, mai con un fondo transparent.
+
+   Le GEOMETRIE (colonne, altezze dei controlli, corpi tipografici) vengono
+   dallo snapshot "Calendario Ciclo v3.dc.html", blocco IMPOSTAZIONI. */
+
+.im-root {
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column;
+  --im-accent: var(--verde);
+}
+/* fuori sezione resta montata ma sparisce. Doppia classe = vince sul flex. */
+.im-root.sez-off { display: none; }
+
+.im-scroll {
+  flex: 1; min-height: 0; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 14px;
+  padding-right: 4px; padding-bottom: 4px;
+  scrollbar-width: thin; scrollbar-color: var(--fg-3) transparent;
+}
+
+/* nota di blocco / dati mancanti — stessa forma di .cc-block del Controllo */
+.im-block {
+  flex: none; display: flex; align-items: center; gap: 11px;
+  padding: 11px 14px; border-radius: var(--r-12);
+  background: var(--contrast-5); border: 1px dashed var(--contrast-40);
+  font-size: 13px; color: var(--fg-2); text-wrap: pretty;
+}
+
+/* ── Le colonne ─────────────────────────────────────────────────────
+   Il design ne prevede 3 da 1/3 con soglia a 330px; il quarto gruppo
+   (Sistema) entra nello stesso flusso e va a capo da solo. */
+.im-cols { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+
+.im-gruppo {
+  flex: 1 1 calc(33.333% - 11px); min-width: 330px;
+  background: var(--surface-raised); border: 1px solid var(--hairline-strong);
+  border-radius: var(--r-16); box-shadow: var(--shadow-card);
+  padding: 15px 17px 8px;
+}
+.im-gruppo-head {
+  display: flex; align-items: center; gap: 9px; margin-bottom: 6px;
+  font-family: var(--font-display); font-weight: 400; font-size: 18px;
+}
+/* I gruppi sono tre e stanno in tre colonne; il tetto serve comunque a
+   impedire che, se uno di loro finisse da solo su una riga, si allargasse a
+   tutta pagina spezzando la griglia. Vale solo sopra la larghezza in cui i
+   terzi sono piu' larghi della soglia dei 330px — sotto, la crescita libera
+   e' proprio quello che serve. */
+@media (min-width: 1100px) {
+  .im-gruppo { max-width: calc(33.333% - 11px); }
+}
+
+/* ── Riga ───────────────────────────────────────────────────────────── */
+.im-riga {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 12px 0; border-bottom: 1px solid var(--hairline);
+}
+.im-gruppo > .im-riga:last-child { border-bottom: 0; }
+/* riga figlia: rientro + filetto verticale, come nel design (r.571) */
+.im-riga--child { margin-left: 14px; border-left: 1px solid var(--hairline-strong); padding-left: 13px; }
+.im-riga-txt { flex: 1; min-width: 180px; }
+/* l'(i) sta SUBITO DOPO la label, non in fondo alla riga */
+.im-riga-lab { display: flex; align-items: center; gap: 7px; font-size: 13.5px; font-weight: 600; color: var(--fg-1); }  /* gap 7 come .cc-row-k: la (i) ha margin-left -3, l'aria effettiva e' 4px */
+.im-riga-hint { font-size: 11.5px; color: var(--fg-3); text-wrap: pretty; }
+/* riga a controllo largo (taratura pompe): il cursore scende sotto la label */
+.im-riga--wide .im-slider { flex: 1 1 100%; }
+
+.im-val { flex: none; font-size: 13px; color: var(--fg-1); }
+
+/* ── AVVISI ──────────────────────────────────────────────────────────
+   Gemella locale di .cc-nota--gialla (controllo.css): stessi identici valori
+   — fondo pieno --luce, testo --ink, padding 10/12, r-8, peso 500, 11.5px,
+   NIENTE icone. E' la ricetta unica degli avvisi dell'app: se cambia la',
+   cambia qui. Locale e non condivisa per lo stesso motivo per cui i fogli
+   di sezione sono separati (diff disgiunti). */
+.im-nota {
+  flex: 1 1 100%;
+  padding: 10px 12px; border-radius: var(--r-8);
+  background: var(--luce); color: var(--ink);
+  font-weight: 500; font-size: 11.5px; line-height: 1.45; text-wrap: pretty;
+}
+/* la riga che ospita un avviso non porta filetto ne' respiro doppio: il
+   riquadro pieno e' gia' un blocco chiuso, il separatore sotto lo sporcava */
+.im-riga--nota { border-bottom: 0; padding: 2px 0 12px; }
+
+/* ── Bottone "oggi" e rimandi ───────────────────────────────────────── */
+.im-quick {
+  flex: none; height: 32px; padding: 0 13px; border-radius: var(--r-full);
+  border: 1px solid var(--hairline-strong); background: var(--contrast-5);
+  color: var(--fg-1); font-size: 12px; font-weight: 700; cursor: pointer;
+  transition: background .15s ease;
+}
+.im-quick:hover:not(:disabled) { background: var(--contrast-10); }
+.im-quick:disabled { opacity: .45; cursor: default; }
+
+/* bottone di sola icona (apri calendario, chiudi modale, frecce del mese):
+   stessa taglia e stesso fondo del bottone "oggi", senza etichetta */
+.im-ic {
+  flex: none; width: 32px; height: 32px; border-radius: var(--r-full);
+  border: 1px solid var(--hairline-strong); background: var(--contrast-5);
+  color: var(--fg-1); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background .15s ease;
+}
+.im-ic:hover:not(:disabled) { background: var(--contrast-10); }
+.im-ic:disabled { opacity: .45; cursor: default; }
+
+/* rimando a un'altra sezione: e' un bottone, si legge come un link */
+.im-link-btn {
+  flex: none; display: inline-flex; align-items: center; gap: 6px;
+  height: 32px; padding: 0 13px; border-radius: var(--r-full);
+  border: 1px solid var(--hairline-strong); background: var(--contrast-5);
+  color: var(--fg-1); font-size: 12px; font-weight: 700; cursor: pointer;
+  transition: background .15s ease;
+}
+.im-link-btn:hover { background: var(--contrast-10); }
+
+/* ── Segmentato (varietà, ciclo luce) ───────────────────────────────── */
+.im-radio {
+  flex: none; display: flex; gap: 4px; padding: 3px;
+  border-radius: var(--r-full); background: var(--contrast-5);
+  border: 1px solid var(--hairline);
+}
+.im-opt {
+  height: 32px; padding: 0 14px; border: 0; border-radius: var(--r-full);
+  background: transparent; color: var(--fg-2);
+  font-size: 12.5px; font-weight: 700; cursor: pointer; white-space: nowrap;
+  transition: background .18s ease, color .18s ease;
+}
+.im-opt:hover:not(:disabled) { background: var(--contrast-8); color: var(--fg-1); }
+.im-opt.on, .im-opt.on:hover { background: var(--oggi); color: var(--ink); }
+.im-opt:disabled { opacity: .5; cursor: default; }
+
+/* ── Interruttore 52×32 ─────────────────────────────────────────────── */
+.im-sw {
+  flex: none; position: relative; width: 52px; height: 32px;
+  border-radius: var(--r-full); border: 1px solid var(--hairline-strong);
+  background: var(--contrast-10); cursor: pointer; padding: 0;
+  transition: background .18s ease, border-color .18s ease;
+}
+.im-sw-knob {
+  position: absolute; top: 3px; left: 3px; width: 24px; height: 24px;
+  border-radius: var(--r-full); background: var(--fg-2);
+  transition: transform .18s ease, background .18s ease;
+}
+/* ACCESO = AMBRA (--luce), scelta di Alberto: e' il colore "attivo" dell'app
+   (badge LIBERO, azioni armate, avvisi) e il verde qui si confondeva con il
+   verde "tutto a posto" della sezione Stato. Pomello in --ink: nero su ambra
+   e' il contrasto piu' alto disponibile fra i token (il bianco su --luce
+   sarebbe illeggibile). */
+.im-sw.on { background: var(--luce); border-color: var(--luce); }
+.im-sw.on .im-sw-knob { transform: translateX(20px); background: var(--ink); }
+.im-sw:disabled { opacity: .45; cursor: default; }
+/* valore NON pubblicato: pallino a meta' strada e tratteggio — non e'
+   "spento", e' "non si sa" */
+.im-sw.na { background: transparent; border: 1px dashed var(--contrast-40); }
+.im-sw.na .im-sw-knob { transform: translateX(10px); background: var(--fg-3); }
+
+/* ── Orario hh:mm ───────────────────────────────────────────────────── */
+.im-time {
+  flex: none; display: flex; align-items: center; gap: 4px;
+  padding: 5px 9px; border-radius: var(--r-8);
+  border: 1px solid var(--hairline-strong); background: var(--contrast-5);
+}
+.im-time input {
+  width: 26px; background: transparent; border: 0; color: var(--fg-1);
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 14.5px; font-weight: 600; text-align: center; padding: 2px 0; outline: none;
+}
+.im-time input:focus { background: var(--contrast-10); border-radius: 4px; }
+.im-time.off { opacity: .45; }
+
+/* ── Select ─────────────────────────────────────────────────────────── */
+.im-select { flex: none; position: relative; display: flex; align-items: center; }
+.im-select select {
+  appearance: none; height: 36px; padding: 0 34px 0 13px;
+  border-radius: var(--r-8); border: 1px solid var(--hairline-strong);
+  background: var(--contrast-5); color: var(--fg-1);
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 13px; font-weight: 600; cursor: pointer; outline: none;
+}
+.im-select select:disabled { opacity: .45; cursor: default; }
+/* le option sono disegnate dal sistema: fondo scuro esplicito o su alcune
+   piattaforme resterebbero bianche su bianco */
+.im-select option { background: var(--surface-raised); color: var(--fg-1); }
+.im-select svg { position: absolute; right: 10px; pointer-events: none; }
+.im-source-select { flex: 1 1 100%; min-width: 0; }
+.im-source-select select { width: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── Cursore ────────────────────────────────────────────────────────── */
+.im-slider { flex: 1 1 200px; display: flex; align-items: center; gap: 10px; min-width: 180px; }
+.im-track { flex: 1; position: relative; display: flex; align-items: center; height: 22px; }
+.im-track-bg {
+  position: absolute; left: 0; right: 0; top: 50%; height: 4px;
+  transform: translateY(-50%); border-radius: 2px; background: var(--contrast-10);
+}
+.im-track-fill {
+  position: absolute; top: 50%; height: 4px; transform: translateY(-50%);
+  border-radius: 2px; background: var(--im-accent);
+}
+.im-notch {
+  position: absolute; top: 50%; height: 12px; width: 2px;
+  transform: translate(-1px, -50%); background: var(--contrast-40); border-radius: 1px;
+}
+.im-track input[type=range] {
+  position: relative; z-index: 2; width: 100%; height: 22px;
+  appearance: none; background: transparent; margin: 0; cursor: pointer;
+}
+.im-track input[type=range]::-webkit-slider-thumb {
+  appearance: none; width: 16px; height: 16px; border-radius: var(--r-full);
+  background: var(--fg-1); border: 2px solid var(--surface-raised); cursor: pointer;
+}
+.im-track input[type=range]::-moz-range-thumb {
+  width: 16px; height: 16px; border-radius: var(--r-full);
+  background: var(--fg-1); border: 2px solid var(--surface-raised); cursor: pointer;
+}
+.im-track input[type=range]:disabled { cursor: default; }
+.im-slider-val { flex: none; min-width: 62px; text-align: right; font-size: 13px; font-weight: 600; color: var(--fg-1); }
+
+/* ── Fascia "ore di luce" (24 celle) ────────────────────────────────── */
+.im-band { flex: 1 1 100%; min-width: 0; padding-top: 2px; }
+.im-band-cells { display: flex; gap: 1px; height: 26px; border-radius: var(--r-8); overflow: hidden; }
+.im-cell { flex: 1; background: var(--contrast-10); position: relative; }
+.im-cell.lit { background: var(--luce); }
+.im-tick { position: absolute; top: 29px; left: 0; font-size: 9px; color: var(--fg-3); }
+.im-band-legend {
+  display: flex; justify-content: space-between;
+  margin-top: 16px; font-size: 11px; color: var(--fg-2);
+}
+.im-band-legend span { display: inline-flex; align-items: center; gap: 5px; }
+
+/* ── CTA di avvio (azione armata) ───────────────────────────────────── */
+/* Ricetta unica dei bottoni colorati: bordo 1.5px d'accento + fondo
+   miscelato sulla superficie + icona nell'accento. */
+.im-cta {
+  flex: none; display: inline-flex; align-items: center; gap: 8px;
+  height: 40px; padding: 0 18px; border-radius: var(--r-full);
+  border: 1.5px solid var(--verde);
+  background: color-mix(in srgb, var(--verde) 12%, var(--surface-raised));
+  color: var(--verde); font-size: 13.5px; font-weight: 700; cursor: pointer;
+  transition: filter .15s ease, background .15s ease, border-color .15s ease, color .15s ease;
+}
+.im-cta:hover:not(:disabled) { filter: brightness(1.15); }
+.im-cta:disabled { opacity: .45; cursor: default; }
+/* variante DANGER (Cancella coltivazione): stessa geometria e stessa ricetta,
+   accento rosso. Dichiarata PRIMA di .arm: hanno la stessa specificita' e
+   l'ambra dell'armato deve vincere. */
+.im-cta--danger {
+  border-color: var(--errore);
+  background: color-mix(in srgb, var(--errore) 12%, var(--surface-raised));
+  color: var(--errore);
+}
+/* armato = ambra piena, come ogni azione in attesa di conferma nell'app */
+.im-cta.arm { border-color: var(--luce); background: var(--luce); color: var(--ink); }
+
+/* ── Overlay del calendario di semina ───────────────────────────────
+   Stesse misure delle modali di App (.guide-overlay / .guide-modal): scrim
+   con sfocatura, foglio su --surface-raised, ombra pesante, entrata ccSheet
+   (la keyframe vive in app.css ed e' globale). */
+.im-overlay {
+  position: fixed; inset: 0; z-index: 78;
+  background: var(--scrim); backdrop-filter: blur(3px);
+  display: flex; align-items: center; justify-content: center; padding: 18px;
+}
+.im-modale {
+  width: min(360px, 100%);
+  background: var(--surface-raised); border: 1px solid var(--hairline-strong);
+  border-radius: var(--r-16); box-shadow: var(--shadow-card-heavy);
+  padding: 14px 16px 16px; animation: ccSheet .22s ease;
+}
+.im-modale-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.im-modale-tit { font-family: var(--font-display); font-weight: 400; font-size: 17px; }
+
+.im-cal-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.im-cal-mese { font-size: 13.5px; font-weight: 700; text-transform: capitalize; }
+
+.im-cal-gg, .im-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.im-cal-gg span {
+  text-align: center; font-size: 10.5px; font-weight: 800;
+  letter-spacing: .05em; color: var(--fg-3); padding-bottom: 4px;
+}
+.im-cal-v { height: 36px; }
+.im-cal-d {
+  height: 36px; border-radius: var(--r-8); border: 1px solid transparent;
+  background: var(--contrast-5); color: var(--fg-1);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  font-variant-numeric: tabular-nums;
+  transition: background .15s ease, border-color .15s ease;
+}
+.im-cal-d:hover { background: var(--contrast-10); }
+/* OGGI = bordo bianco (stessa convenzione della timeline: oggi si riconosce,
+   non si "seleziona"); la SEMINA in corso ha un puntino d'ambra; la SCELTA
+   e' l'unica piena. Tre stati distinti che possono cadere sulla stessa cella. */
+.im-cal-d.oggi { border-color: var(--oggi); }
+.im-cal-d.cur { color: var(--luce); }
+.im-cal-d.sel, .im-cal-d.sel:hover {
+  background: var(--oggi); color: var(--ink); border-color: var(--oggi);
+}
+
+.im-modale-piede { display: flex; align-items: center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+.im-cal-avviso { flex: 1 1 150px; font-size: 11.5px; color: var(--fg-2); text-wrap: pretty; }
+/* conferma: stessa ricetta dei bottoni colorati (bordo accent + fondo
+   miscelato), in verde perche' e' l'azione che porta a termine */
+.im-cta--ok { height: 36px; padding: 0 15px; font-size: 13px; }
+
+/* ══ MOBILE (≤ 700px) ════════════════════════════════════════════════
+   Una colonna sola; i controlli scendono sotto la label quando la riga non
+   ha piu' larghezza per starci accanto. */
+@media (max-width: 700px) {
+  .im-cols { gap: 12px; }
+  .im-gruppo { flex: 1 1 100%; min-width: 0; padding: 13px 14px 6px; }
+  .im-riga { gap: 10px; padding: 11px 0; }
+  .im-riga-txt { flex: 1 1 100%; min-width: 0; }
+  /* i controlli larghi vanno a capo a tutta riga, gli altri restano
+     allineati a destra sotto la label */
+  .im-slider { flex: 1 1 100%; }
+  .im-radio { margin-left: auto; }
+  .im-sw, .im-time, .im-select, .im-quick, .im-link-btn, .im-cta { margin-left: auto; }
+  /* l'icona-calendario resta attaccata al bottone "oggi": e' lei a doversi
+     spostare a destra, non il "oggi" che la segue */
+  .im-ic { margin-left: auto; }
+  .im-ic + .im-quick { margin-left: 0; }
+  .im-modale { padding: 12px 13px 14px; }
+  .im-modale-piede .im-cta--ok { margin-left: auto; }
+  .im-band { margin-left: 0; }
+}

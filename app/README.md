@@ -1,10 +1,9 @@
-# App Home Assistant: materiali in preparazione
+# Linfa Local Control per Home Assistant
 
-Questa cartella contiene per ora le immagini delle guide contestuali dell'app
-Home Assistant. Il codice e le istruzioni di installazione saranno aggiunti dopo
-la riconciliazione con la configurazione in uso: **questa cartella non è ancora
-un add-on installabile**.
+Interfaccia per comandare una serra Linfa da Home Assistant tramite il bridge MQTT del Raspberry Pi. La connessione tra Raspberry e serra può essere USB oppure Wi-Fi locale: l'interfaccia Home Assistant resta la stessa.
 
-Le immagini sono pubblicate in via provvisoria e potranno essere sostituite.
-Non sono comprese nella licenza MIT del codice; i diritti sulle singole immagini
-restano ai rispettivi titolari.
+Questa è la prima versione distribuibile dell'app. Comprende il sorgente React, il backend, le guide contestuali e i file di configurazione Home Assistant, incluso il [piano di coltivazione completo](ha-config/serra_piano.yaml). Il piano contiene le varianti autofiorente e fotoperiodica, selezionabili nelle impostazioni dell'app.
+
+**Prima di installarla**, leggi [installazione, prerequisiti e passaggio da una copia locale](DOCS.md). L'app non sostituisce il controller e il bridge sul Raspberry, descritti nella [guida passo per passo](https://interstellar0verdrive.github.io/Linfa-local-control/).
+
+Il progetto è indipendente da Robonica S.r.l. e non è affiliato o approvato dal produttore. Le immagini delle guide possono avere diritti separati dalla licenza MIT del codice.

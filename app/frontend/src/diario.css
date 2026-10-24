@@ -1,0 +1,292 @@
+/* Sezione DIARIO — porting design v3 (Fase 4).
+
+   PERCHÉ UN FILE A PARTE: stesso motivo di stato.css e controllo.css — il
+   diff della sezione resta disgiunto da quelli delle altre e i prefissi
+   (.di-* vs .st-* / .cc-*) sono separati per costruzione. Vite concatena
+   tutto in un CSS solo in build: nessun costo di rete aggiunto.
+
+   I TOKEN restano quelli di app.css (:root globale): qui NON si dichiara
+   nessun colore nuovo. L'accento della riga/fase arriva per variabile
+   inline (--di-accent) e ogni velatura si ottiene con color-mix sulla
+   superficie — mai un fondo transparent, che sotto una card velata
+   lascerebbe trasparire quello che c'e' sotto.
+
+   Le GEOMETRIE (altezze, padding, corpi tipografici) vengono dallo snapshot
+   "Calendario Ciclo v3.dc.html", blocco DIARIO. */
+
+.di-root {
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column; gap: 13px;
+}
+/* fuori sezione resta montata (filtri e fasi aperte intatti) ma sparisce.
+   Doppia classe = vince sulla display:flex qui sopra. */
+.di-root.sez-off { display: none; }
+
+/* ── Testata: titolo + sottotitolo + i due gruppi di filtri ─────────── */
+/* E' la FASCIA FERMA della sezione (data-sez-band, vedi app.css): sta fuori
+   dallo scroller, quindi non serve sticky ne' un fondo pieno — il contenuto
+   e' gia' tagliato dal bordo dello scroller e non le passa mai attraverso.
+   La position serve solo a far valere lo z-index della fascia, cosi'
+   l'ombra si posa SOPRA il contenuto che le scorre sotto. */
+.di-head {
+  flex: none; display: flex; align-items: center; gap: 11px; flex-wrap: wrap;
+  position: relative;
+  /* respiro fra le pill dei filtri e la hairline della fascia (che si
+     disegna sul bordo inferiore di QUESTO elemento) */
+  padding-bottom: 10px;
+}
+.di-titolo { font-family: var(--font-display); font-weight: 300; font-size: 21px; }
+.di-sub { font-size: 12.5px; color: var(--fg-3); flex: 1; min-width: 140px; }
+
+/* il segmented e il suo (i) viaggiano insieme: l'(i) e' la chiave di lettura
+   dell'intera sezione e non deve staccarsi dal controllo che spiega */
+.di-filtri-wrap { display: flex; align-items: center; gap: 7px; }  /* gap 7 standard: la (i) ha margin-left -3, aria effettiva 4px */
+/* segmented In evidenza / Routine / Tutto — stessa ricetta di .st-ranges */
+.di-filtri {
+  display: flex; gap: 3px; padding: 3px; border-radius: var(--r-full);
+  background: var(--contrast-5); border: 1px solid var(--hairline);
+}
+.di-filtro {
+  height: 28px; padding: 0 13px; border: 0; border-radius: var(--r-full);
+  background: transparent; color: var(--fg-2);
+  font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;
+  transition: background .18s ease, color .18s ease;
+}
+.di-filtro:hover { background: var(--contrast-8); color: var(--fg-1); }
+.di-filtro.on, .di-filtro.on:hover { background: var(--oggi); color: var(--ink); }
+
+.di-sep { width: 1px; height: 22px; background: var(--hairline-strong); align-self: center; }
+
+/* chip di sottosistema: acceso = bianco pieno, spento = superficie neutra,
+   NON disponibile = tratteggiato e inerte (design r.502-509). */
+.di-tipi { display: flex; gap: 5px; flex-wrap: wrap; }
+.di-tipo {
+  height: var(--ctl-sm); padding: 0 12px; border-radius: var(--r-full);
+  border: 1px solid var(--hairline);
+  background: var(--contrast-5); color: var(--fg-2);
+  font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 6px;
+  transition: background .18s ease, color .18s ease, border-color .18s ease;
+}
+.di-tipo:hover:not(:disabled) { background: var(--contrast-8); color: var(--fg-1); }
+.di-tipo.on, .di-tipo.on:hover { background: var(--oggi); border-color: var(--oggi); color: var(--ink); }
+.di-tipo.vuoto {
+  background: transparent; border: 1px dashed var(--contrast-40);
+  color: var(--fg-3); cursor: default;
+}
+
+/* ── Scroller di sezione (comanda l'ombra della fascia) ─────────────── */
+/* Il bordo di TAGLIO dello scroller deve coincidere con il bordo inferiore
+   della testata (dove si disegna la hairline della fascia): il gap 13px del
+   root lo riporterebbe 13px piu' in basso, lasciando un buco in cui le righe
+   si vedono SOTTO la linea. Quindi: lo scroller risale dentro il gap
+   (margin-top negativo) e restituisce lo spazio come padding interno — a
+   riposo non cambia nulla, in scroll le righe spariscono ESATTAMENTE sotto
+   la hairline. */
+.di-scroll {
+  flex: 1; min-height: 0; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 13px;
+  /* padding-top ridotto a 4: i 10px di respiro ora vivono NEL padding della
+     testata (sopra la hairline), e la distanza a riposo resta ~quella di prima */
+  margin-top: -13px; padding-top: 4px;
+  padding-right: 4px; padding-bottom: 4px;
+  scrollbar-width: thin; scrollbar-color: var(--fg-3) transparent;
+}
+
+/* ── Note di stato (nessun dato / errore) ───────────────────────────── */
+.di-nota {
+  flex: none; display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; border-radius: var(--r-12);
+  font-size: 13px; color: var(--fg-2); text-wrap: pretty;
+}
+.di-nota--lock { background: var(--contrast-5); border: 1px dashed var(--contrast-40); }
+
+/* ── I 4 contatori ──────────────────────────────────────────────────── */
+.di-stats { flex: none; display: flex; gap: 12px; flex-wrap: wrap; }
+.di-stat {
+  flex: 1 1 180px; min-width: 0;
+  display: flex; align-items: center; gap: 11px;
+  padding: 12px 14px;
+  background: var(--surface-raised); border: 1px solid var(--hairline-strong);
+  border-radius: var(--r-12); box-shadow: var(--shadow-card);
+}
+.di-stat-txt { min-width: 0; }
+/* l'(i) sta SUBITO DOPO la label, non in fondo alla riga */
+.di-stat-lab {
+  display: flex; align-items: center; gap: 2px;
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em;
+  font-weight: 800; color: var(--fg-3);
+}
+.di-stat-val { font-size: 13px; font-weight: 600; color: var(--fg-1); white-space: nowrap; }
+
+/* ── Card di fase ───────────────────────────────────────────────────── */
+.di-fase {
+  flex: none; overflow: hidden;
+  background: var(--surface-raised); border: 1px solid var(--hairline-strong);
+  border-radius: var(--r-16); box-shadow: var(--shadow-card);
+}
+.di-fase-head {
+  width: 100%; display: flex; align-items: center; gap: 11px;
+  padding: 13px 16px; border: 0; text-align: left; cursor: pointer;
+  /* velatura dell'accento MISCELATA sulla superficie (mai transparent) */
+  background: color-mix(in srgb, var(--di-accent) 10%, var(--surface-raised));
+  color: inherit; font: inherit;
+  transition: background .15s ease;
+}
+.di-fase-head:hover { background: color-mix(in srgb, var(--di-accent) 16%, var(--surface-raised)); }
+.di-fase-disc {
+  width: 32px; height: 32px; border-radius: var(--r-full); flex: none;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--di-accent); color: var(--ink);
+}
+.di-fase-lab { font-size: 15px; font-weight: 700; color: var(--fg-1); }
+.di-fase-range { font-size: 12px; color: var(--fg-2); white-space: nowrap; }
+.di-fase-n { font-size: 11.5px; color: var(--fg-3); white-space: nowrap; }
+.di-fase-badge {
+  font-size: 9.5px; font-weight: 800; letter-spacing: .06em;
+  padding: 2px 8px; border-radius: var(--r-full);
+  background: var(--di-accent); color: var(--ink);
+}
+.di-fase-body { padding: 0 18px 16px; }
+.di-vuoto { padding-top: 13px; font-size: 12.5px; color: var(--fg-3); }
+
+/* ── Giorno + righe evento ──────────────────────────────────────────── */
+.di-giorno { padding-top: 13px; }
+.di-giorno-head { display: flex; align-items: baseline; gap: 9px; padding-bottom: 7px; }
+.di-giorno-lab { font-size: 12px; font-weight: 800; letter-spacing: .07em; color: var(--fg-1); }
+.di-giorno-sub { font-size: 11.5px; color: var(--fg-3); }
+
+/* Niente filetto fra le righe: a separarle bastano 2px di aria e, dove c'e',
+   il fondo della riga (in evidenza o critica) — che con l'hairline addosso
+   sembrava tagliato. L'aria sta SOTTO ogni riga tranne l'ultima del giorno,
+   cosi' il blocco non avanza un margine spaiato prima del giorno successivo
+   (che porta gia' il suo padding-top). */
+.di-riga {
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px 0; margin-bottom: 2px;
+}
+.di-riga:last-child { margin-bottom: 0; }
+.di-riga-disc {
+  width: 32px; height: 32px; border-radius: var(--r-full); flex: none;
+  display: flex; align-items: center; justify-content: center;
+  /* 12% dell'accento MISCELATO sulla superficie della card: sotto c'e' la
+     velatura della testata di fase, un rgba puro la lascerebbe trasparire */
+  background: color-mix(in srgb, var(--di-accent) 12%, var(--surface-raised));
+}
+.di-riga-ora { flex: none; width: 46px; font-size: 12.5px; color: var(--fg-2); }
+.di-riga-txt { flex: 1; min-width: 0; font-size: 13.5px; color: var(--fg-1); text-wrap: pretty; }
+/* il sottosistema in testa alla riga: e' il soggetto della frase, non un
+   doppione dell'icona — senza, "modalità Pianificata" di Acqua/Luci/Ventole
+   sarebbero tre righe identiche distinte solo dal colore del disco */
+.di-riga-txt b { font-weight: 700; }
+
+/* ── Riga IN EVIDENZA ────────────────────────────────────────────────
+   Fondo appena velato d'ambra (l'accento "attenzione" dell'app) MISCELATO
+   sulla superficie: sotto c'e' gia' la velatura della testata di fase, un
+   rgba puro la lascerebbe trasparire. Niente giallo pieno: quello e'
+   riservato agli avvisi veri (.cc-nota--gialla) e qui griderebbe.
+   La fascia esce dal padding del corpo (margini negativi) cosi' si legge
+   come una banda continua e non come un rettangolo staccato.
+   Vale SEMPRE, anche dentro "Tutto": e' il modo di distinguerle a colpo
+   d'occhio quando le due famiglie sono mescolate. */
+.di-riga--ril {
+  background: var(--contrast-5);   /* bianco semitrasparente, subtle (scelta Alberto: niente tinta ambra) */
+  margin: 0 -9px 2px; padding-left: 9px; padding-right: 9px;
+  border-radius: var(--r-8);
+}
+.di-riga--ril:last-child { margin-bottom: 0; }
+.di-riga--ril .di-riga-ora { color: var(--fg-1); }
+
+/* ── Riga CRITICA ────────────────────────────────────────────────────
+   La famiglia allarme (vedi criticoDi in Diario.jsx): fondo rosso pieno, la
+   stessa banda geometrica della riga in evidenza. Sta DOPO .di-riga--ril di
+   proposito: una riga critica e' quasi sempre anche in evidenza e i due
+   fondi non si sommano — a parita' di specificita' vince l'ultimo, e il
+   rosso deve vincere.
+   Il fondo e' la tinta di --danger-60 MISCELATA sulla superficie invece che
+   sovrapposta: sotto c'e' la velatura della testata di fase, e un rgba puro
+   la lascerebbe trasparire (stessa ragione del disco e della testata). */
+.di-riga--critica {
+  --di-critica-bg: color-mix(in srgb, var(--danger) 60%, var(--surface-raised));
+  background: var(--di-critica-bg);
+  margin: 0 -9px 2px; padding-left: 9px; padding-right: 9px;
+  border-radius: var(--r-8);
+}
+.di-riga--critica:last-child { margin-bottom: 0; }
+.di-riga--critica .di-riga-ora { color: var(--fg-1); }
+/* il disco sul rosso: velo chiaro, non l'accento del sottosistema (sarebbe
+   piu' scuro del fondo e leggerebbe come un buco). Il fondo riga e' opaco,
+   quindi qui il bianco semitrasparente e' prevedibile. */
+.di-riga--critica .di-riga-disc { background: var(--contrast-10); }
+/* la pill "manuale" e' tarata sul grigio: sul rosso sparirebbe */
+.di-riga--critica .di-riga-org {
+  background: var(--contrast-10); border-color: var(--contrast-40); color: var(--fg-1);
+}
+
+/* ── Pill "manuale" ──────────────────────────────────────────────────
+   Compare SOLO quando l'origine dichiarata e' manuale: 'auto' e' la norma e
+   una pill su ogni riga sarebbe rumore. Sobria come il vecchio badge di
+   categoria — bordo e testo, nessun fondo pieno: e' un'informazione di
+   servizio, non un allarme. */
+.di-riga-org {
+  flex: none; font-size: 10px; font-weight: 700; letter-spacing: .04em;
+  padding: 2px 9px; border-radius: var(--r-full);
+  border: 1px solid var(--hairline-strong);
+  background: var(--contrast-5); color: var(--fg-2);
+}
+
+/* ── "Carica gli eventi più vecchi" ─────────────────────────────────── */
+.di-altri {
+  flex: none; align-self: center;
+  display: inline-flex; align-items: center; gap: 8px;
+  height: var(--ctl-sm); padding: 0 16px; border-radius: var(--r-full);
+  border: 1px solid var(--hairline-strong); background: var(--surface-raised);
+  color: var(--fg-1); font-size: 12.5px; font-weight: 700; cursor: pointer;
+  transition: background .15s ease;
+}
+.di-altri:hover:not(:disabled) { background: var(--surface-elevated); }
+.di-altri:disabled { opacity: .5; cursor: default; }
+
+/* ── Coda: perimetro del diario + rimando al Piano ──────────────────── */
+.di-cap { flex: none; font-size: 11.5px; color: var(--fg-3); text-wrap: pretty; padding: 0 2px; }
+.di-link {
+  padding: 0; border: 0; background: none; font: inherit; cursor: pointer;
+  color: var(--fg-2); text-decoration: underline; text-underline-offset: 2px;
+  text-decoration-color: var(--fg-3); transition: color .15s ease, text-decoration-color .15s ease;
+}
+.di-link:hover, .di-link:focus-visible { color: var(--fg-1); text-decoration-color: var(--fg-1); }
+
+/* ══ MOBILE (≤ 700px) ════════════════════════════════════════════════
+   Il diario resta una lista: cambia l'impaginazione della testata (titolo
+   sopra, filtri sotto a tutta larghezza) e la riga evento, che a 375px non
+   ha spazio per disco + ora + testo + pill sulla stessa riga. */
+@media (max-width: 700px) {
+  .di-head { gap: 9px; }
+  .di-titolo { font-size: 19px; }
+  .di-sub { flex: 1 1 100%; order: 2; min-width: 0; }
+  .di-filtri-wrap { order: 3; }
+  /* il divisore verticale non ha senso quando i due gruppi vanno a capo */
+  .di-sep { display: none; }
+  .di-tipi { order: 4; flex: 1 1 100%; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 2px; scrollbar-width: thin; scrollbar-color: var(--fg-3) transparent; }
+
+  .di-stats { gap: 9px; }
+  .di-stat { flex: 1 1 calc(50% - 5px); padding: 10px 12px; gap: 9px; }
+
+  .di-fase-head { padding: 11px 13px; gap: 9px; flex-wrap: wrap; }
+  /* riga 1 = disco + nome + badge + chevron (order 0, lo spacer li separa);
+     range e conteggio scendono INSIEME sulla riga 2 (order 5/6, larghezza
+     auto: due voci brevi affiancate, non due righe sprecate) */
+  .di-fase-range { order: 5; flex: 0 1 auto; }
+  .di-fase-n { order: 6; flex: 0 1 auto; }
+  .di-fase-body { padding: 0 13px 13px; }
+
+  /* riga a due livelli: disco+ora+pill in alto, testo sotto a tutta riga */
+  .di-riga { flex-wrap: wrap; gap: 9px; padding: 9px 0; }
+  .di-riga--ril,
+  .di-riga--critica { margin: 0 -7px 2px; padding-left: 7px; padding-right: 7px; }
+  .di-riga--ril:last-child,
+  .di-riga--critica:last-child { margin-bottom: 0; }
+  .di-riga-disc { width: 28px; height: 28px; }
+  .di-riga-txt { flex: 1 1 100%; order: 4; font-size: 13px; }
+  .di-riga-org { margin-left: auto; }
+}

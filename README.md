@@ -6,7 +6,7 @@
 
 La procedura è stata provata su **Linfa Weezy**. Potrebbe funzionare anche sulla Linfa standard, ma questa variante non è ancora stata verificata.
 
-[**Apri la guida passo per passo →**](https://interstellar0verdrive.github.io/Linfa-local-control/) · [Esplora il controller](bridge/) · [Stato dell'app Home Assistant](#stato-del-progetto)
+[**Apri la guida passo per passo →**](https://interstellar0verdrive.github.io/Linfa-local-control/) · [Esplora il controller](bridge/) · [App Home Assistant](app/DOCS.md)
 
 ## La guida
 
@@ -28,13 +28,13 @@ La [tabella dei comandi](https://interstellar0verdrive.github.io/Linfa-local-con
 | --- | --- |
 | Guida hardware e setup | **Pubblicata** — [inizia dal capitolo 01](https://interstellar0verdrive.github.io/Linfa-local-control/setup/01-panoramica/) |
 | Controller CLI e bridge MQTT | **Disponibili** nella cartella [`bridge/`](bridge/) |
-| App completa per Home Assistant | **Pronta, in fase di test.** Verrà caricata e rilasciata qui a breve; non è ancora inclusa nella repository. |
+| App completa per Home Assistant | **Versione sperimentale** nella cartella [`app/`](app/). Include l'interfaccia e il piano di coltivazione completo con varianti autofiorente e fotoperiodica. Leggi le [istruzioni di installazione](app/DOCS.md) prima di usarla. |
 
 ### Anteprima dell'app Home Assistant
 
 [![Anteprima della vista Coltivazione dell'app Home Assistant: fasi di crescita, timeline e attività del giorno](docs/assets/home-assistant-coltivazione-preview.webp)](docs/assets/home-assistant-coltivazione-preview.webp)
 
-*Vista Coltivazione della versione in test. L'interfaccia potrà cambiare prima del rilascio.*
+*Vista Coltivazione della versione sperimentale. L'interfaccia potrà cambiare.*
 
 Il controller usa la shell del VoCore2 via seriale oppure SSH locale; il Raspberry fa da ponte con MQTT. Gli stati pubblicati rappresentano soprattutto l'**ultimo stato logico noto**, non una misura hardware sempre affidabile. Il [file di configurazione di esempio](bridge/serra-mqtt.env.example) mostra come scegliere il trasporto sul proprio Raspberry.
 

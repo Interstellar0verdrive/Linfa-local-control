@@ -1,0 +1,56 @@
+# ESEMPIO INERTE. Copia in /config/serra_piano.yaml solo dopo aver letto
+# la guida di installazione. Le durate e le soglie qui sotto sono illustrative:
+# non sono una ricetta di coltivazione per una specie o una varietà.
+# Luci a zero, nessun ricircolo pianificato, nessuna dose e nessun evento:
+# anche se avvii una coltivazione, il piano non deve azionare luci o pompe.
+# Mantieni spenti i dosatori automatici finché non hai configurato e
+# verificato personalmente pompe, calibrazioni, sensori e dosi.
+
+fasi:
+  germinazione: {giorni: 7}
+  vegetativa: {giorni: 21}
+  fioritura: {giorni: 42, giorni_foto: 42}
+  flush: {giorni: 14, giorni_foto: 14}
+  essiccazione: {giorni: 14}
+
+eventi:
+  germinazione: []
+  vegetativa: []
+  fioritura: []
+  flush: []
+  essiccazione: []
+
+# Ordine dei cinque canali: D, R, B, G, A.
+luci:
+  germinazione: [0, 0, 0, 0, 0]
+  vegetativa: [0, 0, 0, 0, 0]
+  fioritura: [0, 0, 0, 0, 0]
+  flush: [0, 0, 0, 0, 0]
+  essiccazione: [0, 0, 0, 0, 0]
+
+# "ore" contiene offset dall'accensione delle luci; [] = nessun ricircolo.
+# "durata" resta positiva perché il parser la richiede anche con ore vuote.
+acqua:
+  germinazione: {ore: [], durata: 5}
+  vegetativa: {ore: [], durata: 5}
+  fioritura: {ore: [], durata: 5}
+  flush: {ore: [], durata: 5}
+  essiccazione: {ore: [], durata: 5}
+
+# Soglie dimostrative per la visualizzazione. Prima di attivare la gestione
+# automatica del clima, scegli sensori affidabili e imposta valori adatti.
+ambiente:
+  germinazione: {soglia_umidita: 75, soglia_temp: 30, umid_min: 40, temp_min: 18}
+  vegetativa: {soglia_umidita: 75, soglia_temp: 30, umid_min: 40, temp_min: 18}
+  fioritura: {soglia_umidita: 75, soglia_temp: 30, umid_min: 40, temp_min: 18}
+  flush: {soglia_umidita: 75, soglia_temp: 30, umid_min: 40, temp_min: 18}
+  essiccazione: {soglia_umidita: 75, soglia_temp: 30, umid_min: 40, temp_min: 18}
+
+# Tutte le dosi sono zero. Non abilitare i dosatori automatici usando questo
+# esempio; la calibrazione dei dosatori e le dosi richiedono verifica separata.
+nutrienti:
+  germinazione: [{grow: 0, micro: 0, bloom: 0, ec: "—"}]
+  vegetativa: [{grow: 0, micro: 0, bloom: 0, ec: "—"}]
+  fioritura: [{grow: 0, micro: 0, bloom: 0, ec: "—"}]
+  flush: [{grow: 0, micro: 0, bloom: 0, ec: "—"}]
+  essiccazione: [{grow: 0, micro: 0, bloom: 0, ec: "—"}]
