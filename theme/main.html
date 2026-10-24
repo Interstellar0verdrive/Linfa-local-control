@@ -97,12 +97,12 @@
           {% if step.number == '05' %}<p class="route-hint"><strong>Quale passo scegliere:</strong> se USB ti è servito solo per entrare e vuoi usare Wi-Fi, torna al <a href="{{ 'setup/02-wifi/'|url }}">passo 02A</a> per completare rete e isolamento. Negli altri casi passa al 06.</p>{% elif route_hint %}<p class="route-hint"><strong>Quale passo scegliere:</strong> {{ route_hint }}</p>{% endif %}
           <nav class="step-nav" aria-label="Passi della guida">
             <div class="step-nav-group">
-              <a href="{{ (step_prev.url if step_prev else '')|url }}"><small>← {% if step.number == '03' %}DAL PERCORSO WI-FI{% elif step.number == '05' %}DAL PERCORSO USB{% elif step_prev %}PASSO PRECEDENTE{% else %}TORNA ALL'INDICE{% endif %}</small><strong>{{ step_prev.title if step_prev else 'Indice completo' }}</strong></a>
-              {% for alternative in step_prev_alt %}<a href="{{ alternative.url|url }}"><small>← {% if step.number == '03' %}DAL PERCORSO USB{% elif step.number == '05' %}DAL PERCORSO WI-FI{% else %}ALTRO PERCORSO{% endif %}</small><strong>{{ alternative.title }}</strong></a>{% endfor %}
+              <a href="{{ (step_prev.url if step_prev else '')|url }}"><small>← {% if step.number == '03' %}DAL PERCORSO WI-FI{% elif step.number == '05' %}DAL PERCORSO USB{% elif step_prev %}PASSO PRECEDENTE{% else %}TORNA ALL'INDICE{% endif %}</small><strong>{% if step_prev %}{{ step_prev.number }} · {{ step_prev.title }}{% else %}Indice completo{% endif %}</strong></a>
+              {% for alternative in step_prev_alt %}<a href="{{ alternative.url|url }}"><small>← {% if step.number == '03' %}DAL PERCORSO USB{% elif step.number == '05' %}DAL PERCORSO WI-FI{% else %}ALTRO PERCORSO{% endif %}</small><strong>{{ alternative.number }} · {{ alternative.title }}</strong></a>{% endfor %}
             </div>
             <div class="step-nav-group">
-              <a href="{{ (step_next.url if step_next else '')|url }}"><small>{% if step.number == '01' %}VIA WI-FI{% elif step.number == '03' %}SOLO USB{% elif step_next %}PASSO SUCCESSIVO{% else %}TORNA ALL'INDICE{% endif %} →</small><strong>{{ step_next.title if step_next else 'Indice completo' }}</strong></a>
-              {% for alternative in step_next_alt %}<a href="{{ alternative.url|url }}"><small>{% if step.number == '01' %}VIA USB{% elif step.number == '02A' %}SE SSH NON FUNZIONA · USB{% elif step.number == '03' %}SOLO WI-FI{% else %}ALTRO PERCORSO{% endif %} →</small><strong>{{ alternative.title }}</strong></a>{% endfor %}
+              <a href="{{ (step_next.url if step_next else '')|url }}"><small>{% if step.number == '01' %}VIA WI-FI{% elif step.number == '03' %}SOLO USB{% elif step_next %}PASSO SUCCESSIVO{% else %}TORNA ALL'INDICE{% endif %} →</small><strong>{% if step_next %}{{ step_next.number }} · {{ step_next.title }}{% else %}Indice completo{% endif %}</strong></a>
+              {% for alternative in step_next_alt %}<a href="{{ alternative.url|url }}"><small>{% if step.number == '01' %}VIA USB{% elif step.number == '02A' %}SE SSH NON FUNZIONA · USB{% elif step.number == '03' %}SOLO WI-FI{% else %}ALTRO PERCORSO{% endif %} →</small><strong>{{ alternative.number }} · {{ alternative.title }}</strong></a>{% endfor %}
             </div>
           </nav>
           {% elif is_home %}
