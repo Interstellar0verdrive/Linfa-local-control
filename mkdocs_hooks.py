@@ -127,8 +127,9 @@ def on_page_content(content, page, config, files):
 
 def on_page_context(context, page, config, nav):
     uri = page.file.src_uri
+    path_by_number = {"02A": ["wifi"], "02B": ["usb"], "04": ["usb"]}
     steps = [
-        {"number": number, "progress": int(number[:2]) / 9 * 100, "title": title, "src": src, "url": src.removesuffix(".md") + "/", "summary": summary, "phase": phase, "check": check}
+        {"number": number, "progress": int(number[:2]) / 9 * 100, "title": title, "src": src, "url": src.removesuffix(".md") + "/", "summary": summary, "phase": phase, "check": check, "paths": path_by_number.get(number, ["wifi", "usb"])}
         for number, title, src, summary, phase, check in STEPS
     ]
     by_number = {item["number"]: item for item in steps}
@@ -160,6 +161,12 @@ def on_page_context(context, page, config, nav):
     context["step_prev_alt"] = [by_number[number] for number in previous[1:]]
     context["step_next"] = by_number[following[0]] if following else None
     context["step_next_alt"] = [by_number[number] for number in following[1:]]
+    route_hints = {
+        "01": "Se vuoi provare a entrare senza aprire la serra, scegli 02A · Wi-Fi. Se preferisci il collegamento cablato, scegli 02B · USB.",
+        "02A": "Se SSH funziona e la serra è isolata da Internet, prosegui al passo 03. Se SSH non funziona o preferisci il cavo, scegli 02B · USB.",
+        "03": "Se userai USB, anche solo come canale di riserva, passa al 04 per verificare il cavo. Se userai soltanto Wi-Fi e SSH funziona già, salta il 04 e vai al 05.",
+    }
+    context["route_hint"] = route_hints.get(steps[current]["number"]) if current is not None else None
     context["is_home"] = uri == "index.md"
     context["page_title"] = steps[current]["title"] if current is not None else REFERENCES.get(uri, EXTRAS.get(uri, ("Guida passo per passo",)))[0]
     context["page_summary"] = steps[current]["summary"] if current is not None else REFERENCES.get(uri, EXTRAS.get(uri, (None, "Dalla preparazione hardware al controllo locale con Home Assistant.")))[1]

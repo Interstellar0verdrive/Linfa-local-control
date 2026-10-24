@@ -42,7 +42,7 @@
         <div class="sidebar-label sidebar-group-label">CAPITOLI</div>
         <nav class="chapter-nav" aria-label="Capitoli">
           {% for item in steps %}
-          <a href="{{ item.url|url }}"{% if step and step.number == item.number %} class="is-active" aria-current="page"{% endif %}><span>{{ item.number }}</span>{{ item.title }}</a>
+          <a href="{{ item.url|url }}"{% if step and step.number == item.number %} class="is-active" aria-current="page"{% endif %}><span class="chapter-number">{{ item.number }}</span><span class="chapter-title">{{ item.title }}</span><span class="path-tags" aria-label="Percorso: {{ 'Wi-Fi e USB' if item.paths|length == 2 else 'Wi-Fi' if item.paths[0] == 'wifi' else 'USB' }}">{% for path in item.paths %}<span class="path-tag path-tag-{{ path }}" aria-hidden="true">{{ 'Wi-Fi' if path == 'wifi' else 'USB' }}</span>{% endfor %}</span></a>
           {% endfor %}
         </nav>
         <div class="sidebar-divider"></div>
@@ -94,10 +94,11 @@
 
           {% if step %}
           <aside class="completion-callout"><span class="completion-mark" aria-hidden="true">✓</span><div><strong>{% if step_next %}Prima di proseguire{% else %}Percorso completato{% endif %}</strong><p>{{ step.check }}</p></div></aside>
+          {% if step.number == '05' %}<p class="route-hint"><strong>Quale passo scegliere:</strong> se USB ti è servito solo per entrare e vuoi usare Wi-Fi, torna al <a href="{{ 'setup/02-wifi/'|url }}">passo 02A</a> per completare rete e isolamento. Negli altri casi passa al 06.</p>{% elif route_hint %}<p class="route-hint"><strong>Quale passo scegliere:</strong> {{ route_hint }}</p>{% endif %}
           <nav class="step-nav" aria-label="Passi della guida">
             <div class="step-nav-group">
-              <a href="{{ (step_prev.url if step_prev else '')|url }}"><small>← {% if step_prev %}PASSO PRECEDENTE{% else %}TORNA ALL'INDICE{% endif %}</small><strong>{{ step_prev.title if step_prev else 'Indice completo' }}</strong></a>
-              {% for alternative in step_prev_alt %}<a href="{{ alternative.url|url }}"><small>← ALTRO PERCORSO</small><strong>{{ alternative.title }}</strong></a>{% endfor %}
+              <a href="{{ (step_prev.url if step_prev else '')|url }}"><small>← {% if step.number == '03' %}DAL PERCORSO WI-FI{% elif step.number == '05' %}DAL PERCORSO USB{% elif step_prev %}PASSO PRECEDENTE{% else %}TORNA ALL'INDICE{% endif %}</small><strong>{{ step_prev.title if step_prev else 'Indice completo' }}</strong></a>
+              {% for alternative in step_prev_alt %}<a href="{{ alternative.url|url }}"><small>← {% if step.number == '03' %}DAL PERCORSO USB{% elif step.number == '05' %}DAL PERCORSO WI-FI{% else %}ALTRO PERCORSO{% endif %}</small><strong>{{ alternative.title }}</strong></a>{% endfor %}
             </div>
             <div class="step-nav-group">
               <a href="{{ (step_next.url if step_next else '')|url }}"><small>{% if step.number == '01' %}VIA WI-FI{% elif step.number == '03' %}SOLO USB{% elif step_next %}PASSO SUCCESSIVO{% else %}TORNA ALL'INDICE{% endif %} →</small><strong>{{ step_next.title if step_next else 'Indice completo' }}</strong></a>

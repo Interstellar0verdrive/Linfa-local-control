@@ -4,16 +4,16 @@
 
 Obiettivo di questa sezione: preparare un Raspberry Pi “vergine” (solo OS + rete) con tutto l’ambiente necessario per:
 
-- aprire la console UART della serra **solo se hai scelto quel percorso**
+- aprire la console seriale della serra **solo se hai scelto il percorso USB**
 - raggiungere la serra via SSH sulla LAN **solo se hai scelto Wi-Fi**
 - eseguire script Python (controller e bridge, che verranno copiati nel passo 06)
 - parlare con MQTT (lato Python + strumenti CLI per test)
 - predisporre permessi e cartelle standard
 
 > [!IMPORTANT] Da sapere prima di iniziare
-> Prima di iniziare: Raspberry con Debian/Raspberry Pi OS aggiornabile via APT, connesso alla rete domestica e un utente con `sudo`. L'adattatore USB→TTL serve **solo se hai scelto UART**. **Gli esempi usano l'utente `pi` e il percorso `/home/pi`: scegli `pi` durante la preparazione del sistema oppure sostituisci entrambi con il tuo nome utente e la tua home in tutti i comandi.** La password del Raspberry è distinta dalla password root della serra.
+> Prima di iniziare: Raspberry con Debian/Raspberry Pi OS aggiornabile via APT, connesso alla rete domestica e un utente con `sudo`. L'adattatore USB→TTL serve **solo se hai scelto USB**. **Gli esempi usano l'utente `pi` e il percorso `/home/pi`: scegli `pi` durante la preparazione del sistema oppure sostituisci entrambi con il tuo nome utente e la tua home in tutti i comandi.** La password del Raspberry è distinta dalla password root della serra.
 
-Se hai provato il passo 02A con la WAN del router scollegata e hai poi scelto UART, **ricollega Internet solo dopo aver spento la radio della serra oppure verificato il suo isolamento**. Per usare APT e GitHub il Raspberry deve invece poter raggiungere Internet. Se non puoi ancora isolarla, lascia spenta la serra o scollegala dall'alimentazione mentre prepari il Raspberry.
+Se hai provato il passo 02A con la WAN del router scollegata e hai poi scelto USB, **ricollega Internet solo dopo aver spento la radio della serra oppure verificato il suo isolamento**. Per usare APT e GitHub il Raspberry deve invece poter raggiungere Internet. Se non puoi ancora isolarla, lascia spenta la serra o scollegala dall'alimentazione mentre prepari il Raspberry.
 
 ---
 
@@ -66,13 +66,13 @@ sudo apt install -y \
   curl
 ```
 
-Se hai scelto **UART**, installa anche `picocom`. Se hai scelto **Wi-Fi**, installa `openssh-client` e `sshpass`:
+Se hai scelto **USB**, installa anche `picocom`. Se hai scelto **Wi-Fi**, installa `openssh-client` e `sshpass`:
 
 ```bash {.terminal-raspberry}
 sudo apt install -y picocom
 ```
 
-**Esegui il blocco sopra solo per UART.** Per Wi-Fi esegui invece:
+**Esegui il blocco sopra solo per USB.** Per Wi-Fi esegui invece:
 
 ```bash {.terminal-raspberry}
 sudo apt install -y openssh-client sshpass
@@ -129,7 +129,7 @@ for tool in python3 git jq mosquitto_pub mosquitto_sub pip3; do
 done
 ```
 
-**Risposta attesa:** una riga per strumento con il suo percorso. `python3`, `git`, `jq`, `mosquitto_pub` e `mosquitto_sub` devono essere disponibili. `pip3: non trovato` è normale se hai saltato pip. Per UART verifica anche `command -v picocom`; per Wi-Fi verifica `command -v ssh` e `command -v sshpass`.
+**Risposta attesa:** una riga per strumento con il suo percorso. `python3`, `git`, `jq`, `mosquitto_pub` e `mosquitto_sub` devono essere disponibili. `pip3: non trovato` è normale se hai saltato pip. Per USB verifica anche `command -v picocom`; per Wi-Fi verifica `command -v ssh` e `command -v sshpass`.
 
 ---
 
@@ -183,7 +183,7 @@ mkdir -p /home/pi/serra/_bak
 Suggerimento pratico:
 
 - nel passo 06 copierai `serra_controller.py` e `serra_mqtt_bridge.py` in `/home/pi/`
-- useremo poi un symlink per rendere disponibile il comando `serra`.
+- nel passo 06 creerai un collegamento per rendere disponibile il comando `serra`.
 
 ---
 
@@ -216,9 +216,9 @@ Alla fine di questo capitolo, il Raspberry deve avere:
 - ✅ sistema aggiornato
 - ✅ python3 funzionante
 - ✅ moduli python3-serial e python3-paho-mqtt disponibili (import OK)
-- ✅ picocom installato per UART **oppure** `ssh` e `sshpass` per Wi-Fi
+- ✅ picocom installato per USB **oppure** `ssh` e `sshpass` per Wi-Fi
 - ✅ mosquitto-clients installato (per test futuri)
-- ✅ utente scelto per i servizi (negli esempi, `pi`) in gruppo `dialout` **se usa UART**
+- ✅ utente scelto per i servizi (negli esempi, `pi`) in gruppo `dialout` **se usa USB**
 - ✅ cartelle predisposte per i file del progetto
 
 ---
@@ -226,11 +226,13 @@ Alla fine di questo capitolo, il Raspberry deve avere:
 ## Continua il percorso
 
 > [!TIP] Controllo
-> **Verifica prima di proseguire:** Python e i pacchetti richiesti sono pronti; seriale e gruppo `dialout` servono solo a chi usa UART.
+> **Verifica prima di proseguire:** Python e i pacchetti richiesti sono pronti; seriale e gruppo `dialout` servono solo a chi usa USB.
+
+**Quale passo scegliere:** se userai **USB**, anche come canale di riserva, vai al **04** per verificare la console. Se userai **solo Wi-Fi** e SSH funziona già, salta il 04 e vai direttamente al **05**.
 
 <table width="100%" class="step-nav">
   <tr>
-    <td width="50%" align="left"><strong>Passo precedente</strong><br><a href="02-wifi.md">← 02A · Wi-Fi</a><br><a href="02-hardware.md">← 02B · USB</a></td>
+    <td width="50%" align="left"><strong>Passo precedente · scegli il percorso</strong><br><a href="02-wifi.md">← 02A · Wi-Fi</a><br><a href="02-hardware.md">← 02B · USB</a></td>
     <td width="50%" align="right"><strong>Passo successivo</strong><br><a href="04-uart.md">04 · Solo USB →</a><br><a href="05-password-root.md">05 · Solo Wi-Fi →</a></td>
   </tr>
 </table>

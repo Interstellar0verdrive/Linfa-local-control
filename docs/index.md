@@ -28,25 +28,25 @@ Il controller e il bridge sono già nella repository: non devi ripetere l'indagi
 
 <div class="chapter-grid" markdown="1">
 
-- **01** [Panoramica e obiettivi](setup/01-panoramica.md)
+- **01** [Panoramica e obiettivi](setup/01-panoramica.md) <span class="path-tags"><span class="path-tag path-tag-wifi">Wi-Fi</span><span class="path-tag path-tag-usb">USB</span></span>
   Capisci il sistema, le conseguenze della scelta e cosa serve prima di iniziare.
-- **02A · Wi-Fi** [Prova il primo accesso via SSH](setup/02-wifi.md)
+- **02A** [Prova il primo accesso via SSH](setup/02-wifi.md) <span class="path-tags"><span class="path-tag path-tag-wifi">Wi-Fi</span></span>
   Cerca la serra sulla rete, prova SSH e prepara la LAN senza accesso Internet.
-- **02B · USB** [Prepara il collegamento fisico](setup/02-hardware.md)
+- **02B** [Prepara il collegamento fisico](setup/02-hardware.md) <span class="path-tags"><span class="path-tag path-tag-usb">USB</span></span>
   Apri la parte superiore e collega i tre segnali seriali tramite adattatore USB.
-- **03** [Preparare il Raspberry Pi](setup/03-raspberry.md)
+- **03** [Preparare il Raspberry Pi](setup/03-raspberry.md) <span class="path-tags"><span class="path-tag path-tag-wifi">Wi-Fi</span><span class="path-tag path-tag-usb">USB</span></span>
   Installa sistema e pacchetti; configura la seriale soltanto se usi USB.
-- **04 · Solo USB** [Verificare la connessione](setup/04-uart.md)
+- **04** [Verificare la connessione](setup/04-uart.md) <span class="path-tags"><span class="path-tag path-tag-usb">USB</span></span>
   Controlla la console tramite cavo. Se usi solo Wi-Fi, vai al passo 05.
-- **05** [Impostare la password root](setup/05-password-root.md)
+- **05** [Impostare la password root](setup/05-password-root.md) <span class="path-tags"><span class="path-tag path-tag-wifi">Wi-Fi</span><span class="path-tag path-tag-usb">USB</span></span>
   Verifica o imposta la password nella shell della serra.
-- **06** [Installare il controller CLI](setup/06-controller-cli.md)
+- **06** [Installare il controller CLI](setup/06-controller-cli.md) <span class="path-tags"><span class="path-tag path-tag-wifi">Wi-Fi</span><span class="path-tag path-tag-usb">USB</span></span>
   Controlla il servizio originale, installa il controller e prova i comandi.
-- **07** [Configurare il bridge MQTT](setup/07-bridge-mqtt.md)
+- **07** [Configurare il bridge MQTT](setup/07-bridge-mqtt.md) <span class="path-tags"><span class="path-tag path-tag-wifi">Wi-Fi</span><span class="path-tag path-tag-usb">USB</span></span>
   Collega Raspberry e broker, poi verifica stati e comandi MQTT.
-- **08** [Attivare i servizi automatici](setup/08-servizi-automatici.md)
+- **08** [Attivare i servizi automatici](setup/08-servizi-automatici.md) <span class="path-tags"><span class="path-tag path-tag-wifi">Wi-Fi</span><span class="path-tag path-tag-usb">USB</span></span>
   Imposta la rete in base al collegamento scelto e abilita i timer comuni.
-- **09** [Collegare Home Assistant](setup/09-home-assistant.md)
+- **09** [Collegare Home Assistant](setup/09-home-assistant.md) <span class="path-tags"><span class="path-tag path-tag-wifi">Wi-Fi</span><span class="path-tag path-tag-usb">USB</span></span>
   Integra i topic MQTT e prova il flusso completo.
 
 </div>

@@ -88,7 +88,7 @@ Questa guida **presuppone esperienza di base con elettronica e saldatura**: devi
 ### Per entrambi i percorsi
 
 - **Serra Linfa.** Ho provato la procedura su Linfa Weezy; la compatibilità con Linfa standard è ancora da verificare.
-- **Computer Windows, macOS o Linux** con browser e client SSH, collegato alla rete del Raspberry durante l'installazione. Non deve restare acceso durante l'uso normale.
+- **Computer Windows, macOS o Linux** con browser e un programma per aprire una connessione testuale SSH al Raspberry. Non deve restare acceso durante l'uso normale. Su **macOS** usa [Terminale](https://support.apple.com/guide/terminal/trml1018/mac); su **Windows** usa PowerShell o Windows Terminal con il [Client OpenSSH](https://learn.microsoft.com/windows/terminal/tutorials/ssh) (se `ssh` non è riconosciuto, verifica le *Funzionalità facoltative*); su **Linux** usa il terminale con OpenSSH, installando `openssh-client` se manca. In tutti e tre i casi digiterai i comandi `ssh` mostrati nella guida.
 - **Raspberry Pi**, microSD da almeno 16 GB, alimentatore adatto e collegamento alla rete domestica. Il mio prototipo usa un Pi 3B.
 - **Raspberry Pi OS con Python 3.10 o successivo**, un broker MQTT raggiungibile dal Raspberry e da Home Assistant, e l'integrazione MQTT di Home Assistant. Controller e bridge sono già nella repository; Git viene installato nel passo 03.
 - **Solo se vuoi automazioni climatiche:** un sensore di temperatura e umidità compatibile con Home Assistant, collocato **dentro la serra**. Io uso un Aqara Zigbee; il controller non pubblica ancora le misure dei sensori interni originali. Un secondo sensore nella stanza può aiutare a decidere quando ventilare.

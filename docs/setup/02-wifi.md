@@ -20,7 +20,7 @@ Se la serra era già associata al Wi-Fi di casa, trova il suo indirizzo IP nell'
 ssh root@<SERRA_IP>
 ```
 
-L'indirizzo `<SERRA_IP>` è quello della **serra**, non del Raspberry. Confronta la chiave host mostrata al primo accesso con quella che hai già registrato, se disponibile; se SSH segnala che una chiave nota è cambiata, non ignorare l'avviso. Usa la password root della tua serra. **Non conosco una password SSH universale del firmware Robonica.** Se il login funziona, resta nella shell della serra e vai alla [verifica del firmware](#2-verifica-il-firmware-e-conserva-il-token). Se non conosci la password o il server rifiuta il login, passa a [02B · Collegamento USB](02-hardware.md): il reset fisico sul mio esemplare non ha cancellato la password root.
+L'indirizzo `<SERRA_IP>` è quello della **serra**, non del Raspberry. Confronta la chiave host mostrata al primo accesso con quella che hai già registrato, se disponibile; se SSH segnala che una chiave nota è cambiata, non ignorare l'avviso. Accedi come `root`: se hai già una password per la tua serra, usa quella. Su una serra originale puoi fare **un tentativo con `vocore`**, password indicata dal [produttore per il VoCore2 con firmware standard](https://vocore.io/v2.html), **non confermata per il firmware Robonica**. Puoi anche provare una volta a premere Invio senza digitare nulla, ma sul mio firmware SSH non accettava password vuote. Evita ulteriori password casuali. Se il login funziona, resta nella shell della serra e vai alla [verifica del firmware](#2-verifica-il-firmware-e-conserva-il-token). Se non funziona, passa a [02B · Collegamento USB](02-hardware.md): il reset fisico sul mio esemplare non ha cancellato la password root.
 
 ## Se la serra non è sulla rete: access point temporaneo
 
@@ -28,10 +28,10 @@ La procedura originale mostrava una rete `LINFA_…` per il pairing. Sul mio ese
 
 1. Con la WAN ancora scollegata, cerca sul computer o sul telefono una rete `LINFA_…`. Se compare, connettiti e annota indirizzo IP e gateway assegnati. Sul firmware provato la serra rispondeva a `192.168.247.1`, ma non assumere che valga per ogni variante.
 2. Se non compare e la serra era già configurata, valuta il pulsante di reset **solo dopo aver letto questa avvertenza**: sul mio esemplare una pressione prolungata fino al lampeggio bianco ha cancellato i dati di pairing, ripristinato file del software originale e riavviato la serra. Non è un semplice «reset del Wi-Fi». Senza backup potresti perdere impostazioni che non sai ricostruire. Se accetti questo effetto, usa la procedura del [video originale](https://www.youtube.com/watch?v=fwavCyGuwOw), una sola volta, e attendi la rete `LINFA_…`; se non appare, passa al collegamento USB.
-3. Collegato alla rete temporanea, prova dal **terminale del computer** `ssh root@<IP_AP_SERRA>` usando come IP il gateway osservato (nell'esemplare provato, `192.168.247.1`). Questa prova **deve riuscire prima** di trattare il Wi-Fi come percorso senza apertura. Se SSH chiede una password che non conosci, rifiuta la password vuota o non è disponibile, passa al collegamento USB; ripetere il reset non cambierà necessariamente le credenziali.
+3. Collegato alla rete temporanea, prova dal **terminale del computer** `ssh root@<IP_AP_SERRA>` usando come IP il gateway osservato (nell'esemplare provato, `192.168.247.1`). Se non hai una password nota, limita i tentativi a `vocore` e alla password vuota, come [spiegato sopra](#1-cerca-la-serra-sulla-rete-domestica). Questa prova **deve riuscire prima** di trattare il Wi-Fi come percorso senza apertura. Se SSH non è disponibile o rifiuta entrambi i tentativi, passa al collegamento USB; ripetere il reset non cambierà necessariamente le credenziali.
 
-> [!NOTE] Perché `vocore` non è una password certa
-> La password di un firmware VoCore generico non dimostra quella del firmware Robonica. Nell'esportazione storica è annotato un login seriale iniziale senza password, ma il server SSH osservato non è configurato per accettare password vuote. Per questo l'accesso senza apertura resta **da confermare su una serra mai modificata**.
+> [!NOTE] Aiutami a verificare il primo accesso
+> Se riesci a entrare **via SSH su una Linfa mai modificata**, [apri una issue su GitHub](https://github.com/Interstellar0verdrive/Linfa-local-control/issues/new) indicando modello, versione firmware (se visibile), se eri sulla rete `LINFA_…` o sulla LAN e se ha funzionato `vocore`, una password vuota o una credenziale già nota a te. **Non pubblicare password personali, token o schermate che li mostrano.** Il tuo riscontro mi permetterà di aggiornare questa guida.
 
 ## 2. Verifica il firmware e conserva il token
 
@@ -106,7 +106,7 @@ test "$(grep -Fxc '  udhcpc -b -p /var/run/udhcpc.pid -i apcli0 -s /usr/share/ud
 
 ## 4. Associa la rete domestica, se necessario
 
-Se sei già sulla LAN domestica, **salta il pairing**: con WAN scollegata, riavvia la serra con `/sbin/reboot`, ricollegati via SSH al suo IP dopo l'avvio e passa alla verifica. Il riavvio fa usare il nuovo script DHCP. Se non torna raggiungibile, usa UART per recuperare; non ricollegare ancora la WAN.
+Se sei già sulla LAN domestica, **salta il pairing**: con WAN scollegata, riavvia la serra con `/sbin/reboot`, ricollegati via SSH al suo IP dopo l'avvio e passa alla verifica. Il riavvio fa usare il nuovo script DHCP. Se non torna raggiungibile, usa il collegamento USB per recuperare; non ricollegare ancora la WAN.
 
 Se sei sulla rete temporanea `LINFA_…`, il metodo locale verificato usa `POST /credentials`. Dopo aver conservato il token originale, se presente, oppure scelto un nuovo valore privato non vuoto, esci dalla shell SSH della serra; **dal computer ancora connesso alla rete temporanea**, entra nella cartella della repository scaricata prima e avvia:
 
@@ -116,7 +116,7 @@ python3 tools/pair_linfa_wifi.py --host <IP_AP_SERRA>
 
 Su Windows, con Python installato, usa `py -3 tools/pair_linfa_wifi.py --host <IP_AP_SERRA>`. Il programma chiede SSID, password Wi-Fi e token privato senza metterli nella riga di comando. Puoi reinserire l'originale, se lo hai salvato, oppure un valore nuovo non vuoto; il CGI osservato non verifica il token contro un server prima di salvarlo. **La scelta di un token nuovo non è stata provata su una serra originale.** La rete temporanea osservata è aperta e la richiesta locale usa HTTP: eseguila solo in un ambiente sotto il tuo controllo. Abbiamo provato l'endpoint sul firmware del prototipo; su altre versioni potrebbe differire. La richiesta può far riavviare la radio **prima di inviare la risposta HTTP**: se il programma segnala un'interruzione, cerca prima la serra nell'elenco DHCP del router e **non ripetere subito** il pairing. L'app originale offriva una procedura guidata equivalente, ma la sua disponibilità attuale non è verificata.
 
-Ricollega il computer alla rete domestica, individua il nuovo `<SERRA_IP>` sul router e prova `ssh root@<SERRA_IP>` con la password appena verificata. Se il login non riesce, lascia la WAN scollegata e usa UART per recuperare.
+Ricollega il computer alla rete domestica, individua il nuovo `<SERRA_IP>` sul router e prova `ssh root@<SERRA_IP>` con la password appena verificata. Se il login non riesce, lascia la WAN scollegata e usa il collegamento USB per recuperare.
 
 ## 5. Verifica LAN sì, Internet no
 
@@ -136,7 +136,7 @@ ping -c 1 -W 2 <ROUTER_IP>
 
 Quando LAN e assenza delle rotte esterne sono confermate, ricollega la WAN. Dal computer verifica che Internet funzioni; dalla serra ripeti la lettura delle rotte e prova `ping -c 1 -W 2 1.1.1.1`: sul prototipo la risposta era `Network unreachable`. Un semplice timeout **non** equivale a isolamento verificato. Sul prototipo il Wi-Fi e l'isolamento sono rimasti attivi dopo un riavvio; un rinnovo DHCP ha causato una breve interruzione della LAN, poi recuperata.
 
-> [!TIP] Vuoi UART comunque?
+> [!TIP] Preferisci il percorso USB?
 > Anche se SSH funziona, puoi scegliere [02B · Collegamento USB](02-hardware.md) e tenere il cavo come canale permanente. Se colleghi entrambi, nel passo 07 potrai scegliere una precedenza; il controller non ripete sull'altro canale un comando dal risultato incerto.
 
 ## Continua il percorso
