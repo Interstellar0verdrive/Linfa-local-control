@@ -1,0 +1,419 @@
+/* Sezione STATO — porting design v3 (Fase 2).
+   PERCHÉ UN FILE A PARTE E NON UN APPEND IN app.css:
+   app.css e' quasi 1000 righe interamente dedicate al Piano (timeline,
+   ispettore, modali) ed e' toccato in parallelo dalle altre fasi del
+   porting; tenere qui gli stili della sezione rende il diff disgiunto
+   (zero conflitti) e permette di rimuovere/riscrivere la sezione senza
+   rileggere il resto. Vite concatena comunque tutto in un solo CSS in
+   build, quindi non c'e' costo di rete aggiuntivo.
+   I TOKEN restano quelli di app.css (:root globale): qui non si dichiara
+   nessun colore nuovo, si consumano solo le variabili gia' esistenti. */
+
+.st-root {
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column; gap: 12px;
+  --st-dim: 1;                 /* impostata inline dal componente: 1 o 0.42 */
+}
+/* fuori sezione resta montata (stato foto/range intatto) ma sparisce.
+   Doppia classe = vince sulla display:flex qui sopra. */
+.st-root.sez-off { display: none; }
+
+.st-scroll {
+  flex: 1; min-height: 0; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 16px;
+  padding-right: 4px; padding-bottom: 4px;
+  scrollbar-width: thin; scrollbar-color: var(--fg-3) transparent;
+}
+
+/* ── Banner ─────────────────────────────────────────────── */
+.st-banners { flex: none; display: flex; flex-direction: column; gap: 8px; }
+.st-banner {
+  display: flex; align-items: center; gap: 13px;
+  padding: 12px 14px; border-radius: var(--r-12);
+  background: var(--contrast-8); border: 1px solid var(--hairline-strong);
+  color: var(--fg-2);
+}
+.st-banner-txt { flex: 1; min-width: 0; }
+.st-banner-t { font-size: 14px; font-weight: 700; color: var(--fg-1); }
+.st-banner-s { font-size: 12.5px; color: var(--fg-2); text-wrap: pretty; }
+.st-banner--errore { background: var(--errore-12); border-color: var(--errore-35); color: var(--errore-text); }
+/* Azione dentro un banner (oggi: l'azzeramento dell'errore pendente). Il
+   fondo del banner e' gia' l'accento velato, quindi qui la ricetta si
+   INVERTE: pieno sull'accento e testo scuro, altrimenti su errore-12 un
+   bottone errore-12 sparirebbe. Armato = ambra piena come ogni azione
+   manuale dell'app. */
+.st-banner-act {
+  flex: none; height: var(--ctl-md); padding: 0 14px;
+  border: 0; border-radius: var(--r-full);
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--errore); color: var(--ink);
+  font: inherit; font-size: 13px; font-weight: 700;
+  cursor: pointer; white-space: nowrap;
+  transition: background .15s ease, filter .15s ease;
+}
+.st-banner-act:hover:not(:disabled) { filter: brightness(.93); }
+.st-banner-act:disabled { opacity: .45; cursor: default; }
+.st-banner-act.arm, .st-banner-act.arm:hover { background: var(--luce); filter: none; }
+.st-banner--ambra  { background: var(--luce-10); border-color: var(--luce-25); color: var(--luce); }
+.st-banner--neutro { color: var(--fg-3); }
+
+/* ── Card generica ──────────────────────────────────────── */
+.st-card {
+  background: var(--surface-raised); border: 1px solid var(--hairline-strong);
+  border-radius: var(--r-16); box-shadow: var(--shadow-card);
+  display: flex; flex-direction: column; overflow: hidden; min-width: 0;
+}
+.st-card-head {
+  flex: none; display: flex; align-items: center; gap: 9px;
+  padding: 11px 16px;   /* simmetrico: icona+titolo centrati nell'intestazione */
+  font-family: var(--font-display); font-weight: 400; font-size: 17px;
+}
+
+/* ── Riga 1: clima grande + colonna mini ────────────────── */
+.st-row1 { flex: none; display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: stretch; }
+.st-side { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+/* flex-basis 0 + overflow:hidden azzererebbe il min-height automatico: la
+   soglia esplicita tiene in piedi la card anche quando e' impilata. */
+.st-side .st-mini { flex: 1; min-height: 175px; }
+
+.st-clima-head {
+  flex: none; display: flex; align-items: flex-start; gap: 16px;
+  padding: 15px 18px 10px; flex-wrap: wrap;
+}
+.st-big { flex: none; min-width: 0; }
+.st-big-lab { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 700; color: var(--fg-2); }
+.st-swatch { width: 9px; height: 9px; border-radius: var(--r-2); flex: none; }
+.st-dot { width: 7px; height: 7px; border-radius: var(--r-full); flex: none; display: inline-block; }
+/* pallino di banda + valore sulla stessa riga (stesso pattern delle mini) */
+.st-big-valrow { display: flex; align-items: center; gap: 8px; }
+.st-big-valrow .st-dot { width: 8px; height: 8px; }
+.st-big-val { font-size: 30px; font-weight: 500; line-height: 34px; }
+.st-big-sub { font-size: 11.5px; color: var(--fg-3); }
+
+.st-clima-ctl { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 7px; }
+/* <button>: la spiegazione della freschezza la da' il fumettino (Hint.jsx) */
+.st-fresh {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11.5px; font-weight: 600; padding: 4px 10px;
+  border: 0; border-radius: var(--r-full);
+  background: var(--contrast-5); color: var(--fg-2);
+  white-space: nowrap; font-family: inherit; cursor: pointer;
+  transition: background .15s ease;
+}
+.st-fresh:hover { background: var(--contrast-10); }
+/* pesca SOLO in stale (bridge offline o eta' oltre STALE_MIN): sotto soglia
+   l'aspetto e' identico a un pill neutro qualunque */
+.st-fresh.stale { background: var(--errore-12); color: var(--errore-text); }
+.st-fresh.stale:hover { background: var(--errore-35); }
+.st-ranges {
+  display: flex; gap: 3px; padding: 3px; border-radius: var(--r-full);
+  background: var(--contrast-5); border: 1px solid var(--hairline);
+}
+.st-range {
+  height: 28px; padding: 0 11px; border: 0; border-radius: var(--r-full);
+  background: transparent; color: var(--fg-2);
+  font-size: 11.5px; font-weight: 700; cursor: pointer; white-space: nowrap;
+  transition: background .18s ease, color .18s ease;
+}
+.st-range:hover { background: var(--contrast-8); color: var(--fg-1); }
+.st-range.on, .st-range.on:hover { background: var(--oggi); color: var(--ink); }
+/* Sorgente dei punti quando la finestra e' lunga ("medie orarie"/"giornaliere").
+   Stessa taglia della riga min/max: sono due note dello stesso registro. */
+.st-res, .st-res.mono { font-size: 10.5px; color: var(--fg-3); opacity: .82; }
+
+/* ── Area grafico ───────────────────────────────────────── */
+.st-plot { flex: 1; position: relative; overflow: hidden; opacity: var(--st-dim); }
+.st-plot--main { min-height: 190px; border-radius: 0 0 var(--r-16) var(--r-16); --st-axis: 26px; }
+.st-plot--mini { min-height: 120px; --st-axis: 23px; }
+.st-gridline { position: absolute; left: 0; right: 0; height: 1px; background: var(--contrast-10); z-index: 1; }
+/* ETICHETTE DEI GRAFICI — una taglia sola per tutti e tre (grande + le due
+   sparkline). Prima il grafico grande le aveva piu' grosse delle mini e su
+   mobile gli orari si sovrapponevano. La misura vive in --st-lab: cambiarla
+   qui muove insieme valori di griglia e orari di OGNI grafico.
+   La doppia classe (.st-gval.mono) serve a battere `.mono { font-size: .92em }`
+   di app.css, che ha la stessa specificita' ma arriva prima nel bundle. */
+.st-plot { --st-lab: 11px; }
+.st-gval, .st-vlab, .st-gval.mono, .st-vlab.mono, .st-vlab.small {
+  font-size: var(--st-lab);
+}
+.st-gval { position: absolute; z-index: 3; white-space: nowrap; }
+.st-gval.left { left: 8px; }
+.st-gval.right { right: 8px; }
+.st-vtick { position: absolute; top: 0; bottom: var(--st-axis); width: 1px; background: var(--contrast-10); z-index: 1; }
+.st-vlab { position: absolute; bottom: 2px; color: var(--fg-3); z-index: 3; white-space: nowrap; }
+.st-svg {
+  position: absolute; inset: 0 0 var(--st-axis) 0;
+  width: 100%; height: calc(100% - var(--st-axis)); display: block; z-index: 2;
+}
+.st-plot-empty {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  gap: 9px; font-size: 12px; color: var(--fg-3); text-align: center; padding: 12px;
+}
+
+/* Estremi della finestra, sotto la banda ideale: due numeri e basta, l'unita'
+   la dicono gia' la riga sopra e il valore grande accanto. Colore piu' spento
+   della banda ideale: e' un dato di contorno, non deve competere col valore.
+   La doppia classe batte `.mono { font-size: .92em }` di app.css. */
+.st-mm, .st-mm.mono { font-size: 10.5px; color: var(--fg-3); opacity: .82; margin-top: 1px; }
+
+/* ── Crosshair (hover desktop / tap touch) ──────────────────────────────
+   Superficie di ascolto: copre il solo tracciato, l'asse X resta fuori. Il
+   touch-action tiene lo scroll verticale della sezione: un tap mostra, un
+   trascinamento scorre la pagina come prima. */
+.st-xh-hit { position: absolute; inset: 0 0 var(--st-axis) 0; z-index: 6; touch-action: pan-y; }
+.st-xh-line {
+  position: absolute; top: 0; bottom: var(--st-axis); width: 1px;
+  /* piu' marcata delle griglie (--contrast-10): deve leggersi sopra al tracciato */
+  background: var(--contrast-40); z-index: 4; pointer-events: none;
+}
+/* pallino sul punto letto di ogni serie: l'unico segno sul tracciato, e sparisce
+   con la bolla */
+.st-xh-pin {
+  position: absolute; width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px;
+  border-radius: var(--r-full); z-index: 5; pointer-events: none;
+  box-shadow: 0 0 0 2px var(--surface-raised);
+}
+/* stessa ricetta del fumettino (hint.css) ma superficie chiara della card:
+   la bolla vive DENTRO il grafico, un nero pieno ci farebbe un buco */
+.st-xh {
+  position: absolute; top: 8px; transform: translateX(-50%);
+  display: flex; flex-direction: column; gap: 1px;
+  padding: 5px 8px; z-index: 7; pointer-events: none; white-space: nowrap;
+  border: 1px solid var(--hairline-solid); border-radius: var(--r-8);
+  background: var(--surface-raised); box-shadow: var(--shadow-card);
+}
+.st-xh.bordo-sx { transform: none; margin-left: 6px; }
+.st-xh.bordo-dx { transform: translateX(-100%); margin-left: -6px; }
+.st-xh-t, .st-xh-t.mono { font-size: 10.5px; color: var(--fg-3); }
+.st-xh-v, .st-xh-v.mono { font-size: 11px; font-weight: 600; }
+
+/* ── Mini-card (VPD, vasca) ─────────────────────────────── */
+.st-mini-head { flex: none; display: flex; align-items: flex-start; gap: 10px; padding: 13px 15px 6px; }
+.st-mini-txt { flex: 1; min-width: 0; }
+.st-mini-lab { font-size: 12px; font-weight: 700; color: var(--fg-2); }
+.st-mini-sub { font-size: 11px; color: var(--fg-3); }
+.st-mini-head .st-dot { margin-top: 6px; }
+.st-mini-val { font-size: 19px; font-weight: 500; white-space: nowrap; }
+
+/* ── Riga 2: componenti · centralina · foto ─────────────── */
+.st-row2 { flex: none; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 340px; gap: 16px; align-items: stretch; }
+.st-list { min-height: 0; }
+
+.st-comp {
+  width: 100%; display: flex; align-items: center; gap: 11px;
+  padding: 10px 16px; border: 0; border-top: 1px solid var(--hairline);
+  background: transparent; cursor: pointer; text-align: left;
+  transition: background .15s ease;
+}
+.st-comp:hover { background: var(--contrast-5); }
+.st-comp-disc {
+  width: 32px; height: 32px; border-radius: var(--r-full); flex: none;
+  display: flex; align-items: center; justify-content: center;
+}
+.st-comp-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.st-comp-lab { font-size: 13.5px; font-weight: 700; color: var(--fg-1); }
+.st-comp-sub { font-size: 11.5px; color: var(--fg-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.st-badge {
+  flex: none; font-size: 9.5px; font-weight: 800; letter-spacing: .05em;
+  padding: 3px 9px; border-radius: var(--r-full);
+  background: var(--contrast-10); color: var(--fg-2);
+}
+/* LIBERO = allarme: rosso pieno + "radar" che pulsa, come .badge.manual in
+   app.css (lì l'animazione si chiama ccPulse nel design). */
+.st-badge.man {
+  background: var(--danger); color: var(--oggi);
+  animation: pulse-manuale 1.6s ease-in-out infinite;
+}
+@keyframes pulse-manuale {
+  from { box-shadow: 0 0 0 0 var(--danger-60); }
+  to   { box-shadow: 0 0 0 10px transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .st-badge.man { animation: none; }
+}
+
+/* ── Dettaglio di un componente (overlay in sola lettura) ──
+   Backdrop e modale con la stessa ricetta di .guide-overlay/.guide-modal in
+   app.css: scrim + blur, superficie raised, hairline forte, r-16, ombra
+   pesante, animazione ccSheet (definita in app.css, riusata qui).
+   z-index fra l'ispettore (60) e la guida (78): la guida deve poter salire
+   sopra a tutto, questo pannello no. */
+.st-det-overlay {
+  position: fixed; inset: 0; z-index: 65;
+  background: var(--scrim); backdrop-filter: blur(3px);
+  display: flex; align-items: center; justify-content: center; padding: 18px;
+}
+.st-det {
+  width: min(420px, 100%); max-height: min(86vh, 720px);
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--surface-raised); border: 1px solid var(--hairline-strong);
+  border-radius: var(--r-16); box-shadow: var(--shadow-card-heavy);
+  animation: ccSheet .22s ease;
+}
+.st-det:focus { outline: none; }   /* il contenitore prende il focus all'apertura, non e' un bersaglio */
+.st-det-head {
+  flex: none; display: flex; align-items: center; gap: 11px;
+  padding: 13px 14px 13px 16px; border-bottom: 1px solid var(--hairline-strong);
+}
+.st-det-tit { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.3; }
+.st-det-tit b { font-size: 15.5px; color: var(--fg-1); }
+/* la frase del sensore-componente: e' lo stato attuale, non un doppione — le
+   righe sotto dicono solo cio' che questa riga taglia */
+.st-det-tit span { font-size: 12px; color: var(--fg-2); text-wrap: pretty; }
+.st-det-x {
+  width: var(--ctl-sm); height: var(--ctl-sm); border-radius: var(--r-full); border: 0; flex: none;
+  background: var(--contrast-5); color: var(--fg-1); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.st-det-x:hover { background: var(--contrast-10); }
+.st-det-body { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--fg-3) transparent; }
+/* la testata ha gia' la sua riga: un border-top sulla prima kv la sdoppierebbe */
+.st-det-body .st-kv:first-child { border-top: 0; }
+/* Qui il valore puo' essere una frase intera (il "prossimo booster" e' la piu'
+   lunga): nelle liste della sezione la cella valore e' `flex: none` e a
+   pannello stretto mangiava la label. In questa superficie — che si legge, non
+   si scorre — la label tiene la sua larghezza e il VALORE va a capo. */
+.st-det-body .st-kv-txt { flex: none; }
+.st-det-body .st-kv-v { flex: 1; min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+.st-det-vuoto { padding: 16px; font-size: 12.5px; color: var(--fg-2); text-wrap: pretty; }
+.st-det-foot { flex: none; padding: 11px 16px 13px; border-top: 1px solid var(--hairline-strong); }
+/* rimando all'altra sezione: geometria del bottone, lettura da link (stessa
+   idea di .cc-link in controllo.css) */
+.st-det-go {
+  width: 100%; display: inline-flex; align-items: center; gap: 8px;
+  padding: 0; border: 0; background: none; font: inherit;
+  font-size: 13px; font-weight: 700; color: var(--fg-1); cursor: pointer;
+}
+.st-det-go > :last-child { margin-left: auto; color: var(--fg-3); }
+.st-det-go:hover { color: var(--oggi); }
+.st-det-go:hover > :last-child { color: var(--oggi); }
+
+/* min-height uniforme: le righe col sottotitolo (es. "Dati aggiornati") sono
+   piu' alte del contenuto delle altre e la lista risultava a scalini. La
+   soglia e' tarata sulla riga PIU' alta (label + sub), cosi' tutte pareggiano
+   e il sottotitolo — che e' un pattern voluto — non sfonda piu' nulla. */
+.st-kv {
+  display: flex; align-items: center; gap: 11px;
+  padding: 8px 16px; min-height: 52px;
+  border-top: 1px solid var(--hairline);
+}
+/* Le righe NON sono piu' interrogabili nel loro insieme (niente <button>,
+   niente fascia di hover che si illumina lasciando buchi ai lati): dove la
+   spiegazione ha valore c'e' l'(i) in coda — .hint-i in hint.css. */
+.st-kv-txt { flex: 1; min-width: 0; }
+/* flex: la label puo' avere l'(i) accanto (subito dopo il testo, mai in fondo
+   alla riga — vedi la nota su .hint-i in hint.css) */
+.st-kv-k { display: flex; align-items: center; gap: 7px; font-size: 13px; line-height: 1.25; color: var(--fg-2); }  /* gap = come .cc-row-k: senza, la (i) si incolla alla label */
+.st-kv-sub { font-size: 11px; line-height: 1.25; color: var(--fg-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.st-kv-v { flex: none; font-size: 12.5px; font-weight: 600; color: var(--fg-1); text-align: right; }
+
+/* ── Foto ───────────────────────────────────────────────── */
+.st-foto-img {
+  flex: 1; min-height: 150px; background: var(--surface-sunken);
+  display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;
+}
+.st-foto-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.st-foto-nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 36px; height: 36px; border-radius: var(--r-full); border: 0;
+  background: var(--ink-40); color: var(--fg-1); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s ease, opacity .15s ease;
+}
+.st-foto-nav:hover { background: var(--ink-80); }
+.st-foto-nav:disabled { opacity: .25; cursor: default; }
+.st-foto-nav.left { left: 9px; }
+.st-foto-nav.right { right: 9px; }
+/* contatore a sinistra, data/ora a destra — una riga sola */
+.st-foto-cap {
+  flex: none; display: flex; align-items: baseline; justify-content: space-between;
+  gap: 10px; padding: 11px 15px 9px; font-size: 12px; color: var(--fg-2);
+}
+.st-foto-when { color: var(--fg-3); white-space: nowrap; }
+/* riga sotto il contatore: perche' l'archivio non sta crescendo */
+.st-foto-nota { flex: none; padding: 0 15px 10px; font-size: 11.5px; line-height: 1.35; color: var(--fg-3); text-wrap: pretty; }
+
+/* "Scatta foto ora": azione armata in due tap (l'esito e' asincrono, vedi Stato.jsx) */
+.st-foto-act { flex: none; display: flex; flex-direction: column; gap: 7px; padding: 0 15px 14px; }
+/* Stessa GEOMETRIA della CTA del Piano (.act-dobtn "Segna fatto" in app.css):
+   piena larghezza, altezza --ctl-lg, raggio pieno, 14px/700, icona a gap 8.
+   Differenza voluta: fondo BLU (--acqua, l'accento "acqua" dell'app) su testo
+   --ink invece del nero pieno, perche' qui l'azione non e' una spunta. */
+.st-shoot {
+  width: 100%; height: var(--ctl-lg); border: 0; border-radius: var(--r-full);
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--acqua); color: var(--ink);
+  font: inherit; font-size: 14px; font-weight: 700;
+  cursor: pointer; white-space: nowrap;
+  transition: background .15s ease, color .15s ease, filter .15s ease;
+}
+.st-shoot:hover:not(:disabled) { filter: brightness(.93); }
+.st-shoot:disabled { opacity: .45; cursor: default; }
+/* armato = ambra piena, come ogni azione manuale in app.css */
+.st-shoot.arm, .st-shoot.arm:hover { background: var(--luce); color: var(--ink); }
+/* (il feedback dello scatto e' passato al toast globale del Piano: qui non
+   c'e' piu' nessun messaggio inline) */
+
+/* ── Responsive: stessi punti di rottura in uso in app.css ──
+   1100px: cade la colonna laterale da 340px (mini-card affiancate).
+   700px : tutto a colonna singola, grafico a piena larghezza. */
+@media (max-width: 1100px) {
+  .st-row1 { grid-template-columns: minmax(0, 1fr); }
+  .st-side { flex-direction: row; }
+  .st-side .st-mini { flex: 1 1 0; min-width: 0; }
+  .st-row2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .st-foto { grid-column: 1 / -1; }
+}
+@media (max-width: 700px) {
+  .st-scroll { gap: 12px; padding-right: 0; }
+  /* Banner con azione: su una colonna il bottone va SOTTO a tutta larghezza —
+     accanto al testo restavano tre parole per riga e il titolo si spezzava.
+     Il figlio flex NON e' il bottone ma lo <span class="hint-wrap"> che Hint
+     mette attorno ai target con prop `disabled` (vedi Hint.jsx): e' a lui che
+     va chiesto di prendersi la riga, altrimenti il width:100% del bottone si
+     misura su uno span largo quanto il testo e non manda a capo niente. */
+  .st-banner { flex-wrap: wrap; }
+  .st-banner > .hint-wrap, .st-banner > .st-banner-act { flex: 1 0 100%; }
+  .st-banner-act { width: 100%; justify-content: center; height: var(--ctl-lg); }
+  .st-row1, .st-row2 { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .st-side { flex-direction: column; }
+  .st-side .st-mini { flex: none; }
+  .st-clima-head { padding: 13px 14px 8px; gap: 12px; }
+  .st-clima-ctl { align-items: flex-start; width: 100%; }
+  /* Sette chip su 375px stanno in riga per un soffio: se il testo cresce (font
+     di sistema piu' grande, lingua piu' lunga) la barra SCORRE invece di
+     sfondare la card. Scrollbar nascosta: e' una pill, non un pannello. */
+  .st-ranges { max-width: 100%; overflow-x: auto; scrollbar-width: none; gap: 2px; }
+  .st-ranges::-webkit-scrollbar { display: none; }
+  .st-range { flex: 0 0 auto; padding: 0 6px; }
+  .st-big-val { font-size: 26px; line-height: 30px; }
+  /* etichette in una riga sola: "Ultimo ricircolo" andava a capo lasciando
+     un orfano, e la riga raddoppiava di altezza. Da quando la label puo'
+     ospitare l'(i) e' un contenitore flex: il troncamento va chiesto al
+     TESTO (::first-line non basta), quindi si tiene il nowrap e si lascia
+     che sia la cella a nascondere l'eccedenza — l'(i) resta comunque
+     visibile perche' e' `flex: none` e non si comprime. */
+  .st-kv-k { white-space: nowrap; overflow: hidden; }
+  /* Il valore non deve pesare piu' della sua etichetta. La doppia classe non
+     e' vezzo: .mono (app.css) e' piu' avanti nel bundle e con la sola
+     .st-kv-v vinceva lei, lasciando questa regola morta a 12.88px. A parita'
+     di px il monospazio "pesa" piu' di Inter, quindi 12px qui si legge come
+     i 13px dell'etichetta. */
+  .st-kv-v.mono { font-size: 12px; }
+  .st-plot--main { min-height: 170px; }
+  /* mobile: etichette alla taglia delle vecchie sparkline — sotto i 700px il
+     grafico grande e' largo la meta' e a 11px gli orari si toccavano */
+  .st-plot { --st-lab: 9px; }
+  .st-foto-img { min-height: 200px; }
+  /* Dettaglio componente: su telefono e' un bottom-sheet — sale dal basso,
+     larghezza piena, angoli tondi solo in alto (in fondo non si vedrebbero) e
+     il bordo inferiore sparisce con lo schermo. */
+  .st-det-overlay { align-items: flex-end; padding: 0; }
+  .st-det {
+    width: 100%; max-height: 82vh;
+    border-radius: var(--r-16) var(--r-16) 0 0;
+    border-bottom: 0;
+    /* la tacca/barra di sistema non deve coprire l'ultima riga */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}

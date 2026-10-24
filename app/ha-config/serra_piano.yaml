@@ -1,0 +1,238 @@
+
+# =============================================================================
+# PIANO DI COLTIVAZIONE — Linfa Local Control
+# =============================================================================
+#
+# QUESTO è il documento che definisce il ciclo: modificalo qui (durate, eventi,
+# booster) e la serra si adegua da sola (sensori, promemoria, timeline).
+#
+# STRUTTURA A FASI (notazione: G=germinazione, V=vegetativa, F=fioritura,
+# W=flush, E=essiccazione — 1-based DENTRO la fase):
+# - G1 = il giorno in cui il seme, GIÀ germinato nel cotone (radichetta fuori),
+#   va nel panetto in serra. La germinazione in cotone al buio (2-5 gg,
+#   spruzzi a mano) sta FUORI dal conteggio. A G7 le foglioline dovrebbero esserci.
+# - V1 = primo giorno di vegetativa · F1 = primi pistilli / flip ·
+#   W1 = primo giorno di flush · E1 = giorno del taglio.
+# - Gli eventi sono legati alla PROPRIA fase: il Topping è V9 (nono giorno di
+#   vegetativa) SEMPRE, anche se allunghi/accorci la germinazione. I "(≈ gN)"
+#   nei commenti = giorno dalla semina COI DEFAULT, solo per orientarsi.
+# - Le date reali di inizio fase vengono dalle ÀNCORE (Calendario): vegetativa
+#   e fioritura hanno default dal piano + override osservato; flush ed
+#   essiccazione partono SOLO a conferma (data impostata).
+#
+# - Le FASI determinano: fase mostrata, target ambientali, mix LUCI e schedule
+#   ACQUA (sezioni in fondo — applicate da serra_fase_auto al cambio fase; i
+#   valori scritti negli input restano ritoccabili da UI come override
+#   temporaneo, fino al riallineamento successivo).
+#
+# - Il piano include cicli autofiorenti e fotoperiodici. Dopo una modifica,
+#   il sensore si aggiorna entro 5 minuti (o subito con Strumenti sviluppatore
+#   -> Aggiorna sensor.serra_piano).
+#   Parser: /config/serra_piano_parse.py (emette anche i giorni assoluti).
+#
+# =============================================================================
+
+# ── DURATE DELLE FASI (giorni; giorni_foto = variante fotoperiodica) ─────────
+# ESSICCAZIONE: avviene DENTRO la serra — al taglio (E1) i rametti si stendono
+# sul telo di silicone bucherellato sopra la rete SCROG; luci SPENTE (mix a
+# zero), niente ricircoli, umidità alle ventole (~50-60% UR). Durata 21 per
+# sicurezza (tipico 10-14: il test snap a E13 decide) — oltre la durata NON
+# cambia nulla: il regime resta da essiccazione finché non spegni tu la
+# coltivazione; poi "conclusa" = vasetti per la concia (fuori serra).
+fasi:
+  germinazione: { giorni: 7 }                    # G1–G7   (≈ g1–7)
+  vegetativa:   { giorni: 21 }                   # V1–V21  (≈ g8–28; foto: fino al flip)
+  fioritura:    { giorni: 42, giorni_foto: 49 }  # F1–F42  (≈ g29–70; foto ~7 settimane)
+  flush:        { giorni: 22, giorni_foto: 14 }  # W1–W22  (≈ g71–92; foto ~2 settimane)
+  essiccazione: { giorni: 21 }                   # E1–E21  (≈ g93–113)
+
+# ── EVENTI, legati alla propria fase ─────────────────────────────────────────
+# "tipo": booster = promemoria con conferma (latch + ring viola);
+#         azione = intervento manuale (entra nel digest push del mattino);
+#         checkpoint = verifica visiva (idem);
+#         raccolto = traguardo. Senza tipo = pietra miliare informativa.
+# "suggerimento" (opzionale): testo accodato alla notifica dopo il titolo.
+# "ancora" (opzionale): l'evento è il PROMEMORIA di quella milestone (vegetativa/
+#         fioritura/essiccazione): sparisce da timeline e notifiche quando
+#         la Milestone è già confermata — la domanda ha già avuto risposta.
+# "giorno_foto" (opzionale): giorno-di-fase diverso per le fotoperiodiche
+#         (serve solo dove le durate foto cambiano la posizione sensata).
+# "dose" (opzionale): campo per-evento, MACHINE-READABLE e — ATTENZIONE —
+#         NON inerte (corretto 2026-07-26, audit R1/MC-02; il vecchio commento
+#         "nessun consumatore lo legge" era FALSO e pericoloso):
+#         · modo "aggiunta": con serra_dosatori_auto ON, le POMPE EROGANO
+#           ESATTAMENTE i ml/L scritti QUI (automazione serra_nutrient_
+#           aggiunta_auto, orario in input_datetime.serra_dose_ora).
+#           Un refuso qui (es. 5 invece di 0.5) finisce in vasca.
+#         · modo "cambio": da qui NON si eroga — alla conferma del cambio
+#           acqua le pompe usano la tabella "nutrienti" (dose del giorno per
+#           fase) via sensor.serra_dose_nutrienti.
+#         Quindi: dose "aggiunta", tabella "nutrienti" e "suggerimento" vanno
+#         tenuti ALLINEATI A MANO (il parser valida tipi e modo, non i valori).
+eventi:
+  germinazione:
+    - { giorno: 1, titolo: "Disposizione dei panetti", tipo: azione, guida: disposizione-panetti,          # G1 (≈ g1)
+        suggerimento: "Sistemare i panetti nelle celle della griglia, ben distanziati: 4 agli angoli, oppure 5 con una al centro. Chioma più uniforme e meno competizione (vedi la guida)." }
+    - { giorno: 7, titolo: "Germinazione attesa", tipo: checkpoint, ancora: vegetativa, guida: germinazione,          # G7 (≈ g7)
+        suggerimento: "Se le piantine non sono spuntate, spostare in avanti la data di inizio Vegetativa (Milestone nel Calendario) — la semina resta quella vera" }
+  vegetativa:
+    - { giorno: 1,  titolo: "Aggiunta nutrienti (dose 'prime foglie')", tipo: azione, guida: rabbocchi,        # V1 (≈ g8)
+        dose: { modo: aggiunta, grow: 0.5, micro: 0.5, bloom: 0.5 },
+        suggerimento: "Senza cambio acqua: aggiungere +0.5/+0.5/+0.5 ml/L (→ 1/1/1 ml/L)." }
+    - { giorno: 8,  titolo: "CAMBIO acqua + nutrienti (dose 'crescita')", tipo: azione, guida: cambio-acqua,       # V8 (≈ g15)
+        dose: { modo: cambio, grow: 1.8, micro: 1.2, bloom: 0.6 },
+        suggerimento: "Cambio completo, per non restare troppo a lungo sulla stessa acqua (rischio effetto melma): vasca fresca 50/50 (rubinetto + demineralizzata) + dose crescita 1.8/1.2/0.6 ml/L" }
+    - { giorno: 9,  titolo: "Topping (cimatura)", tipo: azione, guida: topping-lst,              # V9 (≈ g16)
+        suggerimento: "Tagliare la cima sopra il 4°/5° nodo per sdoppiare l'apice; solo se la pianta è vigorosa — su una auto in ritardo meglio saltare" }
+    - { giorno: 13, titolo: "Montaggio SCROG", tipo: azione,                 # V13 (≈ g20)
+        suggerimento: "Montare la rete, dovrebbe essere qualche cm sopra la chioma; i rami si guidano sotto rete nei giorni successivi" }
+    - { giorno: 18, titolo: "Distribuzione rami nello SCROG", tipo: azione,  # V18 (≈ g25)
+        suggerimento: "Guidare i rami sotto la rete verso le celle vuote, senza forzare. Obiettivo: chioma piatta e uniforme" }
+  fioritura:
+    - { giorno: 1,  titolo: "Inizio fioritura — aggiunta nutrienti", tipo: azione, guida: cambio-acqua,           # F1 (≈ g29)
+        dose: { modo: aggiunta, grow: 0.2, micro: 0.8, bloom: 0.9 },
+        alt_cambio: true,   # mostra la dose piena alternativa in caso di cambio acqua (melma)
+        suggerimento: "Aggiunta +0.2/+0.8/+0.9 ml/L (→ 2/2/1.5 ml/L). Analizzare l'acqua: se ha un cattivo odore o presenta della melma, fare un CAMBIO invece dell'aggiunta (vasca fresca 50/50 rubinetto + demineralizzata + dose piena 2/2/1.5 ml/L)" }
+    - { giorno: 4,  titolo: "Prime infiorescenze", tipo: checkpoint, ancora: fioritura, guida: fioritura,         # F4 (≈ g32)
+        suggerimento: "Cercare i pistilli bianchi agli apici: quando compaiono, impostare la data osservata nella Milestone Inizio fioritura (Calendario)" }
+    - { giorno: 6,  titolo: "Montare filtro odore", tipo: azione,            # F6 (≈ g34)
+        suggerimento: "I fiori iniziano a profumare: montare il filtro ai carboni nella parte frontale della serra, davanti alla ventola di estrazione" }
+    - { giorno: 9,  titolo: "Cambio acqua + Booster 1", tipo: booster, guida: cambio-acqua,       # F9 (≈ g37)
+        dose: { modo: cambio, grow: 0.8, micro: 1.6, bloom: 2.4 },
+        suggerimento: "Una sessione sola: vasca fresca + dose 'fioritura piena' (0.8/1.6/2.4 ml/L), poi agitare e versare TUTTA la boccetta 'Booster 1 PK' (20ml, monodose)" }
+    - { giorno: 14, titolo: "Tessere rami nello SCROG", tipo: azione,        # F14 (≈ g42)
+        suggerimento: "Riportare sotto la rete i rami che sfuggono e riempire le celle vuote; piegare solo i rami giovani e flessibili, non quelli legnosi" }
+    - { giorno: 22, titolo: "Potatura + foglie gialle", tipo: azione, guida: carenze,        # F22 (≈ g50)
+        suggerimento: "Togliere foglie gialle/secche e i rametti bassi in ombra: aria e luce alle cime, meno rischio muffa" }
+    - { giorno: 26, titolo: "Cambio acqua + Booster 2", tipo: booster, guida: cambio-acqua,       # F26 (≈ g54): la sessione booster comprende il cambio acqua
+        dose: { modo: cambio, grow: 0.8, micro: 1.6, bloom: 2.4 },
+        suggerimento: "Vasca fresca 50/50 (rubinetto + demineralizzata) + ridose fioritura (0.8/1.6/2.4 ml/L), poi agitare e versare TUTTA la boccetta 'Booster 2 PK' (20ml, monodose)" }
+    - { giorno: 38, titolo: "Cambio acqua + Booster 3", tipo: booster, guida: cambio-acqua,       # F38 (≈ g66)
+        dose: { modo: cambio, grow: 0.8, micro: 1.6, bloom: 2.4 },
+        suggerimento: "Svuotare la vasca e ripartire con acqua pulita + dose fioritura (0.8/1.6/2.4 ml/L), poi versare TUTTA la boccetta 'Booster 3 PK' (20ml, monodose P6-K1-S5).È il maturatore: fosforo+zolfo per resa e aromi" }
+  flush:
+    - { giorno: 1,  titolo: "Inizio flush (solo acqua)", tipo: azione,       # W1 (≈ g71)
+        suggerimento: "Svuotare la vasca e riempire con SOLA acqua: da qui in poi niente più nutrienti, solo risciacquo fino al taglio" }
+    - { giorno: 16, giorno_foto: 8, titolo: "Controllo tricomi", tipo: checkpoint, ancora: essiccazione, guida: raccolto,  # W16 (≈ g86; foto W8: ~1 settimana prima del taglio)
+        suggerimento: "Microscopio sulle cime (tricomi): trasparenti = presto, tutti lattiginosi = pianta quasi pronta, la maggior parte lattiginosi e alcuni ambrati = tagliare; se è indietro, spostare il raccolto più avanti" }
+  essiccazione:
+    - { giorno: 1,  titolo: "Raccolto (taglio)", tipo: raccolto, guida: raccolto,   # E1 (≈ g93)
+        suggerimento: "Tagliare quando i tricomi sono lattiginosi con qualche ambrato; stendere i rametti sul telo bucherellato sopra la rete SCROG — da qui in poi: luci sempre spente, all'umidità pensano le ventole" }
+    - { giorno: 13, titolo: "Test snap (fine essiccazione)", tipo: checkpoint, guida: essiccazione,  # E13 (≈ g105)
+        suggerimento: "Piegare un rametto: se si spezza con un crack netto è pronta per i vasetti (concia); se si piega ancora, attendere 1-2 giorni in più" }
+
+# ── LUCI: mix canali FINALI per fase [D (rosso profondo), R (rosso chiaro), B (blu+bianco), G (verde), A (tutte accese=bianco)] ─────────────────────────
+# Sono i valori che il pannello riceve (niente moltiplicatori di potenza).
+# Verde e Bianco sono preset di SERVIZIO e vivono negli script, non qui.
+luci:
+  germinazione: [20, 20, 10, 0, 0]    # viola, potenza lieve (plantule) (~18%)
+  vegetativa:   [70, 70, 30, 0, 0]    # viola, potenza maggiore (~70%)
+  fioritura:    [100, 100, 40, 0, 0]  # viola, potenza massima (100%)
+  flush:        [100, 100, 40, 0, 0]  # come fioritura (la luce non cambia in flush)
+  essiccazione: [0, 0, 0, 0, 0]       # BUIO tassativo: la luce degrada i cannabinoidi
+
+# ── ACQUA: ricircoli per fase ────────────────────────────────────────────────
+# "ore" = ore DOPO l'accensione luci (l'alba per la pianta): si irriga solo
+# a luci accese. Durata in secondi.
+#
+# COME FUNZIONA L'IMPIANTO: i panetti stanno su una serpentina SOPRA la vasca;
+# il ricircolo li bagna e l'acqua ridiscende in vasca. Tra un ricircolo e
+# l'altro i panetti sono l'UNICA riserva della pianta (nessuna capillarità
+# dalla vasca). Solo a fine ciclo (~ultime 2-3 settimane = flush) le radici
+# talvolta passano dai fori del supporto e pescano direttamente in vasca.
+# => dalla FIORITURA in poi: 3 bagnature. Il panetto è l'unico serbatoio a
+#    consumo massimo; e anche in flush le radici NON sempre arrivano in vasca.
+#    Meglio "più bagnato": se le radici pescano, il ricircolo in più è innocuo
+#    (idroponica, il panetto scola); se invece le radici non pescano, 2 sole
+#    bagnature = stress idrico, proprio quando i fiori si riempiono.
+acqua:
+  germinazione: { ore: [1],        durata: 30 }   # 1 ricircolo leggero (spugna mai asciutta del tutto)
+  vegetativa:   { ore: [1, 13],    durata: 60 }
+  fioritura:    { ore: [1, 7, 13], durata: 90 }
+  flush:        { ore: [1, 7, 13], durata: 90 }   # solo acqua in vasca
+  essiccazione: { ore: [],         durata: 5 }    # NESSUN ricircolo (bagnerebbe l'aria; durata irrilevante)
+
+# ── AMBIENTE: range ideale per fase (min = pavimento, soglia = tetto) ─────────
+# Ogni fase ha un RANGE ideale [min, soglia]. Le ventole possono solo ESTRARRE
+# (raffrescare/asciugare), quindi AGISCONO SOLO sul tetto: sopra `soglia_temp`/
+# `soglia_umidita` ventilano (isteresi -5% UR / -1°C). Il `temp_min`/`umid_min`
+# NON è attuabile (non scaldano/umidificano): serve all'indicatore dashboard
+# "sei nel range?" (verde dentro / rosso fuori; sotto il min = solo attenzione).
+# Valori confrontati coi consensi orticoli (ricerca 2026-07):
+#   germinazione 23-25°C · 70-80% UR (plantule: umidità alta DESIDERATA)
+#   vegetativa   22-26°C · 55-65%   (si scende man mano che crescono le radici)
+#   fioritura    20-24°C · 40-50%   (fresco preserva gli aromi; UR giù = meno muffa)
+#   flush        20-24°C · 35-40%   (ultime settimane, anti-muffa; MAI sotto 30% = stress/degrada resina)
+#   essiccazione 18-21°C · 50-60%   (asciugatura lenta; ideale terpeni 15-18°C, 18-21 = compromesso casa)
+ambiente:
+  germinazione: { soglia_umidita: 80, soglia_temp: 25, umid_min: 70, temp_min: 23 }
+  vegetativa:   { soglia_umidita: 65, soglia_temp: 26, umid_min: 55, temp_min: 22 }
+  fioritura:    { soglia_umidita: 50, soglia_temp: 24, umid_min: 40, temp_min: 20 }
+  flush:        { soglia_umidita: 40, soglia_temp: 24, umid_min: 35, temp_min: 20 }
+  essiccazione: { soglia_umidita: 60, soglia_temp: 21, umid_min: 50, temp_min: 18 }
+
+# ── NUTRIENTI: dosi TriPart per litro d'acqua ────────────────────────────────
+# Feeding chart Terra Aquatica TriPart (colonna HYDRO; il kit è la versione
+# Hard Water — stesse dosi). Le capsule Robonica SONO il TriPart:
+#
+# ══ I PRODOTTI ═══════════════════════════════════════════════════════════════
+# CAPSULE (nutriente base, si dosano ai cambi acqua — sono il TriPart T.A.):
+#   R (coperchio ROSSO, SINISTRA,  pompa 2) = Grow  · NPK 3-1-6 + MgO
+#                                             (≈ T.A. TriPart Grow / FloraGro)
+#   G (VERDE,           CENTRO,    pompa 1) = Micro · NPK 5-0-1 + microelementi
+#                                             (≈ T.A. TriPart Micro / FloraMicro)
+#   B (BLU,             DESTRA,    pompa 0) = Bloom · NPK 0-5-4 + MgO + SO4
+#                                             (≈ T.A. TriPart Bloom / FloraBloom)
+# BOOSTER (boccette 20ml MONODOSE, si versano INTERE nella soluzione ai giorni):
+#   Booster 1 PK  → evento F9  (~g37) · NPK 0-1-1        · fioritura leggero
+#   Booster 2 PK  → evento F26 (~g54) · NPK 0-1-1 (=B1)  · fioritura leggero
+#   Booster 3 PK  → evento F38 (~g66) · NPK 0-6-1 + S 5% · MATURATORE (P+zolfo)
+#   Ricambi stessa marca: B1/B2 ≈ T.A. Bloom Booster; B3 ≈ T.A. FinalPart (ex Ripen).
+#   20ml in 4.5L ≈ 4.4 ml/L ≈ dose chart 5 ml/L → si versa la boccetta intera.
+# ═════════════════════════════════════════════════════════════════════════════
+# COME SI DOSA — REGOLA OPERATIVA:
+#   - CAMBI ACQUA COMPLETI: V8, F9, F26 (col Booster 2), F38 (+ W1 flush)
+#     — dove le dosi scendono o l'acqua invecchia: max ~15 giorni per
+#     tratto (unica eccezione V8→F9, 22gg, coperta dalla regola
+#     dell'annusata a F1). Al cambio: dose piena × litri vasca fresca.
+#   - Ai passaggi in salita (V1, F1): AGGIUNTE incrementali sulla
+#     soluzione esistente (i delta sono nei singoli eventi, campo "dose").
+#   - I RABBOCCHI sono SOLO ACQUA: le piante concentrano la soluzione
+#     bevendo, il rabbocco puro la riporta al target — si compensano.
+#   - ACQUA: 50% rubinetto + 50% demineralizzata (guida Robonica; con acqua
+#     molto dura il taglio protegge pompe/gocciolatori dal calcare, e il
+#     kit TriPart "Hard Water" è formulato per acqua CON un po' di durezza
+#     — con acqua 100% purificata servirebbe la versione Soft Water).
+#   - Precisione: su <5L con pompe a impulsi da 0.3-0.4ml, differenze di
+#     0.2 ml/L (~1ml totale) sono sotto l'errore — niente pignolerie.
+#   - Igiene: odori/melma tra un cambio e l'altro = cambio extra, sempre.
+#   - ATTENZIONE: L'EROGAZIONE NON E' MAI A CALENDARIO: gli eventi
+#     qui sotto sono PROMEMORIA (digest + latch che resta pendente); le
+#     pompe dosano SOLO alla conferma umana ("Ho cambiato l'acqua → Eroga").
+#     Se salti il giorno non succede nulla: al ritorno fai cambio + bottone
+#     + boccetta insieme, e la dose atterra per costruzione su acqua fresca.
+# Ogni fase può avere più periodi: "fino_giorno" = giorno di fase incluso;
+# l'ultimo periodo (senza fino_giorno) copre il resto della fase.
+# "ec" = target EC (mS) indicativo da misuratore esterno — guida, non vincolo.
+# Nella chart restano MANUALI (non in capsula): FinalPart 5ml/L in maturazione
+# (ultimi 10-15gg prima del flush) e FlashClean 2ml/L per la pulizia finale.
+nutrienti:
+  germinazione:
+    - { grow: 0.5, micro: 0.5, bloom: 0.5, ec: "0.3-0.6" }                 # 1e radici
+  vegetativa:
+    - { fino_giorno: 7, grow: 1.0, micro: 1.0, bloom: 1.0, ec: "0.8-1.2" } # 1e vere foglie
+    - { grow: 1.8, micro: 1.2, bloom: 0.6, ec: "1.3-1.8" }                 # crescita (chart esatta: V8 è un cambio, si può scendere)
+  fioritura:
+    - { fino_giorno: 8, grow: 2.0, micro: 2.0, bloom: 1.5, ec: "1.8-2.0" } # prefioritura/stretch (fino a F8: il cambio è a F9 col Booster 1)
+    - { grow: 0.8, micro: 1.6, bloom: 2.4, ec: "1.4-2.2" }                 # fioritura piena
+  flush:
+    - { grow: 0, micro: 0, bloom: 0, ec: "—" }                             # SOLO acqua
+  essiccazione:
+    - { grow: 0, micro: 0, bloom: 0, ec: "—" }                             # vasca vuota
+
+# ── FOTOPERIODICHE ────────────────────────────────────────────────────────────
+# Non serve più una sezione separata: la variante è espressa da "giorni_foto"
+# nelle durate (fioritura più lunga, flush più corto) e, dove serve, da
+# "giorno_foto" sul singolo evento. La vegetativa delle foto dura fino al
+# flip (Milestone Inizio fioritura, obbligatoria). Luci/acqua/ambiente valgono
+# uguali: sono agganciati alla FASE, non al giorno.

@@ -1,0 +1,914 @@
+/* Sezione CONTROLLO — porting design v3 (Fase 3).
+
+   PERCHÉ UN FILE A PARTE E NON UN APPEND IN stato.css:
+   stesso ragionamento che ha generato stato.css. stato.css e' il foglio
+   della sezione Stato e verra' toccato ancora (grafici, foto); appendere qui
+   il Controllo intreccerebbe due diff che devono restare separati, e i
+   prefissi (.st-* vs .cc-*) sono gia' disgiunti per costruzione. Vite
+   concatena tutto in un CSS solo in build: nessun costo di rete aggiunto.
+
+   I TOKEN restano quelli di app.css (:root globale): qui NON si dichiara
+   nessun colore nuovo. Gli accenti dei 5 sottosistemi arrivano per variabile
+   inline (--cc-accent) e ogni velatura si ottiene con un livello a opacita'
+   (::before) invece che con un token alpha dedicato — l'accento "ventole"
+   (--warn) non ha varianti -10/-25 in :root e inventarle sarebbe un colore
+   nuovo. */
+
+.cc-root {
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column;
+  --cc-dim: 1;                 /* impostata inline dal componente: 1 o 0.42 */
+
+  /* ── Accento ACQUA: token LOCALI, unica eccezione alla regola ───────
+     Decisione di Alberto: per il pannello acqua fa fede il TURCHESE del
+     design v3 (--cards-umidita-base del DS), non l'azzurro --acqua di
+     app.css. L'eccezione resta confinata a questa sezione: --acqua globale
+     e la sezione Stato non si toccano — e' voluto che la riga "Acqua" di
+     Stato resti sull'azzurro dell'app.
+     Il gradiente e' --hero-umidita del DS, valore esatto: la coda a 0.09
+     lascia trasparire la superficie scura sul lato destro (li' ci vanno
+     solo elementi con fondo proprio: bottone guida e pill modalita'). */
+  --cc-acqua: var(--acqua);
+  --cc-acqua-10: rgba(119,205,252,0.10);
+  --cc-acqua-25: rgba(119,205,252,0.25);
+
+  /* ── Accenti del DS che app.css non ha ─────────────────────────────
+     Valori presi TALI E QUALI da _ds/tokens/fig-tokens.css (tema scuro),
+     col nome del DS: sono gli accenti che il design assegna ai tile dei
+     preset luci e al pannello ring, e che in app.css non esistono.
+     Gli altri quattro invece ci sono gia' e coincidono al byte:
+       media       = --verde        rgb(114,238,166)
+       tapparella  = --fase-flush   rgb(125,173,251)
+       luce        = --luce         rgb(252,191,69)
+       temperatura = --warn         rgb(255,155,93)
+     — quelli si usano direttamente, senza doppioni locali. */
+  --cc-alberto: rgb(113,230,205);     /* verde-acqua: preset Germinazione */
+  --cc-sicurezza: rgb(181,155,255);   /* viola: preset Fioritura e anello */
+  --cc-lab: rgb(147,176,255);         /* blu-lavanda: preset Luce bianca */
+
+  /* L'anello usa "sicurezza": prima c'era --fase-fioritura (rosa) come
+     segnaposto, che con --hero-sicurezza in testata stonava. */
+  --cc-ring: var(--cc-sicurezza);
+  --cc-ring-25: rgba(181,155,255,0.25);
+
+  /* --warn (accent ventole = "temperatura" del DS) non ha varianti alpha in
+     :root e inventarle la' sarebbe un colore nuovo per tutta l'app: la sola
+     velatura che serve al bordo "da piano" vive qui, locale alla sezione. */
+  --cc-vent-25: rgba(255,155,93,0.25);
+
+  /* ── Gradienti di testata (--hero-* del DS) ────────────────────────
+     Valori presi TALI E QUALI da PORTING/.../_ds/tokens/gradients.css:
+     umidita→acqua, luce→luci, temperatura→ventole, media→nutrienti,
+     sicurezza→ring. app.css ha solo gli --hero-<fase> (che sono un'altra
+     famiglia: coda a 0.50, non 0.09), quindi questi restano locali.
+     Tutti e cinque partono da una tinta CHIARA al 90% → sulla fascia il
+     testo va in scuro (flag `dark` in COMP). La coda a 0.09 lascia
+     trasparire la superficie scura sul lato destro: li' ci vanno solo
+     elementi con fondo proprio (bottone guida e pill modalita'). */
+  --cc-hero-acqua: linear-gradient(124.6deg, rgba(180,225,254,0.90) 6%, rgba(119,205,252,0.45) 53%, rgba(119,205,252,0.09) 100%);
+  --cc-hero-luci: linear-gradient(124.6deg, rgba(255,208,143,0.90) 6%, rgba(252,191,69,0.45) 53%, rgba(252,191,69,0.09) 100%);
+  --cc-hero-ventole: linear-gradient(124.6deg, rgba(255,195,160,0.90) 6%, rgba(255,155,93,0.45) 53%, rgba(255,155,93,0.09) 100%);
+  --cc-hero-nutrienti: linear-gradient(124.6deg, rgba(180,246,205,0.90) 6%, rgba(114,238,166,0.45) 53%, rgba(114,238,166,0.09) 100%);
+  --cc-hero-ring: linear-gradient(124.6deg, rgba(212,196,255,0.90) 6%, rgba(181,155,255,0.45) 53%, rgba(181,155,255,0.09) 100%);
+}
+/* fuori sezione resta montata (pannello scelto e durata intatti) ma sparisce */
+.cc-root.sez-off { display: none; }
+
+.cc-scroll {
+  flex: 1; min-height: 0; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 14px;
+  padding-right: 4px; padding-bottom: 4px;
+  scrollbar-width: thin; scrollbar-color: var(--fg-3) transparent;
+}
+
+/* ── Nota di blocco (offline / coltivazione spenta / dati assenti) ─── */
+.cc-block {
+  flex: none; display: flex; align-items: center; gap: 11px;
+  padding: 11px 14px; border-radius: var(--r-12);
+  background: var(--contrast-5); border: 1px dashed var(--contrast-40);
+  font-size: 13px; color: var(--fg-2); text-wrap: pretty;
+}
+
+/* ── Rail delle 5 chip ────────────────────────────────────────────────
+   FASCIA FERMA della sezione (data-sez-band, ricetta in app.css): resta in
+   cima allo scroller mentre il pannello — testata a gradiente compresa —
+   le scorre sotto. Serve quindi:
+   · fondo PIENO, o il pannello si vedrebbe negli spazi fra le chip: e' il
+     fondo pagina (--surface-page, la stessa superficie che il badge "M" usa
+     gia' qui per staccarsi dal tile). I gradienti radiali di body a questa
+     quota sono gia' esauriti, quindi non si vede alcuna giunta;
+   · z-index sopra il pannello — lo porta la ricetta della fascia;
+   · un po' di TETTO sotto le chip, cosi' il contenuto sparisce sotto la
+     fascia e non sotto l'ombra delle chip, che sborda di ~12px. Il padding
+     e' compensato da un margine negativo pari: la distanza dal pannello
+     resta quella di prima (il gap 14 dello scroller). */
+.cc-rail {
+  flex: none; display: flex; gap: 10px;
+  position: sticky; top: 0;
+  background: var(--surface-page);
+  padding-bottom: 8px; margin-bottom: -8px;
+}
+.cc-chip {
+  position: relative; flex: 1; min-width: 0;
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: var(--r-12);
+  background: var(--surface-raised); border: 1px solid var(--hairline-strong);
+  box-shadow: var(--shadow-card);
+  color: inherit; font: inherit; text-align: left; cursor: pointer;
+  transition: border-color .15s ease, background .15s ease;
+}
+.cc-chip:hover { background: var(--surface-elevated); }
+/* selezionata: bordo dell'accento + velatura ~10% dello stesso accento.
+   Il livello e' un ::before a opacita' per non dichiarare token alpha nuovi. */
+.cc-chip.on { border: 1.5px solid var(--cc-accent); padding: 9.5px 11.5px; }
+.cc-chip.on::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
+  background: var(--cc-accent); opacity: .10; pointer-events: none;
+}
+.cc-chip > * { position: relative; }
+.cc-chip-disc {
+  width: 34px; height: 34px; border-radius: var(--r-full); flex: none;
+  display: flex; align-items: center; justify-content: center;
+  /* disco pieno d'accento con icona scura: i colori stanno QUI (non inline)
+     perche' su mobile il tile cambia vestito — vedi @media 700px */
+  background: var(--cc-accent); color: var(--ink);
+}
+.cc-chip-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.cc-chip-lab { font-size: 13px; font-weight: 700; color: var(--fg-1); white-space: nowrap; }
+.cc-chip-sub {
+  font-size: 10.5px; color: var(--fg-2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* Badge PIANO/LIBERO: STESSO aspetto e stessa animazione di .st-badge in
+   stato.css — la stessa informazione non puo' avere due vestiti. */
+.cc-badge {
+  flex: none; font-size: 8.5px; font-weight: 800; letter-spacing: .05em;
+  padding: 6px 9px; line-height: 1; border-radius: var(--r-full);
+  background: var(--contrast-10); color: var(--fg-2);
+}
+.cc-badge.man {
+  background: var(--danger); color: var(--oggi);
+  animation: pulse-manuale 1.6s ease-in-out infinite;   /* keyframes in stato.css */
+}
+@media (prefers-reduced-motion: reduce) { .cc-badge.man { animation: none; } }
+
+/* ── Pannello ───────────────────────────────────────────────────────── */
+/* RAGGI CONCENTRICI (convenzione generale dell'app)
+   Un elemento stondato dentro un contenitore stondato non puo' avere un raggio
+   qualunque: le due curve devono essere concentriche, altrimenti la distanza
+   fra le superfici cambia lungo l'angolo e l'occhio legge un errore. La regola:
+
+       raggio esterno = raggio interno + distanza fra le superfici
+
+   dove la distanza si misura SUPERFICIE-A-SUPERFICIE (i bordi contano).
+   Conto per questo pannello:
+     - card interne (.cc-box): border-radius 12 sul bordo ESTERNO  →  12
+     - distanza card ↔ superficie interna del pannello = padding di .cc-cols → 16
+     - raggio della superficie INTERNA del pannello = 12 + 16                → 28
+     - il pannello ha un bordo di 1px e border-radius si applica al bordo
+       esterno, quindi il valore da scrivere e' 28 + 1                       → 29
+   Da qui `border-radius: 29px` (non e' un token: e' un valore CALCOLATO da
+   questa geometria — se cambiano padding o raggio delle card va rifatto). */
+.cc-panel {
+  flex: none; min-width: 0;
+  background: var(--surface-raised); border: 1px solid var(--hairline-strong);
+  border-radius: 29px; box-shadow: var(--shadow-card); overflow: hidden;
+}
+.cc-head {
+  position: relative;
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--hairline);
+}
+/* Fascia di testata. Di default e' la velatura dell'accento (stessa tecnica
+   delle chip); i pannelli con un GRADIENTE di design (`--cc-hero`, oggi solo
+   l'acqua) lo mostrano pieno, come nello snapshot. */
+.cc-head::before {
+  content: ''; position: absolute; inset: 0;
+  background: var(--cc-accent); opacity: .16; pointer-events: none;
+}
+.cc-panel--hero .cc-head::before { background: var(--cc-hero); opacity: 1; }
+.cc-head > * { position: relative; }
+/* Sul gradiente chiaro il testo va in SCURO (design: --utilities-overlay).
+   Titolo e sottotitolo stanno nella parte opaca a sinistra; il bottone guida
+   e la pill modalita' hanno un fondo proprio e reggono anche sulla coda. */
+.cc-panel--hero .cc-head-lab { color: var(--ink); }
+.cc-panel--hero .cc-head-sub { color: var(--ink-2); }
+.cc-head-disc {
+  width: 40px; height: 40px; border-radius: var(--r-12); flex: none;
+  display: flex; align-items: center; justify-content: center;
+}
+.cc-head-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.cc-head-lab { font-family: var(--font-display); font-weight: 400; font-size: 20px; color: var(--fg-1); }
+/* sottotitolo che contestualizza (convenzione dell'app): dice DA QUANDO sono
+   i dati che il pannello sta mostrando */
+.cc-head-sub { font-size: 11.5px; color: var(--fg-2); }
+
+/* Bottone guida — geometria dello snapshot: cerchio 36px, fondo bianco al 30%,
+   icona in scuro (--utilities-overlay del DS = --ink qui). */
+.cc-guida {
+  flex: none; width: 36px; height: 36px; border-radius: var(--r-full); border: 0;
+  background: var(--contrast-10); color: var(--fg-1); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s ease;
+}
+.cc-guida:hover { background: var(--w-30); }
+.cc-panel--hero .cc-guida { background: var(--w-30); color: var(--ink); }
+.cc-panel--hero .cc-guida:hover { background: var(--w-75); }
+
+/* segmented Pianificato ⇄ Libero */
+.cc-modo {
+  flex: none; display: flex; gap: 3px; padding: 3px;
+  border-radius: var(--r-full); background: var(--ink-40);
+}
+.cc-modo-b {
+  /* larghezza FISSA e generosa: "Libero" -> "Confermare?" non deve mai
+     cambiare l'ingombro delle due pill (su mobile vince il grid 1fr 1fr) */
+  width: 108px; text-align: center;
+  height: 32px; padding: 0; border: 0; border-radius: var(--r-full);
+  background: transparent; color: var(--fg-2);
+  font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;
+  transition: background .15s ease, color .15s ease;
+}
+/* :not(.arm): la regola hover ha specificita' MAGGIORE di .cc-modo-b.arm e
+   vincerebbe — armata+hover restava grigia e "lampeggiava" invece di stare
+   semplicemente in ambra. */
+.cc-modo-b:hover:not(:disabled):not(.arm) { background: var(--contrast-10); color: var(--fg-1); }
+/* attiva = pill piena. `disabled` sulla pill attiva serve a impedire il
+   ri-clic su una modalita' gia' in corso: NON deve sembrare spenta. */
+.cc-modo-b.on, .cc-modo-b.on:disabled { background: var(--oggi); color: var(--ink); opacity: 1; }
+.cc-modo-b:disabled { opacity: .45; cursor: default; }
+/* armata = ambra piena, come ogni azione in attesa di conferma nell'app */
+.cc-modo-b.arm, .cc-modo-b.arm:disabled { background: var(--luce); color: var(--ink); opacity: 1; }
+
+/* ── Corpo a tre colonne (com'è ora · da piano · manuale) ───────────── */
+/* padding e gap UNIFORMI a 16 (prima il top era 14 e stonava contro i 16 degli
+   altri lati): sono anche i numeri su cui e' calcolato il raggio del pannello,
+   vedi la nota RAGGI CONCENTRICI su .cc-panel.
+   align-items: stretch (default, non piu' `start`) = i tre riquadri prendono
+   tutti l'altezza del piu' alto della riga. Il contenuto resta in alto perche'
+   ogni .cc-box e' una colonna flex con justify-content di default (flex-start):
+   lo spazio in piu' cade in fondo alla card, non si distribuisce fra le righe. */
+.cc-cols {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px; padding: 16px;
+}
+/* ECCEZIONE alla regola "tre riquadri stessa altezza": vale finche' i tre
+   contenuti sono confrontabili. Nel pannello Luci il riquadro manuale tiene
+   nove preset, cinque cursori, due CTA e la rampa: e' tre volte gli altri
+   due, e stirarli alla sua altezza produce due cornici vuote per mezzo
+   schermo — che si leggono come "qui manca qualcosa". Qui le card finiscono
+   dove finisce il loro contenuto; restano allineate in ALTO, che e' il bordo
+   che l'occhio segue leggendo. */
+.cc-cols--start { align-items: start; }
+.cc-box {
+  min-width: 0; display: flex; flex-direction: column;
+  border-radius: var(--r-12); padding: 12px 13px;
+  background: var(--surface-sunken); border: 1px solid var(--hairline-strong);
+}
+/* CENTRATURA VERTICALE della testata (regola 02/08, gemella della correzione
+   di .st-* in stato.css): l'intestazione deve avere sopra e sotto la STESSA
+   aria. Sopra c'e' il padding della card (12px); sotto c'e' questo margine
+   PIU' il padding-top della prima riga (7px) → 5+7 = 12. Con il vecchio 4px
+   la testata risultava spinta in basso di un pelo, e su cinque pannelli si
+   vedeva. `align-items: center` allinea fra loro icona, titolo e pill. */
+/* min-height = l'altezza della pill .cc-tag (8.5px di testo + 6+6 di padding).
+   Senza, la testata di "Com'è ora" — che la pill non ce l'ha — e' 5px piu'
+   bassa delle altre due, e da li' in giu' TUTTE le righe del primo riquadro
+   corrono 5px sopra alle gemelle del secondo: il confronto a coppie fra i due
+   riquadri e' proprio quello che si viene a leggere qui. */
+.cc-box-head { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; min-height: 20.5px; }
+.cc-box-t {
+  flex: 1; font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em;
+  font-weight: 800; color: var(--fg-1);
+}
+.cc-box-t--acc { color: var(--cc-accent); }
+/* Spiegazione sotto il titolo del riquadro (riorganizzazione Luci 03/08):
+   trattamento "a citazione" — filetto sinistro + padding — UGUALE per gli
+   introduttivi di tutti e tre i box, cosi' si leggono come la stessa specie. */
+.cc-box-sub {
+  font-size: 12px; line-height: 1.45; color: var(--fg-3);
+  margin: 6px 0 0;
+  border-left: 2px solid var(--hairline-strong); padding-left: 10px;
+}
+/* Sotto l'introduttivo di OGNI riquadro c'e' una riga di divisione a piena
+   larghezza (.cc-sep--full): chiude il cappello e apre il contenuto. Le
+   spaziature sono le stesse nei tre box, cosi' le prime righe di "Com'è ora"
+   e di "Pianificato" restano sulla stessa quota — a patto che i due
+   introduttivi occupino lo stesso numero di righe (per questo i testi si
+   tengono corti e paragonabili). */
+.cc-box-sub + .cc-sep { margin-top: 11px; margin-bottom: 5px; }
+
+/* "da piano": velatura dell'accento, come la testata. Il BORDO e' l'accento
+   al 25% (--cc-soft): in automatico dev'essere un accenno, non una cornice —
+   la cornice piena resta al box "manuale", che e' l'unico stato che deve
+   gridare. */
+.cc-box--deve { position: relative; border-color: var(--cc-soft); }
+.cc-box--deve::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
+  background: var(--cc-accent); opacity: .10; pointer-events: none;
+}
+.cc-box--deve > * { position: relative; }
+/* in manuale la colonna automatica resta LEGGIBILE ma spenta: dice cosa
+   FAREBBE il piano, e non lo sta facendo. */
+.cc-box--deve.spenta { filter: grayscale(1); opacity: .6; transition: filter .25s ease, opacity .2s ease; }
+
+/* "manuale": in automatico e' grigia, in manuale si accende in rosso-errore
+   (l'accento "energia" del design = --errore in app.css) */
+.cc-box--man { filter: grayscale(1) opacity(.72); transition: filter .25s ease; }
+.cc-box--man.on { filter: none; background: var(--errore-12); border-color: var(--errore); }
+
+/* ── Riga chiave/valore ─────────────────────────────────────────────── */
+/* Riga NON interattiva: era un <button> con la fascia di hover, ma illuminare
+   una banda che lascia buchi ai lati e' rumore, e la riga intera non e' un
+   bersaglio sensato. Dove la spiegazione ha valore c'e' l'(i) in coda
+   (.hint-i in hint.css), unico punto interrogabile. */
+.cc-row {
+  width: 100%; display: flex; align-items: center; gap: 10px;
+  padding: 7px 0; border-bottom: 1px solid var(--hairline);
+}
+.cc-row:last-of-type { border-bottom: 0; }
+/* La cella della chiave ospita, in quest'ordine: label · (i) · pallino di
+   banda. Il gap e' 7px fra label e pallino, ma l'(i) ha un bersaglio da 20px
+   che comprende gia' la sua aria: i margini negativi in .hint-i (hint.css)
+   compensano il gap, cosi' il puntino resta appiccicato alla parola. */
+.cc-row-k {
+  flex: 1; min-width: 0; font-size: 13px; color: var(--fg-2);
+  display: flex; align-items: center; gap: 7px;
+}
+/* Valore = stessa taglia e stesso peso della label (scelta Alberto 03/08):
+   a distinguerli basta il colore. Niente grassetto, niente mezzi punti. */
+.cc-row-v {
+  flex: none; font-size: 13px; color: var(--fg-1);
+  text-align: right; max-width: 62%;
+}
+/* pallino di banda IN CODA alla label: a sinistra della riga faceva rientrare
+   solo le righe che ce l'hanno, e la colonna di icone usciva a scalini */
+.cc-dot { width: 9px; height: 9px; border-radius: var(--r-full); flex: none; }
+
+/* ── Tag ATTIVA / SOSPESA / DISATTIVATA ─────────────────────────────── */
+/* padding 6/9: le pill di stato erano schiacciate contro il testo e in mezzo
+   a righe alte 30px sparivano — stessa taglia del badge PIANO/LIBERO */
+.cc-tag {
+  flex: none; font-size: 8.5px; font-weight: 800; letter-spacing: .05em;
+  padding: 6px 9px; line-height: 1; border-radius: var(--r-full);
+  background: var(--contrast-10); color: var(--fg-3);
+}
+.cc-tag.on { background: var(--cc-accent); color: var(--ink); }
+.cc-tag.man { background: var(--errore); color: var(--ink); }
+
+/* ── Note ───────────────────────────────────────────────────────────── */
+/* di base scorrono come testo (dentro ci sono <code> e frammenti inline: un
+   display:flex li spezzerebbe in colonne affiancate) */
+.cc-nota { font-size: 12px; color: var(--fg-2); margin-top: 9px; text-wrap: pretty; }
+.cc-nota--fine { font-size: 11px; color: var(--fg-3); }
+/* Rimando a un'altra sezione dell'app: e' un bottone, ma dentro un testo si
+   comporta e si legge come un link. Sottolineatura staccata dalla parola
+   (underline-offset) perche' a 12px una linea attaccata sporca le lettere. */
+.cc-link {
+  padding: 0; border: 0; background: none; font: inherit; cursor: pointer;
+  color: var(--cc-accent); text-decoration: underline; text-underline-offset: 2px;
+  text-decoration-color: var(--cc-soft); transition: text-decoration-color .15s ease;
+}
+.cc-link:hover, .cc-link:focus-visible { text-decoration-color: var(--cc-accent); }
+
+.cc-nota code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* break-word e non break-all: il path va a capo INTERO sulla riga dopo
+     invece di spezzarsi a meta' parola ("/co | nfig/serra_piano.yaml") */
+  font-size: 10.5px; color: var(--fg-2); overflow-wrap: break-word;
+}
+/* le note con icona sono invece righe: icona a sinistra, testo accanto.
+   (.cc-nota--alert e' stata rimossa: in modalita' Libera ripeteva parola per
+   parola l'introduttivo del riquadro, e comparendo al posto suo faceva
+   saltare l'altezza del box a ogni cambio di modalita'.) */
+.cc-nota--lock {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 11px; border-radius: var(--r-8); margin-top: 10px;
+  font-size: 11.5px; color: var(--fg-1);
+}
+/* AVVISI: riquadro GIALLO pieno con testo nero (scelta Alberto, come i
+   .pmanual del Piano ma in giallo). Un'unica classe per tutti i messaggi
+   di avvertenza sparsi nei pannelli. */
+/* Autosufficiente: la base .cc-nota e' solo testo, qui servono corpo,
+   respiro e angoli. SENZA icone: solo il messaggio. */
+.cc-nota--gialla {
+  display: block; padding: 10px 12px; border-radius: var(--r-8);
+  background: var(--luce); border: 0; color: var(--ink);
+  font-weight: 500; font-size: 11.5px; line-height: 1.45;
+}
+/* Variante "quieta" (03/08): STESSO ingombro della gialla — resta nel suo
+   riquadro — ma sfondo a velo e testo smorzato. Serve al box Libero spento:
+   il cambio di modalita' non deve far spostare nulla. */
+.cc-nota--gialla.quieta { background: var(--contrast-5); color: var(--fg-3); }
+.cc-nota--lock { background: var(--contrast-5); border: 1px dashed var(--contrast-40); color: var(--fg-3); }
+
+/* ── Stepper durata ─────────────────────────────────────────────────── */
+.cc-stepper {
+  display: flex; align-items: center; gap: 9px; margin-top: 11px;
+  padding: 9px 11px; border-radius: var(--r-8); background: var(--surface-raised);
+}
+.cc-stepper-lab { flex: 1; min-width: 0; display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--fg-2); }
+.cc-step {
+  width: var(--ctl-md); height: var(--ctl-md); border-radius: var(--r-8);
+  border: 1px solid var(--hairline-strong); background: var(--contrast-5);
+  color: var(--fg-1); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s ease;
+}
+.cc-step:hover:not(:disabled) { background: var(--contrast-10); }
+.cc-step:disabled { opacity: .35; cursor: default; }
+.cc-stepper-val { flex: none; min-width: 62px; text-align: center; font-size: 17px; font-weight: 600; color: var(--fg-1); }
+
+/* ── I due comandi armati ───────────────────────────────────────────── */
+/* GRID a due colonne uguali, non flex-wrap. Stesso motivo di .cc-modo: la
+   geometria NON deve dipendere da chi e' il figlio.
+   AUDIT R2 (C-R2-4) — la ragione storica non vale piu': dal fix M-1 la forma
+   che Hint restituisce e' stabile (il wrapper dipende da `wrap` e dalla presenza
+   di `disabled`, mai dal testo), quindi qui il figlio e' sempre .hint-wrap. La
+   regola resta comunque, e va tenuta: agganciarsi al wrapper vorrebbe dire
+   riscrivere il layout ogni volta che un call site smette di passare `disabled`,
+   e `1fr 1fr` fa la cosa giusta con qualunque figlio. */
+.cc-chips {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 8px; margin-top: 11px; align-items: stretch;
+}
+/* i figli (wrapper o bottone) devono poter rimpicciolire sotto il contenuto */
+.cc-chips > * { min-width: 0; }
+/* variante a UN comando solo (es. "Applica colore"): occupa la riga intera */
+.cc-chips--uno { grid-template-columns: 1fr; }
+.cc-cmd {
+  width: 100%; display: flex; align-items: center; gap: 9px;
+  padding: 10px 12px; border-radius: var(--r-8);
+  border: 1.5px solid var(--errore); background: var(--errore-12);
+  color: var(--errore); font: inherit; text-align: left; cursor: pointer;
+  transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+.cc-cmd:hover:not(:disabled) { background: var(--errore-35); }
+.cc-cmd:disabled { opacity: .45; cursor: default; }
+.cc-cmd-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.cc-cmd-txt b { font-size: 12.5px; font-weight: 700; color: var(--fg-1); }
+.cc-cmd-txt i { font-size: 11px; font-style: normal; color: var(--fg-2); }
+
+/* CTA PRIMARIA ("Avvia ricircolo"): pieno nell'accento del pannello, testo in
+   contrasto. Stessa geometria dell'altro comando — cambia solo il peso
+   visivo: e' l'azione che si sta cercando, lo Stop e' il freno. */
+/* CTA "vai": dal design NON e' piena — superficie scura PIENA (mai
+   transparent: il velo rosso del box manuale trasparirebbe), bordo accent
+   2px, titolo bianco, sottotitolo grigio, icona play nell'accent. */
+/* variante CENTRATA (Applica colore di Luci): contenuti in colonna al centro,
+   fondo verde traslucido — miscelato sulla superficie, cosi' il velo rosso
+   del box manuale non traspare (regola: mai transparent puro li' dentro). */
+.cc-cmd--go.cc-cmd--center {
+  flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; gap: 5px;
+  background: color-mix(in srgb, var(--cc-accent) 12%, var(--surface-raised));
+}
+.cc-cmd--go.cc-cmd--center .cc-cmd-txt { align-items: center; }
+.cc-cmd--go.cc-cmd--center:hover:not(:disabled) { background: color-mix(in srgb, var(--cc-accent) 18%, var(--surface-raised)); filter: none; }
+
+.cc-cmd--go {
+  border: 2px solid var(--cc-accent); background: var(--surface-elevated); color: var(--fg-1);
+}
+.cc-cmd--go .cc-cmd-ic { color: var(--cc-accent); }
+.cc-cmd--go .cc-cmd-txt b { color: var(--fg-1); }
+.cc-cmd--go .cc-cmd-txt i { color: var(--fg-2); }
+.cc-cmd--go:hover:not(:disabled) { background: var(--surface-elevated); filter: brightness(1.12); }
+
+/* armato = ambra piena (stessa convenzione di .st-shoot.arm in stato.css) */
+.cc-cmd.arm { border-color: var(--luce); background: var(--luce-10); color: var(--luce); }
+.cc-cmd.arm .cc-cmd-txt b { color: var(--luce); }
+/* armata: ambra PIENA (convenzione conferma manuale, come .st-shoot.arm) */
+.cc-cmd--go.arm { border-color: var(--luce); background: var(--luce); color: var(--ink); }
+.cc-cmd--go.arm .cc-cmd-ic { color: var(--ink); }
+.cc-cmd--go.arm .cc-cmd-txt b { color: var(--ink); }
+.cc-cmd--go.arm .cc-cmd-txt i { color: var(--ink-2); }
+.cc-cmd--go.arm:hover:not(:disabled) { background: var(--luce); filter: brightness(.95); }
+
+/* ── Griglia dei preset (pannello Luci) ─────────────────────────────── */
+/* GRID a due colonne, non flex-wrap: stesso motivo di .cc-chips e .cc-modo —
+   la taglia si mette sul figlio QUALUNQUE ESSO SIA, non sul wrapper di Hint.
+   AUDIT R2 (C-R2-4): dal fix M-1 la forma di Hint e' stabile (wrapper legato a
+   `wrap` e alla presenza di `disabled`, mai al testo), quindi il figlio qui e'
+   sempre .hint-wrap; la regola resta perche' non deve tornare a dipendere da
+   quale prop passa un call site. */
+.cc-presets {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 8px; margin-top: 11px; align-items: stretch;
+}
+.cc-presets > * { min-width: 0; }
+/* GEOMETRIA E TRATTAMENTO PRESI DALLO SNAPSHOT (Calendario Ciclo v3.dc.html,
+   builder PR + markup dei tile):
+     contenitore  display:flex; flex-wrap:wrap; gap:8px
+     tile         flex:1 1 calc(50% - 4px); min-width:150px
+                  padding:9px 11px; radius --r-8; border 1.5px accent
+                  background = accent al 10%   (--cards-<x>-base-10)
+                  icona 18px nell'accento · titolo 12.5/700 --fg-1
+                  sottotitolo 11px chiaro
+   Il FLEX (non la grid) e' quello che fa venire "Spegni tutto" a TUTTA
+   LARGHEZZA da solo: e' il nono di nove, resta solo sulla sua riga e il
+   flex-grow gliela fa occupare tutta. Con una grid 1fr 1fr resterebbe
+   largo mezza riga — per questo qui la regola "sempre grid" non vale, e la
+   sua ragione (non agganciarsi al wrapper di Hint) e' coperta lo stesso
+   mettendo la taglia sul FIGLIO QUALUNQUE ESSO SIA. */
+.cc-presets { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 11px; }
+.cc-presets > * { flex: 1 1 calc(50% - 4px); min-width: 150px; }
+.cc-preset {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 11px; border-radius: var(--r-8);
+  border: 1.5px solid var(--preset);
+  /* fondo = accento al 10%, come --cards-<x>-base-10 del DS */
+  background: color-mix(in srgb, var(--preset) 10%, transparent);
+  color: var(--preset); font: inherit; text-align: left; cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+}
+.cc-preset:hover:not(:disabled) { background: color-mix(in srgb, var(--preset) 20%, transparent); }
+.cc-preset:disabled { opacity: .45; cursor: default; }
+.cc-preset-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.cc-preset-txt b { font-size: 12.5px; font-weight: 700; color: var(--fg-1); }
+/* il sottotitolo e' un mix ("D 70 · R 70 · B 30"): mai a capo, taglia con … */
+.cc-preset-txt i {
+  font-size: 11px; font-style: normal; color: var(--w-75);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* armato = ambra piena. Vale solo per Alba e Tramonto, gli unici due tile
+   che mandano un comando invece di preparare i cursori. */
+.cc-preset.arm { border-color: var(--luce); background: var(--luce); color: var(--ink); }
+.cc-preset.arm .cc-preset-txt b { color: var(--ink); }
+.cc-preset.arm .cc-preset-txt i { color: var(--ink-2); }
+
+/* ── Titolo di sezione con icona (design: advTitle) ─────────────────── */
+/* Titoletto di sezione dentro il box Libero (affinamento 03/08: "un po' di
+   gerarchia" — stessa famiglia visiva di .cc-adv-sez, ma con l'icona). */
+.cc-sez {
+  display: flex; align-items: center; gap: 7px;
+  margin: 12px 0 4px; font-size: 12px; font-weight: 500;
+  text-transform: uppercase; letter-spacing: .07em; color: var(--fg-2);
+}
+/* DUE SEPARATORI, DUE MESTIERI (correzione Alberto 03/08):
+     .cc-sep         fra le SEZIONI di un riquadro (i titoletti del box
+                     Libero) — resta dentro il padding laterale, perche'
+                     divide contenuto da contenuto;
+     .cc-sep--full   sotto l'INTRODUTTIVO del riquadro — sanguina nel padding
+                     e taglia la card da bordo a bordo, perche' li' non divide
+                     due sezioni: chiude il cappello del box.
+   -13px = il padding orizzontale di .cc-box, non uno in piu' (il vecchio -16
+   sbordava di 3px oltre il bordo della card). */
+.cc-sep { height: 1px; background: var(--hairline); margin: 14px 0 2px; }
+.cc-sep--full { margin-left: -13px; margin-right: -13px; }
+
+/* (la "sezione avanzata a scomparsa" — .cc-adv/.cc-adv-head/.cc-adv-t/
+   .cc-adv-body — e' stata rimossa con BoxAdv: i controlli fini stanno ora nei
+   riquadri manuali. Con essa se n'e' andato anche .cc-adv-sez, il titoletto
+   senza icona: i Nutrienti erano l'ultimo pannello a usarlo, e dal 04/08
+   passano a .cc-sez come gli altri quattro. Di titoletti ne resta UNA
+   famiglia sola.) */
+
+/* ── Cursori dei canali (Luci) ──────────────────────────────────────── */
+/* MISURE DALLO SNAPSHOT (markup di advChannels):
+     pallino 12px · label larga 118px, 12px, --fg-2
+     pista 4px raggio 2px su --utilities-contrast-10
+     riempimento fino al valore nell'ACCENTO del pannello (ambra, per le luci)
+     valore mono largo 40px, allineato a destra, 11.5px, --fg-1
+   Il riempimento e' una sfumatura a due tappe sulla pista, non un secondo
+   elemento assoluto: stessa resa, meta' dei nodi, e la percentuale arriva
+   dallo stile inline (--fill), che le pseudo-classi ereditano. */
+.cc-sliders { display: flex; flex-direction: column; gap: 4px; }
+.cc-slider { display: flex; align-items: center; gap: 10px; padding: 5px 0; }
+.cc-slider-dot { width: 12px; height: 12px; border-radius: var(--r-full); flex: none; }
+.cc-slider-lab { flex: none; width: 118px; font-size: 12px; color: var(--fg-2); }
+.cc-slider-val { flex: none; width: 40px; text-align: right; font-size: 11.5px; color: var(--fg-1); }
+.cc-slider input[type="range"] {
+  flex: 1; min-width: 0; height: 22px; margin: 0;
+  -webkit-appearance: none; appearance: none; background: transparent; cursor: pointer;
+  --fill: 0%;
+}
+.cc-slider input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px; border-radius: 2px;
+  background: linear-gradient(90deg,
+    var(--cc-accent) 0 var(--fill), var(--contrast-10) var(--fill) 100%);
+}
+.cc-slider input[type="range"]::-moz-range-track {
+  height: 4px; border-radius: 2px;
+  background: linear-gradient(90deg,
+    var(--cc-accent) 0 var(--fill), var(--contrast-10) var(--fill) 100%);
+}
+.cc-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 16px; height: 16px; margin-top: -6px; border-radius: var(--r-full);
+  background: var(--cc-accent); border: 0;
+}
+.cc-slider input[type="range"]::-moz-range-thumb {
+  width: 16px; height: 16px; border-radius: var(--r-full);
+  background: var(--cc-accent); border: 0;
+}
+.cc-slider input[type="range"]:disabled { opacity: .4; cursor: default; }
+
+/* lo stepper del Fade e' staccato dai cursori da una hairline: e' un'altra
+   grandezza (secondi, non percentuali) e nel design ha un separatore proprio */
+.cc-riga-sep { margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--hairline); }
+.cc-riga-sep .cc-stepper { margin-top: 0; }
+
+/* ── Righe con selettore (livelli ventole, colore ring) ─────────────── */
+.cc-sels { display: flex; flex-direction: column; gap: 6px; margin-top: 11px; }
+.cc-sel {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 11px; border-radius: var(--r-8); background: var(--surface-raised);
+}
+/* la label ospita anche l'(i): stessa convenzione delle righe kv */
+.cc-sel-lab { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--fg-2); }
+/* select vestita a mano: quella di serie porta con se' il tema del sistema
+   operativo (fondo bianco su macOS) e stonerebbe su tutto il resto */
+.cc-sel select {
+  flex: none; min-width: 106px; height: var(--ctl-sm);
+  padding: 0 26px 0 10px; border-radius: var(--r-8);
+  border: 1px solid var(--hairline-strong); background: var(--contrast-5);
+  color: var(--fg-1); font: inherit; font-size: 12.5px; font-weight: 600;
+  -webkit-appearance: none; appearance: none; cursor: pointer;
+  /* chevron disegnato nel background: un'icona in piu' nel DOM per una
+     freccina non si giustifica */
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+                    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 14px) calc(50% + 1px), calc(100% - 9px) calc(50% + 1px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+.cc-sel select:hover:not(:disabled) { background-color: var(--contrast-10); }
+.cc-sel select:disabled { opacity: .45; cursor: default; }
+/* le opzioni sono rese dal sistema: fondo scuro esplicito o restano bianche */
+.cc-sel option { background: var(--surface-raised); color: var(--fg-1); }
+
+/* ── Righe a SEGMENTI (livelli ventole) ─────────────────────────────── */
+/* Quattro righe "label + segmented a 4 pill". Il segmento acceso e' lo STATO
+   REALE letto dal sensore: la riga si legge come un indicatore anche senza
+   toccarla, e diventa comando solo quando la si preme (armata, due tocchi). */
+.cc-segs { display: flex; flex-direction: column; gap: 8px; margin-top: 11px; }
+.cc-seg-r { display: flex; flex-direction: column; gap: 6px; }
+/* la prima riga e' il DERIVATO, non una ventola: la hairline sotto la stacca
+   dalle tre reali invece di lasciarle sembrare quattro cose uguali */
+.cc-seg-r.der { padding-bottom: 9px; border-bottom: 1px solid var(--hairline); }
+.cc-seg-lab {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12.5px; color: var(--fg-2);
+}
+.cc-seg-lab em { font-style: normal; font-size: 10.5px; color: var(--fg-3); }
+/* GRID a quattro colonne uguali, non flex: "Confermi?" non deve allargare la
+   sua pill a spese delle altre tre, e la taglia va messa sul figlio qualunque
+   esso sia (wrapper di Hint o bottone). Stesso trucco di .cc-modo. */
+.cc-seg {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 3px; padding: 3px; border-radius: var(--r-full); background: var(--ink-40);
+}
+.cc-seg > * { min-width: 0; }
+.cc-seg-b {
+  width: 100%; height: 30px; padding: 0; border: 0; border-radius: var(--r-full);
+  background: transparent; color: var(--fg-2);
+  font: inherit; font-size: 11.5px; font-weight: 700; cursor: pointer; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+  transition: background .15s ease, color .15s ease;
+}
+.cc-seg-b:hover:not(:disabled):not(.arm):not(.on) { background: var(--contrast-10); color: var(--fg-1); }
+/* acceso = livello in cui gira ADESSO. Ambra piena, come nello screenshot. */
+.cc-seg-b.on { background: var(--luce); color: var(--ink); }
+.cc-seg-b:disabled { opacity: .45; cursor: default; }
+.cc-seg-b.on:disabled { opacity: .7; }
+/* armato = in attesa del secondo tocco: stessa ambra ma a contorno, per non
+   confondersi con il segmento gia' acceso */
+.cc-seg-b.arm, .cc-seg-b.arm:disabled {
+  background: var(--luce-10); color: var(--luce);
+  box-shadow: inset 0 0 0 1.5px var(--luce); opacity: 1;
+}
+
+/* ── Colonna con piu' card impilate ─────────────────────────────────── */
+/* Una cella della griglia puo' contenere due card (Nutrienti: le pompe e,
+   sotto, la dose di fase). Lo stesso gap verticale delle colonne, cosi' la
+   spaziatura resta una sola in tutto il pannello. */
+.cc-colonna { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+
+/* ── Dose di fase in tre tessere (pannello Nutrienti) ───────────────── */
+/* Tre numeri da confrontare fra loro: in colonna sarebbero tre righe da
+   leggere una per volta, affiancati si leggono in un colpo solo. */
+.cc-dosi-g {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px; margin-top: 4px;
+}
+/* Tessere APPESE A UNA LISTA di righe (Prossima azione): il filetto di chiusura
+   dell'ultima riga e i riquadri si toccavano, e le tessere sembravano il
+   seguito della riga invece di un blocco a se'. Lo stacco diventa lo STESSO
+   che le tessere hanno sotto l'introduttivo dell'altra card (5px sotto al
+   filetto + 4px sopra alla griglia = 9): una sola distanza in tutto il
+   pannello, misurata sempre dalla hairline che le precede. */
+.cc-row + .cc-dosi-g { margin-top: 9px; }
+.cc-dosi-t {
+  min-width: 0; display: flex; flex-direction: column; gap: 2px;
+  padding: 9px 10px; border-radius: var(--r-8);
+  background: var(--surface-raised);
+  /* niente fili/bordi colorati (bocciati): la tessera e' neutra, il colore
+     della pompa lo porta SOLO il pallino accanto al nome */
+}
+.cc-dosi-n { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--fg-2); }
+.cc-dosi-t b { font-size: 15px; font-weight: 700; color: var(--fg-1); white-space: nowrap; }
+/* Seconda riga della tessera ("8.1 ml su 4.5 L"): a 10px e --fg-3 (25% di
+   bianco) si leggeva a fatica, ed e' la riga che dice su quanta acqua vale il
+   numero grande. +1px e --fg-2 (50%): resta grigia, quindi chiaramente
+   subordinata al bianco pieno del ml/L, ma si legge. */
+.cc-dosi-t i {
+  font-size: 11px; font-style: normal; color: var(--fg-2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* LE STESSE TESSERE DENTRO "Prossima azione". Li' il fondo non e' neutro: e'
+   il sunken VELATO d'accento (.cc-box--deve::before), quindi piu' chiaro e
+   verdino — e --surface-raised, che sull'altra card stacca benissimo, ci si
+   appoggia sopra quasi senza confine. Le tessere scendono di un gradino
+   (stesso raised tirato verso --ink) invece di salirne uno: il verdino resta
+   il fondo del riquadro, e i tre numeri tornano a leggersi come tre blocchi
+   posati sopra. Nessun colore nuovo, solo i token gia' in uso. */
+.cc-box--deve .cc-dosi-t {
+  background: color-mix(in srgb, var(--ink) 25%, var(--surface-raised));
+}
+
+/* riga chiave/valore in un contesto che non e' una lista: niente bordo sotto */
+.cc-row--sola { border-bottom: 0; margin-top: 4px; }
+
+/* ── I tre EROGA (pannello Nutrienti) ───────────────────────────────── */
+/* GRID a tre colonne uguali — stesso trucco di .cc-chips: la geometria non
+   deve dipendere da quale figlio arriva (wrapper di Hint o bottone).
+   Il COLORE del bottone e' la pompa: --pompa arriva inline dalla mappa
+   vincolante (Rossa·Grow, Verde·Micro, Blu·Bloom) e non e' uno stato. */
+.cc-eroga {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px; margin-top: 11px; align-items: stretch;
+}
+.cc-eroga > * { min-width: 0; }
+/* CONTORNO colorato + play nello stesso colore, come nel design: il pieno
+   colorato su tre bottoni affiancati diventerebbe un semaforo, e questi non
+   sono stati — sono tre tubi diversi. */
+.cc-dose {
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  padding: 10px 6px; border-radius: var(--r-8);
+  border: 1.5px solid var(--pompa);
+  background: color-mix(in srgb, var(--pompa) 12%, var(--surface-raised));
+  color: var(--pompa); font: inherit; text-align: center; cursor: pointer;
+  transition: filter .15s ease, background .15s ease, border-color .15s ease;
+}
+.cc-dose:hover:not(:disabled) { filter: brightness(1.15); }
+.cc-dose:disabled { opacity: .45; cursor: default; }
+.cc-dose b { font-size: 11.5px; font-weight: 800; letter-spacing: .05em; color: var(--fg-1); }
+/* il nome della pompa non va mai a capo: "Verde · Micro" su due righe
+   spezzerebbe l'identificazione del tubo */
+.cc-dose span { font-size: 10px; color: var(--fg-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+/* armato = ambra piena, come ogni azione in attesa di conferma */
+.cc-dose.arm { border-color: var(--luce); background: var(--luce); color: var(--ink); }
+.cc-dose.arm b { color: var(--ink); }
+.cc-dose.arm span { color: var(--ink-2); }
+
+/* ── Legenda del semaforo (pannello LED Ring) ───────────────────────── */
+/* E' la chiave di lettura dell'anello: cinque righe in ORDINE DI PRIORITÀ,
+   con quella che comanda adesso in evidenza. Le altre restano leggibili ma
+   arretrate — servono a capire cosa vorrebbe dire quel colore, non a
+   competere con la riga attiva. */
+.cc-sem-t {
+  margin-top: 12px; margin-bottom: 6px;
+  font-size: 10px; text-transform: uppercase; letter-spacing: .08em;
+  font-weight: 800; color: var(--fg-3);
+}
+.cc-sem { display: flex; flex-direction: column; gap: 3px; }
+/* i figli sono wrapper di Hint (le righe hanno tutte una spiegazione):
+   devono comportarsi da blocchi a tutta larghezza */
+.cc-sem > * { display: block; width: 100%; min-width: 0; }
+.cc-sem-r {
+  display: flex; align-items: center; gap: 9px;
+  padding: 7px 10px; border-radius: var(--r-8);
+  border: 1px solid transparent; background: var(--contrast-5);
+  opacity: .55; transition: opacity .2s ease, background .2s ease, border-color .2s ease;
+}
+.cc-sem-r.on {
+  opacity: 1; border-color: var(--sem); background: var(--surface-raised);
+}
+.cc-sem-dot { width: 11px; height: 11px; border-radius: var(--r-full); flex: none; background: var(--sem); }
+.cc-sem-lab { flex: 1; min-width: 0; font-size: 12px; color: var(--fg-2); text-wrap: pretty; }
+.cc-sem-r.on .cc-sem-lab { color: var(--fg-1); font-weight: 600; }
+/* etichetta "ORA": stessa taglia e stesso vestito delle pill di stato */
+.cc-sem-now {
+  flex: none; font-size: 8.5px; font-weight: 800; letter-spacing: .05em;
+  padding: 5px 8px; line-height: 1; border-radius: var(--r-full);
+  background: var(--sem); color: var(--ink);
+}
+
+/* ── Responsive: stessi punti di rottura di app.css/stato.css ───────── */
+@media (max-width: 1100px) {
+  /* tre colonne su schermo stretto diventano illeggibili: la lettura ("com'è
+     ora") resta larga sopra, le due colonne "regole/comandi" si affiancano */
+  .cc-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cc-box--ora { grid-column: 1 / -1; }
+}
+@media (max-width: 860px) {
+  /* le 5 chip non stanno piu' in riga: due per riga, la quinta a tutta */
+  .cc-rail { flex-wrap: wrap; }
+  .cc-rail > .cc-chip { flex: 1 1 calc(50% - 5px); }
+}
+@media (max-width: 700px) {
+  .cc-scroll { gap: 12px; padding-right: 0; }
+  .cc-cols { grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 12px 12px 14px; }
+  /* testata a due righe: identita' + guida sopra, scelta modalita' sotto a
+     tutta larghezza (le due pill restano bersagli comodi da toccare) */
+  .cc-head { flex-wrap: wrap; padding: 12px 13px; gap: 10px; }
+  /* il sottotitolo va a capo invece di spingere la guida sulla riga dopo:
+     identita' + guida restano insieme in cima */
+  .cc-head-sub { white-space: normal; }
+  /* 50% GARANTITO per ciascuna pill: grid a colonne uguali. Col flex
+     "Confermi?" riusciva ad allargare la sua meta' a spese dell'altra; con
+     1fr 1fr la geometria non dipende dal contenuto.
+     AUDIT R2 (C-R2-4): la selezione tiene DUE figli possibili non perche' Hint
+     cambi forma col testo (dal fix M-1 non lo fa piu'), ma perche' non tutti i
+     call site passano da Hint — il bottone nudo resta un caso legittimo. */
+  .cc-modo { flex: 1 1 100%; display: grid; grid-template-columns: 1fr 1fr; }
+  .cc-modo > .hint-wrap, .cc-modo > .cc-modo-b { min-width: 0; }
+  .cc-modo-b { width: 100%; padding-left: 0; padding-right: 0; }
+  /* in colonna singola i due comandi si impilano: una colonna sola, e vale
+     per qualunque figlio (wrapper o bottone nudo) */
+  .cc-chips { grid-template-columns: 1fr; }
+  /* taglia e peso ormai uguali alla label anche su desktop: qui resta solo
+     il tetto di larghezza, piu' stretto in colonna singola */
+  .cc-row-v { max-width: 55%; }
+
+  /* Tessere delle dosi: in un terzo di schermo telefono "8.1 ml su 4.5 L" non
+     ci sta su una riga, e i puntini di sospensione taglierebbero proprio i
+     litri. Qui la riga VA A CAPO (lo spazio unificatore nel testo tiene unito
+     "8.1 ml" e "4.5 L": il capoverso cade su "su", l'unico punto dove non
+     spezza un numero dalla sua unita'). */
+  .cc-dosi-t i { white-space: normal; overflow: visible; }
+
+  /* ── Rail: da chip descrittive a TILE A SOLA ICONA ──────────────────
+     Le 5 chip impilate mangiavano mezza schermata prima ancora di arrivare
+     al pannello. Qui diventano quadratini affiancati su UNA riga; se non ci
+     stanno la riga scorre in orizzontale invece di andare a capo. */
+  .cc-rail {
+    flex-wrap: nowrap; gap: 8px;
+    overflow-x: auto; overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    /* overflow-x:auto rende `auto` anche l'asse Y: senza questo padding lo
+       scroll-container taglierebbe il badge che sborda in alto dal tile
+       (badge 21px ancorato a -6px: servono ~8px di aria).
+       Il padding DESTRO ospita lo sbalzo orizzontale del badge sull'ULTIMO
+       tile: senza, quando l'ultimo sottosistema e' in manuale lo sbalzo
+       allarga lo scrollWidth e tutta la fila si taglia di ~6px (visto su
+       iPhone). I tile si ricalcolano ~1.4px piu' piccoli e ci stanno.
+       Il padding SOTTO e' il tetto della fascia ferma (vedi la regola base):
+       10 di padding meno 8 di margine negativo = i 2px di prima. */
+    padding: 8px 7px 10px 0;
+  }
+  .cc-rail::-webkit-scrollbar { display: none; }
+  .cc-rail > .cc-chip {
+    flex: 1 1 0; min-width: 48px; max-width: 72px;
+    aspect-ratio: 1; padding: 0;
+    justify-content: center;                 /* l'icona sta al centro del tile */
+    border-radius: var(--r-12);
+    overflow: visible;                       /* il badge sborda dal bordo */
+  }
+  /* label, stato e pill PIANO/LIBERO spariscono: il nome resta in aria-label
+     e il pannello che si apre si presenta da solo */
+  .cc-rail .cc-chip-txt,
+  .cc-rail .cc-badge { display: none; }
+
+  /* Vestito del tile: NIENTE disco dentro il quadrato e NIENTE bordo — il
+     quadrato E' il colore del sottosistema e l'icona ci sta dentro diretta.
+       selezionato    → fondo PIENO d'accento, icona --ink piena
+       non selezionato → solo velatura ~13% dell'accento, icona nell'accento
+                         al 70%: il salto di intensita' fa da separatore, il
+                         contorno non serve (ed era rumore su cinque tile)
+     Il livello colorato e' il ::before gia' usato dalla chip desktop: qui
+     cambia solo la sua opacita', cosi' non servono token alpha nuovi. */
+  .cc-rail > .cc-chip { border: 0; padding: 0; }
+  .cc-rail > .cc-chip::before {
+    content: ''; position: absolute; inset: 0; border-radius: inherit;
+    background: var(--cc-accent); opacity: .13; pointer-events: none;
+    transition: opacity .15s ease;
+  }
+  .cc-rail > .cc-chip.on::before { opacity: 1; }
+  .cc-rail .cc-chip-disc {
+    width: auto; height: auto; background: none;
+    color: var(--cc-accent); opacity: .7; transition: opacity .15s ease;
+  }
+  .cc-rail .cc-chip-disc svg { width: 30px; height: 30px; }
+  .cc-rail > .cc-chip.on .cc-chip-disc { color: var(--ink); opacity: 1; }
+  /* badge "M" in stile notifica iOS: pallino rosso pieno a cavallo dello
+     spigolo in alto a destra. Sostituisce la pill LIBERO, che qui non
+     entrerebbe. In automatico non si renderizza proprio (vedi Controllo.jsx). */
+  .cc-chip-m {
+    position: absolute; top: -6px; right: -6px; z-index: 1;
+    /* piu' aria attorno alla M: cresce il cerchio, non la lettera */
+    width: 21px; height: 21px; border-radius: var(--r-full);
+    display: flex; align-items: center; justify-content: center;
+    background: var(--danger); color: var(--oggi);
+    font-size: 10px; font-weight: 800; line-height: 1;
+    border: 1.5px solid var(--surface-page);   /* stacco dal tile, come iOS */
+    animation: pulse-manuale 1.6s ease-in-out infinite;  /* keyframes in stato.css */
+  }
+}
+/* fuori dal mobile il badge "L" non esiste: c'e' la pill LIBERO per esteso */
+@media (min-width: 701px) { .cc-chip-m { display: none; } }
+@media (prefers-reduced-motion: reduce) { .cc-chip-m { animation: none; } }

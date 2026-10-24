@@ -24,7 +24,7 @@ Sul **mio esemplare già modificato** ho verificato via Wi-Fi comandi, fotografi
 
 ## I nove passi
 
-Il controller e il bridge sono già nella repository: non devi ripetere l'indagine sul traffico cloud. **L'app completa Home Assistant è pronta e in fase di test, ma non è ancora pubblicata qui**; i passi finali spiegano l'integrazione manuale attualmente disponibile.
+Controller, bridge e app Home Assistant sono nella repository: non devi ripetere l'indagine sul traffico cloud. L'app è ancora **sperimentale**; il passo 09 distingue la prova manuale di MQTT dalla sua installazione.
 
 <div class="chapter-grid" markdown="1">
 
@@ -47,9 +47,13 @@ Il controller e il bridge sono già nella repository: non devi ripetere l'indagi
 - **08** [Attivare i servizi automatici](setup/08-servizi-automatici.md) <span class="path-tags"><span class="path-tag path-tag-wifi">Wi-Fi</span><span class="path-tag path-tag-usb">USB</span></span>
   Imposta la rete in base al collegamento scelto e abilita i timer comuni.
 - **09** [Collegare Home Assistant](setup/09-home-assistant.md) <span class="path-tags"><span class="path-tag path-tag-wifi">Wi-Fi</span><span class="path-tag path-tag-usb">USB</span></span>
-  Integra i topic MQTT e prova il flusso completo.
+  Integra i topic MQTT, prova il flusso completo e installa l'app se vuoi usarne l'interfaccia.
 
 </div>
+
+## App Home Assistant
+
+L'[app Linfa Local Control](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/app/DOCS.md) comprende interfaccia, automazioni e un piano di coltivazione completo con varianti autofiorente e fotoperiodica. Leggi i prerequisiti e le istruzioni di installazione prima di attivarla; l'app è in fase di collaudo e non sostituisce il bridge MQTT sul Raspberry.
 
 ## Riferimento rapido
 

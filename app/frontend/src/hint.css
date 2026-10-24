@@ -1,0 +1,93 @@
+/* Hint — bolla scura stondata con freccetta (vedi Hint.jsx).
+   Fondo NERO QUASI PIENO: le superfici dell'app sono gia' scure
+   (--surface-page 18/19/20, --surface-raised 41/42/47), quindi per staccare
+   serve andare sotto, non sopra; il rilievo lo danno l'hairline e l'ombra. */
+.hint-bubble {
+  position: fixed;
+  z-index: 9000;                      /* sopra modali/toast: e' sempre l'ultimo aperto */
+  max-width: 260px;
+  padding: 11px 13px;
+  /* stacco dal fondo scuro: bordo grigio scuro subtle (stesso solido delle
+     hairline sticky), il nero-su-scuro da solo si confondeva */
+  border: 1px solid var(--hairline-solid);
+  border-radius: var(--r-8);
+  background: rgb(10, 10, 12);
+  color: var(--w-75);   /* via di mezzo fra --fg-2 e bianco (scelta Alberto) */
+  font: 500 11px/16.4px var(--font-sans);  /* interlinea: la base 1.4 (15.4px) + 1px esatto */
+  text-align: left;
+  text-wrap: pretty;
+  box-shadow: var(--shadow-card), 0 2px 6px var(--ink-40);
+  pointer-events: none;               /* non ruba mai hover/click al target */
+  opacity: 0;
+  transform: scale(.96);
+  transition: opacity .12s ease, transform .12s ease;
+}
+/* .ready arriva col secondo paint, quando la posizione e' stata misurata:
+   prima di allora la bolla e' invisibile (serve solo a farsi misurare). */
+.hint-bubble.ready { opacity: 1; transform: none; }
+
+/* Modalita' "segue il cursore" (desktop): la posizione e' un transform scritto
+   da JS a ogni mousemove, quindi NIENTE transizione sul transform — la bolla
+   inseguirebbe il mouse con 120 ms di ritardo. Resta solo il fade. */
+.hint-bubble.cursor {
+  transition: opacity .12s ease;
+  will-change: transform;
+}
+
+/* freccetta: quadratino ruotato, `left` inline lo allinea al centro del target */
+.hint-caret {
+  position: absolute;
+  width: 10px; height: 10px;
+  margin-left: -5px;
+  background: inherit;
+  border: 1px solid var(--hairline-solid);
+  transform: rotate(45deg);
+}
+/* bolla SOPRA il target → freccetta in basso (si vedono i due lati inferiori) */
+.hint-bubble .hint-caret {
+  bottom: -6px;
+  border-top: 0; border-left: 0;
+  border-bottom-right-radius: 2px;
+}
+/* bolla SOTTO il target (flip) → freccetta in alto */
+.hint-bubble.below .hint-caret {
+  bottom: auto; top: -6px;
+  border-top: 1px solid var(--hairline); border-left: 1px solid var(--hairline);
+  border-bottom: 0; border-right: 0;
+  border-top-left-radius: 2px; border-bottom-right-radius: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hint-bubble { transition: none; transform: none; }
+  .hint-bubble.ready { transform: none; }
+  /* .cursor ha specificita' maggiore: va spento esplicitamente. Il transform
+     resta quello inline (posizione), che nessuna regola di foglio puo' vincere. */
+  .hint-bubble.cursor { transition: none; }
+}
+
+/* Affordance "(i)" delle righe informative: nelle tabelle chiave/valore la
+   riga NON e' interrogabile (niente hover, niente bersaglio largo che si
+   illumina a buchi). La spiegazione, dove ha davvero valore, vive solo qui.
+   POSIZIONE: SUBITO DOPO LA LABEL, dentro la cella della chiave — mai in
+   fondo alla riga (decisione 02/08). In fondo, l'(i) si infilava fra i
+   valori e la colonna dei numeri: le righe che ce l'avevano spingevano il
+   valore piu' a sinistra delle altre, e per rimetterle in riga serviva uno
+   pseudo-spacer su TUTTE le righe senza (i) — cioe' un buco vuoto largo
+   20px in fondo a quasi ogni riga. Attaccata alla label il problema non
+   esiste: la cella della chiave e' elastica, se la assorbe, e i valori
+   tornano tutti a filo destro da soli. Lo spacer e' stato rimosso.
+   Se la riga ha anche un pallino di banda, l'ordine e': label · (i) · dot. */
+.hint-i {
+  flex: none; display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; padding: 0; margin: 0 -2px 0 -3px;   /* valore scelto da Alberto: (i) attaccata alla label */
+  border: 0; background: transparent; color: var(--fg-3);
+  cursor: pointer; transition: color .15s ease;
+}
+.hint-i:hover, .hint-i:focus-visible { color: var(--fg-2); }
+
+/* Bersaglio sostitutivo per i figli DISABILITATI (i browser non mandano
+   eventi di mouse ai form control disabled): lo span li riceve al posto loro.
+   inline-flex + stretch = eredita la larghezza del contenitore, cosi' una CTA
+   width:100% resta a piena larghezza. */
+.hint-wrap { display: inline-flex; }
+.hint-wrap > :disabled { pointer-events: none; }

@@ -1,0 +1,1139 @@
+/* Serra Piano — restyling dal mockup "Calendario Ciclo v3" (ALB DS).
+   Token dal design system: superfici, hairline, raggi, ombre, hero gradients.
+   Regole chiave: OGGI bianco ≠ selezione (bordo accent) · ambra piena SOLO
+   per azione manuale · limbo neutro tratteggiato. */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* ── Superfici (ALB DS) ── */
+  --surface-page: rgb(18,19,20);
+  --surface-raised: rgb(41,42,47);
+  --surface-sunken: rgb(30,31,38);
+  --surface-elevated: rgb(60,60,70);  /* checkpoint/informativi: un gradino sopra */
+
+  /* ── Testi / neutri bianchi ── */
+  --fg-1: rgb(255,255,255);
+  --fg-2: rgba(255,255,255,0.5);
+  --fg-3: rgba(255,255,255,0.25);
+  --fg-45: rgba(255,255,255,0.45);  /* numerini secondari (/21, GIORNO n) */
+  --hairline: rgba(255,255,255,0.1);
+  --hairline-solid: #353535;        /* hairline PIENA per superfici sticky: niente trasparenze
+                                       che fanno intravedere il contenuto che scorre sotto */
+  --hairline-strong: rgba(255,255,255,0.2);
+  --contrast-5: rgba(255,255,255,0.05);
+  --contrast-8: rgba(255,255,255,0.08);  /* fondo quote/hover (era un riferimento fantasma) */
+  --contrast-10: rgba(255,255,255,0.1);
+  --contrast-40: rgba(255,255,255,0.4);
+  --w-20: rgba(255,255,255,0.2);
+  --w-30: rgba(255,255,255,0.3);
+  --w-75: rgba(255,255,255,0.75);
+  --oggi: #fff;                     /* la fascia/dot/pill di OGGI */
+
+  /* ── Neri / alpha ink ── */
+  --ink: rgb(0,0,0);
+  --ink-2: rgba(0,0,0,0.6);
+  --ink-10: rgba(0,0,0,0.1);
+  --ink-15: rgba(0,0,0,0.15);
+  --ink-20: rgba(0,0,0,0.2);
+  --ink-25: rgba(0,0,0,0.25);
+  --ink-30: rgba(0,0,0,0.3);
+  --ink-40: rgba(0,0,0,0.4);
+  --ink-80: rgba(0,0,0,0.8);
+  --scrim: rgba(0,0,0,0.55);        /* fondo delle modali */
+
+  /* ── Palette FASI (ALB DS: umidita/media/etra/tapparella/luce) ── */
+  --fase-germinazione: rgb(119,205,252);
+  --fase-germinazione-10: rgba(119,205,252,0.1);
+  --fase-germinazione-25: rgba(119,205,252,0.25);
+  --fase-germinazione-50: rgba(119,205,252,0.5);
+  --fase-vegetativa: rgb(114,238,166);
+  --fase-vegetativa-10: rgba(114,238,166,0.1);
+  --fase-vegetativa-25: rgba(114,238,166,0.25);
+  --fase-vegetativa-50: rgba(114,238,166,0.5);
+  --fase-fioritura: rgb(248,175,228);
+  --fase-fioritura-10: rgba(248,175,228,0.1);
+  --fase-fioritura-25: rgba(248,175,228,0.25);
+  --fase-fioritura-50: rgba(248,175,228,0.5);
+  --fase-flush: rgb(125,173,251);
+  --fase-flush-10: rgba(125,173,251,0.1);
+  --fase-flush-25: rgba(125,173,251,0.25);
+  --fase-flush-50: rgba(125,173,251,0.5);
+  --fase-essiccazione: rgb(252,191,69);
+  --fase-essiccazione-10: rgba(252,191,69,0.1);
+  --fase-essiccazione-25: rgba(252,191,69,0.25);
+  --fase-essiccazione-50: rgba(252,191,69,0.5);
+  --hero-germinazione: linear-gradient(124.6deg, rgba(180,225,254,0.90) 6%, rgba(119,205,252,0.70) 53%, rgba(119,205,252,0.50) 100%);
+  --hero-vegetativa: linear-gradient(124.6deg, rgba(180,246,205,0.90) 6%, rgba(114,238,166,0.70) 53%, rgba(114,238,166,0.50) 100%);
+  --hero-fioritura: linear-gradient(124.6deg, rgba(252,210,240,0.90) 6%, rgba(248,175,228,0.70) 53%, rgba(248,175,228,0.50) 100%);
+  --hero-flush: linear-gradient(124.6deg, rgba(143,186,255,0.90) 6%, rgba(125,173,251,0.70) 53%, rgba(125,173,251,0.50) 100%);
+  --hero-essiccazione: linear-gradient(124.6deg, rgba(255,208,143,0.90) 6%, rgba(252,191,69,0.70) 53%, rgba(252,191,69,0.50) 100%);
+
+  /* ── Accenti funzionali ── */
+  --luce: rgb(252,191,69);          /* ambra = manuale / luci */
+  --luce-10: rgba(252,191,69,0.1);
+  --luce-25: rgba(252,191,69,0.25);
+  --acqua: rgb(119,205,252);        /* turchese del DS ("umidita"): scelta Alberto 02/08,
+                                       vale in TUTTA l'app (il flush resta l'azzurro di fase) */
+  --acqua-10: rgba(119,205,252,0.1);
+  --verde: rgb(114,238,166);
+  --verde-10: rgba(114,238,166,0.1);
+  --verde-12: rgba(114,238,166,0.12);
+  --verde-25: rgba(114,238,166,0.25);
+  --errore: rgb(255,112,99);        /* ALB DS "energia" */
+  --errore-12: rgba(255,112,99,0.12);
+  --errore-35: rgba(255,112,99,0.35);
+  --errore-text: rgb(255,150,140);
+  --ok: var(--verde);
+  --warn: rgb(255,155,93);          /* ALB DS "temperatura" — poco fuori banda */
+  --danger: rgb(229,70,58);
+  --danger-60: rgba(229,70,58,0.60);   /* ping del badge LIBERO (rosso allarme) */
+
+  /* ── Geometria / tipografia ── */
+  --r-2: 2px;                       /* marker quadrati barra fasi */
+  --ctl-sm: 34px; --ctl-md: 38px; --ctl-lg: 44px;  /* taglie controlli (bottoni/pill) */
+  --r-8: 8px; --r-12: 12px; --r-16: 16px; --r-full: 999px;
+  --shadow-card: 0 4px 16px var(--ink-20);
+  --shadow-card-heavy: 0 8px 28px var(--ink-30);
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+html, body, #root { height: 100%; }
+body {
+  background:
+    radial-gradient(920px 440px at 90% -12%, var(--verde-10), transparent 60%),
+    radial-gradient(760px 380px at -6% 112%, var(--acqua-10), transparent 58%),
+    var(--surface-page);
+  color: var(--fg-1);
+  font: 14px/1.45 var(--font-sans);
+}
+.mono { font-variant-numeric: tabular-nums; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: .92em; }
+button { font: inherit; color: inherit; }
+.spacer { flex: 1; }
+
+.boot { display: grid; place-items: center; height: 100vh; color: var(--fg-2); }
+.boot.error { color: var(--errore); }
+
+.app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; padding: 16px 20px 18px; gap: 13px; }
+
+/* ── Header ─────────────────────────────────────────────── */
+.header { display: flex; align-items: center; gap: 22px; flex: none; }
+.coltura { font-family: var(--font-display); font-weight: 300; font-size: 29px; line-height: 36px; }
+.strip { flex: 1; display: flex; justify-content: flex-end; align-items: stretch; }
+.strip .cell { padding: 0 18px; }
+.strip .cell + .cell { border-left: 1px solid var(--hairline); }
+.strip .cell:last-child { padding-right: 0; }
+.strip .v { font-size: 15px; font-weight: 600; white-space: nowrap; }
+.strip .k { font-size: 11.5px; color: var(--fg-2); white-space: nowrap; }
+/* sotto ~1200px: solo clima (T/UR/VPD), font ridotto. Titolo e matita via
+   (il piano non si edita da mobile) e la strip SCORRE come la phasebar:
+   con flex-end l'overflow finirebbe a sinistra, irraggiungibile. */
+@media (max-width: 1200px) {
+  /* .header davanti: la base .coltura-wrap (piu' sotto nel file) non deve vincere */
+  .header .coltura-wrap { display: none; }
+  .strip {
+    justify-content: flex-start; overflow-x: auto; padding-bottom: 2px;
+    scrollbar-width: thin; scrollbar-color: var(--fg-3) transparent;
+  }
+  .strip .cell.meta { display: none; }
+  /* la prima cella VISIBILE e' un clima preceduto dai meta nascosti:
+     niente separatore ne' padding a sinistra (parte a filo) */
+  .strip .cell.meta + .cell.clima { border-left: 0; padding-left: 0; }
+  .strip .v { font-size: 13.5px; }
+  .strip .k { font-size: 10.5px; }
+  .strip .cell { padding: 0 13px; }
+}
+
+/* ── Barra fasi (overview) ──────────────────────────────── */
+/* scrollabile quando i min-width non ci stanno; il padding verticale tiene
+   DENTRO il marker OGGI (che sporge sopra/sotto i segmenti) */
+.phasebar {
+  display: flex; gap: 4px; align-items: flex-start; flex: none;
+  overflow-x: auto; padding: 26px 0 9px; margin-top: -18px;
+  scrollbar-width: thin; scrollbar-color: var(--fg-3) transparent;
+}
+.ph-seg {
+  position: relative; flex-basis: 0; min-width: 116px; /* "Germinazione" intera */
+  height: 50px;
+  container-type: inline-size;
+  transition: flex-grow .38s cubic-bezier(.4,0,.2,1);
+}
+.ph-oggi { transition: left .38s cubic-bezier(.4,0,.2,1); }
+/* segmento stretto: si sfoltisce per gradi — prima la durata, poi le date,
+   il NOME per ultimo (mai in ellipsis ai min-width normali) */
+@container (max-width: 150px) {
+  .ph-line1 .ph-dur { display: none; }
+}
+@container (max-width: 82px) {
+  .ph-dates { display: none; }
+}
+@container (max-width: 46px) {
+  .ph-line1 { display: none; }
+}
+.ph-fill {
+  height: 100%; border-radius: var(--r-8); padding: 0 12px;
+  display: flex; flex-direction: column; justify-content: center; overflow: hidden;
+}
+.ph-line1 { display: flex; align-items: baseline; gap: 7px; min-width: 0; }
+.ph-name { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ph-dur { font-size: 11px; font-weight: 600; white-space: nowrap; }
+.ph-dates { font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ph-oggi {
+  position: absolute; top: -9px; bottom: -9px; width: 2px; transform: translateX(-1px);
+  background: var(--w-75); border-radius: var(--r-2); z-index: 2;
+  box-shadow: 0 0 5px 1px var(--ink-25);
+}
+.ph-oggi span {
+  position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
+  font-size: 9px; font-weight: 800; letter-spacing: .05em;
+  background: var(--oggi); color: var(--ink); padding: 1px 6px; border-radius: var(--r-full); white-space: nowrap;
+}
+
+/* ── Nav sezioni (porting design v3) ────────────────────── */
+/* Geometria dal design (pill h38 dentro una pillola con padding 4/gap 4,
+   raggio pieno, attivo pieno chiaro + ombra card); palette e token sono
+   quelli di questo file — nessun colore importato dal design. */
+.sez-nav { flex: none; display: flex; align-items: center; position: relative; z-index: 2; }
+/* Scroll-shadow (design v3: "navShadow"). Compare quando la sezione sotto la
+   nav e' scrollata — la classe .scrolled la mette App.jsx, valida per TUTTE le
+   sezioni. Geometria dal design: la fascia inizia dopo il gap di .app (13px),
+   deborda dei 20px di padding laterale e sfuma in 16px.
+   pointer-events:none perche' copre la prima riga di contenuto. */
+.sez-nav::after {
+  content: ''; position: absolute; top: calc(100% + 13px); left: -20px; right: -20px;
+  height: 16px; border-top: 1px solid var(--hairline-solid);
+  background: linear-gradient(to bottom, var(--ink-40), transparent);
+  opacity: 0; transition: opacity .25s ease; pointer-events: none;
+}
+.sez-nav.scrolled::after { opacity: 1; }
+
+/* ── Scroll-shadow degli scroller INTERNI (riquadri con testata) ─────────
+   Concetto DIVERSO da quello qui sopra: la nav si ombreggia quando il
+   contenuto di una SEZIONE le passa sotto; qui l'ombra sta sotto la testata
+   del proprio riquadro (timeline, ispettore, sheet — domani pannelli di
+   Controllo, Diario…).
+   RIUSABILITA': basta `data-scroll-shadow` sullo scroller e una TESTATA che
+   ne sia il fratello IMMEDIATAMENTE PRECEDENTE. Nient'altro: la classe
+   .sc-on la mette App.jsx sullo scroller quando e' scrollato, e :has() la
+   riporta indietro alla testata.
+   Perche' un box-shadow e non un ::after col gradiente come nella nav: la
+   testata puo' essere essa stessa un contenitore in overflow (.tl-head sotto
+   i 1150px scorre in orizzontale) e taglierebbe qualunque pseudo-elemento
+   figlio; l'ombra PROPRIA di un elemento invece non e' mai tagliata dal suo
+   overflow. Resta comunque dentro il riquadro (overflow:hidden + raggio).
+   La riga hairline della testata (border-bottom) NON viene toccata. */
+:has(+ [data-scroll-shadow]) {
+  /* z-index: l'ombra deve stare SOPRA il contenuto che le scorre sotto */
+  position: relative; z-index: 2;
+  box-shadow: 0 14px 12px -4px transparent;
+  transition: box-shadow .25s ease;
+}
+/* la parte DINAMICA e' una classe messa dal JS sulla testata (fratello
+   precedente): l'equivalente `:has(+ .sc-on)` inciampa nell'invalidazione
+   pigra di Chromium e l'ombra non si accendeva mai. */
+:has(+ [data-scroll-shadow]).sc-under { box-shadow: 0 14px 12px -4px var(--ink-40); }
+
+/* ── Scroll-shadow di una FASCIA FERMA di sezione (data-sez-band) ────────
+   Terzo caso, fratello dei due qui sopra. Una sezione puo' avere una fascia
+   che non scorre — i filtri del Diario (fuori dallo scroller), il rail di
+   Controllo (sticky dentro lo scroller): li' il contenuto passa sotto la
+   FASCIA, non sotto la nav. L'ombra deve quindi emanare dal bordo inferiore
+   della fascia; quella della nav si spegne (cadeva sopra i filtri e li
+   tagliava a meta'). La classe .sc-under la mette App.jsx, come per i
+   riquadri: una convenzione sola in tutta l'app.
+   PERCHE' box-shadow e non un ::after col gradiente come nella nav: la
+   fascia puo' essere essa stessa un contenitore in overflow (il rail mobile
+   scorre in orizzontale, .di-tipi pure) e taglierebbe qualunque
+   pseudo-elemento figlio. Le due ombre in lista sono la stessa coppia del
+   ::after della nav — hairline piena + gradiente — resa senza pseudo.
+   La `position` NON si dichiara qui: la porta chi usa la fascia (relative
+   per il Diario, sticky per il rail), altrimenti questo foglio, che in
+   bundle viene per ultimo, vincerebbe sulla sticky a pari specificita'. */
+[data-sez-band] {
+  z-index: 3;   /* sopra il contenuto che le scorre sotto (e sopra la nav) */
+  box-shadow: 0 1px 0 transparent, 0 14px 12px -4px transparent;
+  transition: box-shadow .25s ease;
+}
+[data-sez-band].sc-under {
+  box-shadow: 0 1px 0 var(--hairline-solid), 0 14px 12px -4px var(--ink-40);
+}
+
+.sez-pills {
+  display: flex; align-items: center; gap: 4px; padding: 4px; max-width: 100%;
+  border-radius: var(--r-full);
+  background: var(--contrast-5); border: 1px solid var(--hairline);
+}
+.sez-pill {
+  height: var(--ctl-md); padding: 0 17px; border: 0; border-radius: var(--r-full);
+  background: transparent; color: var(--fg-2);
+  font-size: 13.5px; font-weight: 600; white-space: nowrap; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: background .18s ease, color .18s ease;
+}
+.sez-pill:hover { background: var(--contrast-8); color: var(--fg-1); }
+.sez-pill.on {
+  background: var(--oggi); color: var(--ink); font-weight: 700;
+  box-shadow: var(--shadow-card);
+}
+.sez-pill.on:hover { background: var(--oggi); color: var(--ink); }
+
+/* Telefono: pill a sole icone, distribuite su tutta la larghezza */
+@media (max-width: 700px) {
+  .sez-pills { flex: 1; }
+  .sez-pill { flex: 1; padding: 0 10px; justify-content: center; }
+  .sez-pill > span { display: none; }
+  /* senza etichetta l'icona E' la voce: va letta a colpo d'occhio.
+     (la size 18 la scrive App.jsx sull'<svg>: qui la sovrascrive il CSS) */
+  .sez-pill svg { width: 21px; height: 21px; }
+  /* la fascia nav si avvicina alla phasebar: verticale prezioso, e le due
+     fasce sono comunque distinte (pillole su fondo pagina) */
+  .sez-nav { margin-top: -6px; }
+}
+
+/* ── Corpo ──────────────────────────────────────────────── */
+.main { flex: 1; display: flex; gap: 18px; min-height: 0; }
+/* Piano fuori sezione: resta montato (stato timeline intatto) ma sparisce.
+   Doppia classe = vince sulla display:flex di .main. */
+.main.sez-off { display: none; }
+
+.tl-card {
+  flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;
+  background: var(--surface-raised); border: 1px solid var(--hairline-strong);
+  border-radius: var(--r-16); box-shadow: var(--shadow-card);
+}
+.tl-head {
+  flex: none; display: flex; align-items: center; gap: 13px;
+  padding: 13px 18px; border-bottom: 1px solid var(--hairline-strong);
+}
+.tl-title { font-family: var(--font-display); font-weight: 300; font-size: 22px; }
+.tl-hint { font-size: 13px; color: var(--fg-2); white-space: nowrap; }
+@media (max-width: 1500px) { .tl-hint { display: none; } }
+.legend { display: flex; align-items: center; gap: 15px; font-size: 12px; color: var(--fg-2); font-weight: 500; }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.lg-dot { width: 12px; height: 12px; border-radius: var(--r-full); display: inline-block; }
+.lg-dot.past { background: var(--verde); }
+/* come appare davvero nella riga OGGI: dot nero su fondo bianco */
+.lg-dot.today { background: var(--ink); border: 3.5px solid var(--oggi); width: 15px; height: 15px; }
+.lg-dot.future { background: var(--surface-raised); border: 2px solid var(--contrast-40); }
+.lg-dot.limbo { background: transparent; border: 2px dashed var(--contrast-40); }
+.btn-oggi {
+  height: var(--ctl-sm); padding: 0 14px; border-radius: var(--r-full);
+  border: 1px solid var(--hairline-strong); background: var(--contrast-5);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 7px;
+}
+.btn-oggi:hover { background: var(--contrast-10); }
+/* pill "N in ritardo" (azioni pendenti scadute): ambra = manuale/da fare */
+.btn-ritardo {
+  height: var(--ctl-sm); padding: 0 13px; border-radius: var(--r-full);
+  border: 1px solid var(--luce-25); background: var(--luce-10);
+  color: var(--luce); font-size: 12.5px; font-weight: 600; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+}
+.btn-ritardo:hover { background: var(--luce-25); }
+.btn-icon {
+  height: var(--ctl-sm); width: var(--ctl-sm); flex: none; border-radius: var(--r-full);
+  border: 1px solid var(--hairline-strong); background: var(--contrast-5);
+  color: var(--fg-1); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.btn-icon:hover { background: var(--contrast-10); }
+
+.tl-scroll { flex: 1; overflow-y: auto; padding: 8px 14px 30px; scrollbar-width: thin; scrollbar-color: var(--fg-3) transparent; }
+
+/* ── Milestone (segnalibro tra i giorni) ────────────────── */
+.ms-row { display: flex; align-items: center; margin: 9px 0; }
+.ms-line { flex: 1; height: 0; border-top: 1.5px dashed; opacity: .5; }
+.ms-card {
+  flex: none; display: flex; align-items: center; gap: 10px; margin: 0 12px;
+  padding: 7px 11px; border-radius: var(--r-8); border: 1px solid;
+  box-shadow: var(--shadow-card-heavy);
+}
+.ms-icon { width: 30px; height: 30px; border-radius: var(--r-8); display: flex; align-items: center; justify-content: center; }
+.ms-kicker { font-size: 9.5px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; white-space: nowrap; }
+.ms-name { font-size: 15px; font-weight: 700; white-space: nowrap; }
+.ms-date { font-size: 12.5px; color: var(--fg-2); white-space: nowrap; }
+.ms-status {
+  font-size: 10px; font-weight: 700; padding: 2px 9px; border-radius: var(--r-full);
+  background: var(--contrast-10); color: var(--fg-2); white-space: nowrap;
+}
+.ms-delta {
+  font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: var(--r-full);
+  color: var(--ink); white-space: nowrap;
+}
+/* testi allineati alla BASELINE (feedback Alberto), pill comprese */
+.ms-mid { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; min-width: 0; }
+.ms-lock {
+  display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700;
+  color: var(--fg-3); padding: 5px 10px; border-radius: var(--r-8); background: var(--contrast-5);
+}
+.ms-actions { display: flex; gap: 6px; flex: none; margin-left: 2px; }
+/* frecce tono-su-tono: bordo soft e velo del colore di fase (feedback Alberto) */
+.ms-btn {
+  width: var(--ctl-sm); height: var(--ctl-sm); border-radius: var(--r-8);
+  border: 1px solid color-mix(in srgb, var(--phase) 35%, transparent);
+  background: color-mix(in srgb, var(--phase) 12%, var(--surface-raised));
+  color: var(--fg-1);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background .15s ease;
+}
+.ms-btn:hover:not(:disabled) { background: color-mix(in srgb, var(--phase) 26%, var(--surface-raised)); }
+.ms-btn:disabled { opacity: .35; cursor: default; }
+.ms-btn.reset { border-color: var(--hairline-strong); background: var(--contrast-5); color: var(--fg-2); }
+
+/* Flip 12/12 (fotoperiodica pre-flip): card come le milestone ma con conferma
+   esplicita (il flip non è ancora avvenuto). */
+.flip-card { flex-wrap: wrap; row-gap: 9px; }
+.flip-hint { font-size: 11px; color: var(--fg-3); font-style: italic; white-space: nowrap; }
+.flip-go {
+  flex: none; margin-left: 4px;
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 8px 13px; border-radius: var(--r-full); border: none;
+  background: var(--phase); color: var(--ink);
+  font-size: 12px; font-weight: 800; letter-spacing: .02em;
+  cursor: pointer; white-space: nowrap;
+}
+.flip-go:hover:not(:disabled) { filter: brightness(1.06); }
+.flip-go:disabled { opacity: .5; cursor: default; }
+
+/* cascata: righe a valle scivolano con molla (overshoot), non a scatto */
+@keyframes ccShiftA { from { transform: translateY(-16px); opacity: .25; } to { transform: translateY(0); opacity: 1; } }
+@keyframes ccShiftB { from { transform: translateY(-16px); opacity: .25; } to { transform: translateY(0); opacity: 1; } }
+@keyframes ccToast { from { transform: translate(-50%, 10px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+@keyframes ccSheet { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.toast {
+  position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 80;
+  display: flex; align-items: center; gap: 11px; padding: 11px 14px 11px 15px;
+  border-radius: var(--r-full); background: var(--verde); color: var(--ink);
+  box-shadow: 0 12px 40px var(--ink-40); animation: ccToast .28s ease; max-width: 92%;
+  font-size: 13.5px; font-weight: 600;
+}
+/* niente ellipsis: un messaggio troncato non informa. Su schermi stretti
+   il testo va a capo (e il raggio si ammorbidisce: pill multi-riga) */
+.toast span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 700px) {
+  /* width:max-content: con left:50% lo shrink-to-fit del fixed avrebbe a
+     disposizione solo mezza viewport e il wrap strizzava il toast a colonnina */
+  .toast { font-size: 12.5px; width: max-content; max-width: 92vw; }  /* raggio pieno come su desktop (angoli sempre tondi) */
+  .toast span { white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.35; }
+}
+.toast-x {
+  border: 0; background: var(--ink-20); color: var(--ink); border-radius: var(--r-full);
+  width: 26px; height: 26px; flex: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── Header di fase ─────────────────────────────────────── */
+/* gruppo fase: da aperto è la card che perimetra header + giorni */
+.ph-group { border-radius: var(--r-12); margin: 6px 0 2px; border: 1px solid transparent; }
+/* niente overflow:hidden (tagliava il bordo di selezione dell'ultima riga):
+   gli angoli in alto li fa l'header, il resto resta dentro il bordo del gruppo */
+.ph-group.open { border-color: var(--hairline); }
+/* wrapper collassabile: l'altezza si anima via grid-template-rows 0fr↔1fr
+   (ease reale, indipendente dal contenuto). L'inner clippa e raccorda il
+   bordo inferiore al radius del gruppo. */
+.ph-days-grid {
+  display: grid; grid-template-rows: 0fr;
+  transition: grid-template-rows .45s cubic-bezier(.4,0,.2,1);
+}
+.ph-group.open .ph-days-grid { grid-template-rows: 1fr; }
+.ph-days-inner { overflow: hidden; min-height: 0; border-radius: 0 0 calc(var(--r-12) - 1px) calc(var(--r-12) - 1px); }
+.ph-header {
+  width: 100%; display: flex; align-items: center; gap: 11px;
+  border: 1px solid transparent; border-radius: var(--r-12); cursor: pointer; text-align: left;
+  padding: 9px 12px 9px 10px; margin: 0; background: transparent;
+}
+/* collassata = card chiusa riconoscibile */
+.ph-header.closed {
+  background: var(--contrast-5);
+  border-color: var(--hairline);
+}
+/* aperta: l'header è la testata della card (bordo lo dà il gruppo) */
+.ph-header.open {
+  background: var(--contrast-5);
+  border-radius: calc(var(--r-12) - 1px) calc(var(--r-12) - 1px) 0 0; border-color: transparent;
+  border-bottom: 1px solid var(--hairline);
+}
+.ph-header:hover { background: var(--contrast-10); }
+/* :not(.selected/.today): la regola vinceva sul bordo di selezione
+   e lo cancellava sull'ultima riga (diagnosi di Alberto) */
+.ph-group.open .day:last-child:not(.selected):not(.today) { border-bottom-color: transparent; }
+.ph-sq { width: 8px; height: 8px; border-radius: var(--r-2); flex: none; }
+.ph-h-name { font-size: 15px; font-weight: 700; white-space: nowrap; }
+.ph-h-dur { font-size: 12.5px; font-weight: 600; color: var(--fg-3); white-space: nowrap; }
+.ph-h-range { font-size: 12px; color: var(--fg-3); white-space: nowrap; }
+.pill-corso {
+  flex: none; white-space: nowrap;   /* non si schiaccia mai (era "IN↵CORSO") */
+  font-size: 9.5px; font-weight: 800; letter-spacing: .06em;
+  padding: 2px 8px; border-radius: var(--r-full); color: var(--ink);
+}
+
+/* ── Riga giorno ────────────────────────────────────────── */
+.day {
+  width: 100%; display: flex; align-items: stretch; gap: 0;
+  background: transparent; border: 1px solid transparent;
+  border-bottom: 1px solid var(--hairline);
+  cursor: pointer; text-align: left; padding: 0; overflow: hidden;
+  min-height: 54px; border-radius: 0;
+  /* la selezione è un OUTLINE sempre presente (trasparente → colorato):
+     non sposta MAI il layout (fix shift desktop) e può fare fade in uscita */
+  outline: 2px solid transparent; outline-offset: -2px;
+  transition: background .22s ease, outline-color .45s ease;
+}
+.day:hover { background: var(--contrast-5); }
+/* NIENTE radius sulle righe (nemmeno OGGI/selezione): l'unico arrotondamento
+   e' sotto, sull'ultima riga della sezione, per raccordarsi al contenitore */
+.day.selected { outline-color: var(--phase); }
+/* OGGI = riga BIANCA piena, testi neri (dal mockup) */
+.day.today {
+  background: var(--oggi); border-radius: 0;
+  border-color: transparent; box-shadow: var(--shadow-card-heavy);
+}
+.day.today .day-code span, .day.today .day-date .wd { color: var(--ink); }
+.day.today .day-code small, .day.today .day-gg, .day.today .day-date .num { color: var(--scrim); }
+.day.today .day-params { color: var(--ink-80); }
+/* i giorni passati sono smorzati, MA non la chevron (che compare solo se
+   selezionato): dimmarla stonerebbe col bordo a pieno colore. Dimmo i
+   singoli figli tranne la chevron, invece dell'intero body. */
+.day.past .day-body > :not(.day-chev) { opacity: .55; }
+.day.limbo:not(.today) {
+  background: repeating-linear-gradient(135deg, var(--contrast-5) 0 8px, transparent 8px 16px);
+}
+
+.rail { width: var(--ctl-md); flex: none; position: relative; display: flex; align-items: center; justify-content: center; }
+.rail-line { position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; transform: translateX(-1px); background: var(--hairline); }
+/* sulla riga OGGI (fondo bianco) la rail-line bianca sparirebbe → grigio chiaro */
+.day.today .rail-line { background: var(--ink-15); }
+.dot {
+  position: relative; width: 13px; height: 13px; border-radius: var(--r-full);
+  background: var(--surface-raised); border: 2px solid var(--contrast-40);
+}
+.dot.dashed { border-style: dashed; background: transparent; }
+.day.today .dot { background: var(--ink); border-color: var(--ink); }
+.day-body { flex: 1; display: flex; align-items: center; gap: 14px; padding: 8px 14px 8px 4px; flex-wrap: wrap; min-width: 0; }
+.pill-oggi {
+  flex: none; font-size: 10px; font-weight: 800; letter-spacing: .06em;
+  color: var(--oggi); background: var(--ink); padding: 3px 8px; border-radius: var(--r-full); /* pill nera su testo bianco (resa storica, prima forzata con priorita massima) */
+}
+.day-code { width: 84px; flex: none; font-size: 18px; font-weight: 700; line-height: 1.15; }
+/* grigio schiarito: fg-3 (25%) era troppo poco contrastato */
+.day-code small { font-size: 12px; font-weight: 400; color: var(--fg-45); }
+.day-gg { font-size: 10.5px; font-weight: 600; letter-spacing: .04em; color: var(--fg-45); }
+.day-date { width: 74px; flex: none; }
+.day-date .wd { font-size: 13px; font-weight: 600; text-transform: capitalize; }
+.day-date .num { font-size: 12px; color: var(--fg-2); }
+.day-params { flex: 1; min-width: 150px; display: flex; flex-direction: column; gap: 3px; font-size: 13px; color: var(--fg-2); }
+.day-params > div { display: flex; align-items: center; gap: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.limbo-tag {
+  flex: none; display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: var(--r-full);
+  background: var(--contrast-10); color: var(--fg-2); border: 1px dashed var(--contrast-40);
+}
+
+.day-chips { flex: none; display: flex; flex-direction: column; gap: 5px; align-items: flex-end; }
+.day-chev { width: 22px; flex: none; display: flex; align-items: center; justify-content: center; }
+/* indicatore "ci sono note" sulla riga giorno */
+.day-note { flex: none; display: flex; align-items: center; justify-content: center; opacity: .85; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600; padding: 4px 11px 4px 9px;
+  border-radius: var(--r-full); max-width: 100%; /* intere finché c'è spazio */
+}
+.chip-txt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* mockup: manuale da fare = AMBRA pieno · manuale fatto = VERDE pieno ·
+   checkpoint = neutro · checkpoint passato = neutro spento */
+.chip.manual { background: var(--luce); color: var(--ink); }
+.chip.donegreen { background: var(--verde); color: var(--ink); }
+.chip.check { border: 1px solid var(--hairline-strong); color: var(--fg-1); background: var(--surface-elevated); }
+.chip.done { background: var(--contrast-5); border: 1px solid var(--hairline); color: var(--fg-2); font-weight: 500; }
+
+/* ── Ispettore ──────────────────────────────────────────── */
+.inspector {
+  width: 420px; flex: none; display: flex; flex-direction: column; min-height: 0;
+  border: 1px solid; border-radius: var(--r-16); box-shadow: var(--shadow-card); overflow: hidden;
+}
+.insp-hero { flex: none; padding: 16px 18px; display: flex; align-items: center; gap: 13px; }
+/* DATE BOX: "DOM" sopra, "23" sotto. Fondo piu' chiaro dell'icona che c'era
+   prima (--w-20/30 spegneva le due righe di testo scuro): bianco al 45%, non
+   pieno, perche' sotto passa il gradiente di fase e deve restare leggibile.
+   Valore nuovo e non un token: e' l'unica superficie con questa esigenza. */
+.insp-datebox {
+  width: 48px; height: 48px; border-radius: var(--r-12); flex: none;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.45); backdrop-filter: blur(8px);
+  color: var(--ink); line-height: 1;
+}
+/* Le due righe devono risultare LARGHE UGUALI (misurate, non a occhio: 3
+   lettere vs 2 cifre). Il letter-spacing aggiunge spazio anche DOPO l'ultimo
+   carattere: il margin-right negativo lo riprende, altrimenti il testo
+   risulterebbe spostato a sinistra dentro il box.
+   Calibrazione MISURATA (Chrome, font dell'app): "23" a 20px con tabular-nums
+   = 25.7px, identico per qualunque coppia di cifre; le 3 lettere a 10px con
+   .11em di tracking danno una media di 25.7px sui sette giorni (22.6 "GIO" —
+   28.3 "DOM": la differenza residua e' quella delle lettere stesse, in un
+   font proporzionale non e' azzerabile senza sfilacciare il tracking). */
+.insp-dbox-wd {
+  font-size: 10px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .11em; margin-right: -.11em;
+}
+.insp-dbox-n {
+  font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums;
+  margin-top: 1px;
+}
+.insp-hero-txt { flex: 1; min-width: 0; }
+.insp-hero-mid { min-width: 0; }
+/* ── Desktop: le due colonne di testo allineate alle BASELINE ────────────
+   Le taglie sono diverse (11 / 18 / 15 / 12px): allineare per top o per
+   altezza lascia le righe sfalsate. Qui .insp-hero-txt diventa una griglia
+   2×2 con `align-items: baseline`, che allinea ogni riga sulla baseline VERA
+   dei suoi due testi: settimana ↔ sigla fase in alto, data ↔ giorno·fase in
+   basso. I due contenitori (mid / right) si sciolgono con `display: contents`
+   — nessun wrapper in piu' nel markup e le celle finiscono direttamente nella
+   griglia (posizionate a mano: l'auto-flow le metterebbe in riga).
+   Si accende SOLO quando la colonna destra esiste, cioe' sul desktop: nello
+   sheet (che al suo posto ha il bottone di chiusura) resta il blocco normale. */
+.insp-hero-txt:has(.insp-hero-right) {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 13px; align-items: baseline;
+}
+.insp-hero-txt:has(.insp-hero-right) > * { display: contents; }
+.insp-hero-txt:has(.insp-hero-right) .insp-kicker { grid-area: 1 / 1; }
+.insp-hero-txt:has(.insp-hero-right) .insp-title  { grid-area: 2 / 1; }
+.insp-hero-txt:has(.insp-hero-right) .code        { grid-area: 1 / 2; }
+.insp-hero-txt:has(.insp-hero-right) .sub         { grid-area: 2 / 2; }
+.insp-kicker { font-size: 11px; line-height: 13px; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; color: var(--ink-2); }
+/* VINCOLO: il blocco di testo (kicker + data) non deve superare l'altezza del
+   date box (48px) e non deve mai andare a capo — 420px fissi sul desktop,
+   sheet a 375px. Entrambi i layout hanno due righe: 13 + 21 = 34px.
+   La size 18 e' il MASSIMO che regge il caso peggiore misurato SUL DESKTOP:
+   colonna destra piena ("Giorno 113 · Essiccazione", 143px) + data lunga
+   ("24 Settembre 2026") — 155px di testo in 165px disponibili. Nello sheet
+   la colonna e' larga 197px e la data puo' permettersi 19.5px (vedi sotto). */
+.insp-title {
+  font-family: var(--font-display); font-weight: 400; font-size: 18px;
+  color: var(--ink); line-height: 21px; text-transform: capitalize;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.insp-hero-right { text-align: right; flex: none; }
+.insp-hero-right .code { font-size: 15px; font-weight: 600; color: var(--ink); }
+.insp-hero-right .code small { font-size: 12px; font-weight: 400; color: var(--ink-2); }
+.insp-hero-right .sub { font-size: 12px; color: var(--ink-2); }
+
+/* gap 20px TRA le sezioni; dentro ogni sezione (.insp-block) titolo→contenuto 8px */
+.insp-scroll { flex: 1; overflow-y: auto; padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 24px; scrollbar-width: thin; scrollbar-color: var(--fg-3) transparent; }
+/* i figli NON si comprimono quando il contenuto supera l'altezza (dal mockup) */
+.insp-scroll > * { flex: 0 0 auto; }
+.insp-block { display: flex; flex-direction: column; gap: 8px; }
+
+.insp-staterow { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+.state-pill {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 13px; font-weight: 600; padding: 6px 13px; border-radius: var(--r-full);
+  background: var(--contrast-10); color: var(--fg-1);
+}
+.state-fase { font-size: 13.5px; color: var(--fg-2); }
+.state-fase b { color: var(--fg-1); }
+
+.limbo-note {
+  display: flex; gap: 10px; align-items: flex-start; padding: 12px 13px;
+  border-radius: var(--r-12); background: var(--luce-10);
+  border: 1px solid var(--luce-25); font-size: 13px;
+}
+
+.insp-sect { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--fg-2); font-weight: 700; }
+
+/* ── Attività del giorno (stile mockup: stripe + badge + dosi) ── */
+.acts-empty {
+  display: flex; flex-direction: column; gap: 7px; font-size: 13px; color: var(--fg-3);
+  padding: 13px 14px; border-radius: var(--r-12);
+  background: var(--contrast-5); border: 1px solid var(--hairline);
+}
+.acts-empty-main { display: flex; align-items: center; gap: 9px; }
+.acts-empty-note { font-size: 12px; line-height: 1.4; opacity: .9; text-wrap: pretty; }
+.act { position: relative; overflow: hidden; border-radius: var(--r-16); padding: 14px 14px 14px 18px; }
+.act.manual { background: var(--luce); color: var(--ink); box-shadow: var(--shadow-card); }
+.act.check { background: var(--surface-elevated); border: 1px solid var(--hairline); color: var(--fg-1); }
+.act.harvest { background: var(--verde); color: var(--ink); }
+.act-stripe { position: absolute; top: 0; left: 0; bottom: 0; width: 5px; background: var(--ink-25); }
+.act.check .act-stripe { background: var(--contrast-40); }
+.act-badge-row { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+.act-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  padding: 3px 11px; border-radius: var(--r-full); background: var(--ink-20); color: inherit;
+}
+.act.check .act-badge { background: var(--contrast-10); }
+.act-main { display: flex; gap: 11px; align-items: flex-start; }
+.act-title { font-size: 15px; font-weight: 700; text-wrap: pretty; }
+.act-desc { font-size: 13px; line-height: 18px; margin-top: 3px; opacity: .85; text-wrap: pretty; }
+/* nota "dosatori in automatico" in coda alla descrizione del cambio (solo auto) */
+.act-autonote {
+  margin-top: 8px; padding: 8px 10px; border-radius: 0 8px 8px 0;
+  font-size: 12px; line-height: 1.4; text-wrap: pretty;
+  background: var(--ink-10);
+  border-left: 3px solid var(--ink);
+}
+.act-autonote b { font-weight: 800; }
+.act-doses { display: flex; gap: 8px; margin-top: 11px; }
+.act-doses span {
+  flex: 1; display: flex; flex-direction: column; gap: 2px;
+  background: var(--w-30); border-radius: var(--r-8); padding: 8px 11px;
+}
+.act.check .act-doses span { background: var(--contrast-5); }
+.act-doses small { font-size: 9.5px; font-weight: 800; letter-spacing: .07em; opacity: .75; }
+.act-doses b { font-size: 15px; white-space: nowrap; }
+.act-doses i { font-size: 10.5px; font-style: normal; opacity: .6; white-space: nowrap; }
+/* riga "livello acqua" sopra i tre riquadri: il volume su cui è calcolata la dose */
+.act-vol { display: flex; align-items: center; gap: 6px; margin-top: 9px; font-size: 12.5px; font-weight: 700; }
+.act-vol b { font-weight: 800; }
+.act-vol i { font-style: normal; font-weight: 500; opacity: .7; }
+.act-vol svg { flex: none; }
+.act-vol + .act-doses { margin-top: 7px; }
+/* nota "dose alternativa in caso di cambio acqua" (secondaria, sotto le dosi) */
+.act-altdose {
+  margin-top: 9px; padding-top: 7px; font-size: 11.5px; line-height: 1.4; text-wrap: pretty;
+  color: var(--ink); opacity: .72;
+  border-top: 1px dashed color-mix(in srgb, var(--ink) 28%, transparent);
+}
+.act-altdose b { font-weight: 800; opacity: 1; }
+
+/* ── Guide contestuali: icona-libro + overlay ─────────────────────────── */
+/* Icona-guida: fondo NEUTRO scuro (opaco), NON tinto della fase — così non
+   stona con nessun colore/tonalità dietro (milestone, card, checkpoint). */
+.guida-link {
+  width: var(--ctl-sm); height: var(--ctl-sm); border-radius: var(--r-8); flex: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--hairline-strong);
+  background: var(--surface-page);
+  color: var(--fg-1); transition: background .15s ease;
+}
+.guida-link:hover { background: var(--surface-raised); }
+.guide-overlay {
+  position: fixed; inset: 0; z-index: 78;
+  background: var(--scrim); backdrop-filter: blur(3px);
+  display: flex; align-items: center; justify-content: center; padding: 18px;
+}
+.guide-modal {
+  width: min(640px, 100%); max-height: min(88vh, 900px);
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--surface-raised); border: 1px solid var(--hairline-strong);
+  border-radius: var(--r-16); box-shadow: var(--shadow-card-heavy); animation: ccSheet .22s ease;
+}
+.guide-head {
+  flex: none; display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px; border-bottom: 1px solid var(--hairline-strong);
+}
+.guide-title { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+.guide-title b { font-size: 16px; }
+.guide-title span { font-size: 12px; color: var(--fg-2); }
+.guide-x {
+  width: var(--ctl-sm); height: var(--ctl-sm); border-radius: var(--r-full); border: 0; flex: none; cursor: pointer;
+  background: var(--contrast-5); color: var(--fg-1); display: flex; align-items: center; justify-content: center;
+}
+.guide-x:hover { background: var(--contrast-10); }
+.guide-body { flex: 1; overflow-y: auto; padding: 16px 18px 22px; }
+.guide-intro { font-size: 13.5px; line-height: 1.55; color: var(--fg-2); margin: 0 0 16px; text-wrap: pretty; }
+.guide-body h3 { font-size: 15px; margin: 22px 0 8px; }
+.guide-body h3:first-child { margin-top: 0; }
+.guide-body > p { font-size: 13.5px; line-height: 1.55; color: var(--fg-2); margin: 0 0 8px; text-wrap: pretty; }
+.guide-body a { color: var(--fg-1); text-decoration: underline; }
+/* citazione/paragrafo in evidenza (blockquote) — niente colore di testo */
+.guide-quote {
+  margin: 6px 0 16px; padding: 12px 15px;
+  border-left: 3px solid var(--fg-2);
+  background: var(--contrast-8, var(--contrast-5));
+  border-radius: 0 var(--r-8) var(--r-8) 0;
+  font-size: 13.5px; line-height: 1.55; color: var(--fg-1); text-wrap: pretty;
+}
+.guide-quote b { color: var(--fg-1); }
+/* Callout d'avviso (admonition `[!nota]`): riquadro ambra */
+.guide-callout--nota,
+.guide-callout--attenzione,
+.guide-callout--warning {
+  border-left-color: var(--fase-essiccazione);
+  background: var(--fase-essiccazione-10);
+}
+.guide-callout--nota b,
+.guide-callout--attenzione b,
+.guide-callout--warning b { color: var(--fase-essiccazione); }
+.guide-imgs { margin: 2px 0 12px; }
+.guide-imgs.multi { display: flex; gap: 8px; align-items: flex-start; }
+.guide-imgs.multi > * { flex: 1 1 0; min-width: 0; margin: 0; }
+/* in galleria: stessa proporzione + crop, cosi' le foto affiancate hanno la
+   stessa altezza e la riga risulta allineata anche se gli originali variano */
+.guide-imgs.multi .guide-fig img { aspect-ratio: 4 / 3; object-fit: cover; }
+.guide-check { margin: 8px 0 12px; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.guide-check li { font-size: 13px; line-height: 1.45; color: var(--fg-2); padding-left: 14px; position: relative; }
+.guide-check li::before { content: '•'; position: absolute; left: 2px; color: var(--fg-3); }
+.guide-check b { color: var(--fg-1); }
+.guide-fig { margin: 0 0 10px; }
+.guide-fig img { width: 100%; border-radius: var(--r-8); display: block; }
+.guide-fig figcaption { font-size: 11.5px; color: var(--fg-3); margin-top: 5px; text-align: center; }
+.guide-fig-ph {
+  display: flex; align-items: center; gap: 8px; margin: 0 0 10px;
+  padding: 16px 14px; border-radius: var(--r-8); border: 1px dashed var(--hairline-strong);
+  background: var(--contrast-5); color: var(--fg-3); font-size: 12px;
+}
+/* libreria guide: indice a gruppi */
+.guide-idx-group { margin-bottom: 18px; }
+.guide-idx-group h4 {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--fg-3); margin: 0 0 8px; font-weight: 700;
+}
+.guide-idx-item {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 11px 12px; margin-bottom: 6px; border-radius: var(--r-8);
+  border: 1px solid var(--hairline); background: var(--contrast-5);
+  color: var(--fg-1); font-size: 13.5px; text-align: left; cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.guide-idx-item:hover { background: var(--contrast-8, var(--contrast-5)); border-color: var(--hairline-strong); }
+.guide-idx-item > span { flex: 1; min-width: 0; }
+.guide-idx-item > svg:last-child { color: var(--fg-3); flex: none; }
+.guide-idx-item > svg:first-child { color: var(--fg-2); flex: none; }
+/* rimando all'indice in fondo alla singola guida */
+.guide-more { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--hairline); text-align: center; }
+.guide-more button {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: var(--r-8); cursor: pointer;
+  border: 1px solid var(--hairline-strong); background: transparent;
+  color: var(--fg-2); font-size: 12.5px; font-weight: 600;
+  transition: background .15s, color .15s;
+}
+.guide-more button:hover { background: var(--contrast-5); color: var(--fg-1); }
+/* modalità dosaggio: a mano (siringa, neutro) vs pompe (auto, verde) */
+.act-foot { display: flex; gap: 9px; margin-top: 12px; }
+/* Hint avvolge in uno <span class="hint-wrap"> i figli che POSSONO essere
+   `disabled`: il flex item diventa lo span, quindi l'elasticita' va messa su
+   di lui. "Segna fatto" e' solo nella sua riga (:only-child) e la occupa
+   tutta; "Annulla" divide la riga con lo stato "Fatto" e resta a misura di
+   testo, esattamente come prima. */
+.act-foot > .hint-wrap:only-child { flex: 1; }
+.act-foot > .hint-wrap > .act-dobtn { width: 100%; }
+.act-dobtn {
+  flex: 1; height: var(--ctl-lg); border-radius: var(--r-full); border: 0;
+  background: var(--ink); color: var(--oggi); font-weight: 700; font-size: 14px;
+  cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  transition: background .15s ease, color .15s ease;
+}
+.act.check .act-dobtn { background: var(--contrast-10); color: var(--fg-1); border: 1px solid var(--hairline-strong); }
+.act-dobtn.armed { background: var(--oggi); color: var(--ink); }
+.act-dobtn:disabled { opacity: .5; cursor: default; }
+.act-donestate {
+  flex: 1; height: var(--ctl-lg); border-radius: var(--r-full);
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-weight: 700; font-size: 14px; background: var(--ink-15);
+}
+.act.check .act-donestate { background: var(--verde-12); color: var(--verde); }
+.act-undobtn {
+  height: var(--ctl-lg); padding: 0 18px; border-radius: var(--r-full);
+  border: 1px solid var(--ink-30); background: transparent; color: inherit;
+  font-weight: 700; font-size: 13px; cursor: pointer;
+}
+.act.check .act-undobtn { border-color: var(--hairline-strong); }
+.act-undobtn:hover { background: var(--ink-10); }
+.act-undobtn:disabled { opacity: .5; cursor: default; }
+
+/* ── Note del giorno ── */
+.notes { display: flex; flex-direction: column; gap: 8px; }
+.note { display: flex; gap: 8px; align-items: flex-start; }
+.note-txt {
+  flex: 1; min-width: 0; resize: none; overflow: hidden;
+  background: var(--surface-sunken); border: 1px solid var(--hairline);
+  border-radius: var(--r-12); color: var(--fg-1); font: inherit;
+  padding: 10px 12px; line-height: 1.4;
+}
+.note-txt::placeholder { color: var(--fg-3); }
+.note-txt:focus { outline: none; border-color: var(--hairline-strong); }
+.note-ok, .note-del {
+  flex: none; width: var(--ctl-sm); height: var(--ctl-sm); border-radius: var(--r-8);
+  border: 1px solid var(--hairline); background: var(--contrast-5); color: var(--fg-2);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.note-del:hover { background: var(--contrast-10); color: var(--fg-1); }
+/* ✓ conferma nota: verde on hover, a sinistra della X */
+.note-ok:hover { background: var(--verde-12); border-color: var(--verde-25); color: var(--verde); }
+.note-add {
+  align-self: flex-start; display: inline-flex; align-items: center; gap: 6px;
+  height: var(--ctl-sm); padding: 0 13px; border-radius: var(--r-full);
+  border: 1px dashed var(--hairline-strong); background: transparent; color: var(--fg-2);
+  font-weight: 600; font-size: 13px; cursor: pointer;
+}
+.note-add:hover { background: var(--contrast-5); color: var(--fg-1); }
+/* conferma cancellazione nota */
+.note-confirm {
+  align-items: center; gap: 10px; padding: 8px 8px 8px 13px;
+  background: var(--errore-12); border: 1px solid var(--errore-35); border-radius: var(--r-12);
+}
+.note-confirm-txt { flex: 1; font-size: 13px; font-weight: 600; color: var(--fg-1); }
+.note-cancel, .note-delok {
+  flex: none; height: 32px; padding: 0 14px; border-radius: var(--r-full);
+  font-weight: 700; font-size: 13px; cursor: pointer; border: 1px solid var(--hairline-strong);
+}
+.note-cancel { background: transparent; color: var(--fg-1); }
+.note-cancel:hover { background: var(--contrast-5); }
+.note-delok { background: var(--errore); color: var(--oggi); border-color: transparent; }
+.note-delok:hover { filter: brightness(1.08); }
+
+.pcard { display: flex; gap: 13px; padding: 13px 14px; border-radius: var(--r-12); background: var(--surface-sunken); }
+/* cicli di ricircolo: una riga per orario (mockup) */
+.cicli { display: flex; flex-direction: column; gap: 6px; }
+.ciclo {
+  display: flex; align-items: center; gap: 10px; padding: 7px 11px;
+  border-radius: var(--r-8); background: var(--acqua-10);
+}
+.ciclo .t { font-size: 14px; font-weight: 600; }
+.ciclo .d { font-size: 12.5px; color: var(--fg-2); }
+.ciclo .d b { color: var(--fg-1); }
+.pdisc { width: var(--ctl-lg); height: var(--ctl-lg); border-radius: var(--r-full); flex: none; display: flex; align-items: center; justify-content: center; }
+.pbody { flex: 1; min-width: 0; }
+.prow1 { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
+.pname { font-size: 15px; font-weight: 700; }
+.pval { font-size: 13.5px; color: var(--fg-1); }
+.psub { font-size: 12.5px; color: var(--fg-2); margin-top: 3px; }
+.psub b { color: var(--fg-1); }
+
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 700; letter-spacing: .05em;
+  padding: 2px 9px; border-radius: var(--r-full);
+}
+.badge.auto { background: var(--contrast-10); color: var(--fg-2); }
+/* LIBERO = allarme: qualcosa è fuori dall'automazione. Rosso + "ping" per
+   attirare l'attenzione senza far sanguinare gli occhi (anello che pulsa). */
+.badge.manual {
+  background: var(--danger); color: var(--oggi); font-weight: 800;
+  animation: badgePing 1.6s ease-out infinite;
+}
+@keyframes badgePing {
+  0%   { box-shadow: 0 0 0 0 var(--danger-60); }
+  70%  { box-shadow: 0 0 0 20px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .badge.manual { animation: none; }
+}
+
+/* Avviso testuale sotto il titolo del componente in LIBERO: lo schedule è
+   ignorato. Stessa tonalità rossa — la 2ª frase è un link per l'automatico. */
+.pmanual {
+  margin: 8px 0; padding: 10px 10px 12px; border-radius: var(--r-8);
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  font-size: 11.5px; line-height: 1.4; color: var(--danger);
+}
+.pmanual-go {
+  background: none; border: none; padding: 0; margin: 0;
+  font: inherit; font-weight: 700; color: var(--danger);
+  text-decoration: underline; text-underline-offset: 2px; cursor: pointer;
+}
+.pmanual-go:hover { opacity: .78; }
+.pmanual-go:disabled { opacity: .55; cursor: default; }
+
+/* ── Editor del piano (v3) ──────────────────────────────── */
+.coltura-wrap { display: flex; align-items: center; gap: 8px; }
+.btn-editplan {
+  width: var(--ctl-sm); height: var(--ctl-sm); border-radius: var(--r-full); border: 1px solid var(--hairline-strong);
+  background: var(--contrast-5); color: var(--fg-2); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.btn-editplan:hover { background: var(--contrast-10); color: var(--fg-1); }
+
+.plan-overlay {
+  position: fixed; inset: 0; z-index: 70;
+  background: var(--scrim); backdrop-filter: blur(3px);
+  display: flex; align-items: center; justify-content: center; padding: 18px;
+}
+.plan-modal {
+  width: min(880px, 100%); height: min(86vh, 900px);
+  display: flex; flex-direction: column;
+  background: var(--surface-raised); border: 1px solid var(--hairline-strong);
+  border-radius: var(--r-16); box-shadow: var(--shadow-card-heavy); overflow: hidden;
+  animation: ccSheet .22s ease;
+}
+.plan-head {
+  flex: none; display: flex; align-items: center; gap: 10px;
+  padding: 13px 16px; border-bottom: 1px solid var(--hairline-strong);
+}
+.plan-title { display: flex; flex-direction: column; line-height: 1.25; }
+.plan-title b { font-size: 15px; }
+.plan-title .mono { font-size: 11.5px; color: var(--fg-2); }
+.plan-x {
+  width: var(--ctl-sm); height: var(--ctl-sm); border-radius: var(--r-full); border: 0;
+  background: var(--contrast-5); color: var(--fg-1); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+/* Modale di conferma (annullo milestone / flip) — riusa .plan-overlay come backdrop */
+.confirm-modal {
+  width: min(440px, 100%);
+  background: var(--surface-raised); border: 1px solid var(--hairline-strong);
+  border-radius: var(--r-16); box-shadow: var(--shadow-card-heavy);
+  overflow: hidden; animation: ccSheet .22s ease;
+}
+.confirm-head { display: flex; align-items: center; gap: 11px; padding: 16px 18px 10px; font-size: 16px; }
+.confirm-ic { width: var(--ctl-sm); height: var(--ctl-sm); border-radius: var(--r-8); flex: none; display: flex; align-items: center; justify-content: center; }
+.confirm-body { padding: 2px 18px 4px; }
+.confirm-body p { font-size: 13px; line-height: 1.5; color: var(--fg-2); margin: 0 0 10px; }
+.confirm-body b { color: var(--fg-1); }
+.confirm-safe {
+  display: flex; gap: 8px; align-items: flex-start;
+  background: color-mix(in srgb, var(--ok) 10%, transparent); border-radius: var(--r-8); padding: 9px 11px;
+}
+.confirm-safe svg { flex: none; margin-top: 1px; }
+.confirm-actions { display: flex; justify-content: flex-end; gap: 9px; padding: 14px 18px 18px; }
+.confirm-cancel, .confirm-ok {
+  padding: 9px 15px; border-radius: var(--r-8); font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.confirm-cancel { background: var(--contrast-5); color: var(--fg-1); border: 1px solid var(--hairline-strong); }
+.confirm-ok { border: none; color: var(--ink); }
+.confirm-cancel:hover:not(:disabled), .confirm-ok:hover:not(:disabled) { filter: brightness(1.07); }
+.confirm-cancel:disabled, .confirm-ok:disabled { opacity: .5; cursor: default; }
+
+.plan-loading { flex: 1; display: grid; place-items: center; color: var(--fg-2); }
+.plan-text {
+  flex: 1; resize: none; border: 0; outline: none;
+  background: var(--surface-page); color: var(--fg-1);
+  padding: 14px 16px; font-size: 12.5px; line-height: 1.5;
+  white-space: pre; overflow: auto; tab-size: 2;
+  scrollbar-width: thin; scrollbar-color: var(--fg-3) transparent;
+}
+.plan-err {
+  flex: none; max-height: 120px; overflow: auto; margin: 0;
+  padding: 10px 16px; font-size: 12px; line-height: 1.45;
+  background: var(--errore-12); color: var(--errore-text);
+  border-top: 1px solid var(--errore-35); white-space: pre-wrap;
+}
+.plan-foot {
+  flex: none; display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; border-top: 1px solid var(--hairline-strong);
+}
+.plan-hint { flex: 1; font-size: 11.5px; color: var(--fg-3); }
+.plan-cancel {
+  height: var(--ctl-md); padding: 0 16px; border-radius: var(--r-full);
+  border: 1px solid var(--hairline-strong); background: transparent; color: var(--fg-1);
+  font-weight: 600; cursor: pointer;
+}
+.plan-cancel.danger { border-color: var(--errore-35); background: var(--errore-12); color: var(--errore-text); }
+.plan-save {
+  height: var(--ctl-md); padding: 0 18px; border-radius: var(--r-full); border: 0;
+  background: var(--verde); color: var(--ink); font-weight: 800; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 7px;
+}
+.plan-save:disabled { opacity: .5; cursor: default; }
+
+.devbadge {
+  position: fixed; bottom: 10px; right: 12px;
+  font-size: 10px; color: var(--fg-3);
+  border: 1px dashed var(--fg-3); border-radius: var(--r-8); padding: 2px 8px;
+  background: var(--surface-page);
+}
+
+/* ── Ispettore come MODALE sotto i 980px ─────────────────── */
+.insp-overlay {
+  position: fixed; inset: 0; z-index: 60;
+  background: var(--scrim); backdrop-filter: blur(3px);
+  display: flex; align-items: center; justify-content: center; padding: 14px;
+}
+.insp-sheet { width: min(560px, 100%); max-height: 88vh; display: flex; animation: ccSheet .25s ease; }
+.insp-sheet .inspector { width: 100%; max-height: 88vh; }
+/* Nello sheet la colonna del testo e' piu' larga (197px contro i 165px del
+   desktop, dove la colonna destra dell'hero si prende il resto): la data puo'
+   respirare di un paio di punti senza rischiare l'a-capo. */
+.insp-sheet .insp-title { font-size: 19.5px; line-height: 22px; }
+.insp-close {
+  width: var(--ctl-md); height: var(--ctl-md); border-radius: var(--r-full); border: 0; flex: none;
+  background: var(--w-30); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+
+@media (max-width: 1150px) {
+  .app { height: 100vh; }
+  .legend { display: none; }
+  /* barra timeline: titolo via, chips ravvicinate e riga scorrevole in
+     orizzontale quando i bottoni non ci stanno (niente tagli a destra) */
+  .tl-title { display: none; }
+  .tl-head {
+    overflow-x: auto; gap: 8px; padding: 11px 14px;
+    scrollbar-width: thin; scrollbar-color: var(--fg-3) transparent;
+  }
+  .tl-head > * { flex: none; }
+  .tl-head .spacer { flex: 1; }
+  /* i dettagli sono in MODALE: la chevron ">" (che riappare solo a modale
+     chiusa) è confusa e ruba spazio → via del tutto. La selezione resta
+     indicata dall'outline. Recupera anche i 22px che tagliavano la riga OGGI. */
+  .day-chev { display: none; }
+}
+
+/* ── Telefono: milestone a capo, header di fase non schiacciato ── */
+@media (max-width: 600px) {
+  /* milestone: via le linee tratteggiate, card a tutta larghezza che manda
+     a capo il testo (kicker/nome/data/stato) invece di sfondare a destra */
+  .ms-line { display: none; }
+  .ms-card { flex: 1; min-width: 0; margin: 0; }
+  .ms-mid { flex: 1; }
+  /* header fase: il range g8–28 è ridondante su mobile, liberalo (dur resta) */
+  .ph-h-range { display: none; }
+  .ph-header { gap: 9px; }
+  /* riga giorno: params e chip vanno su righe proprie a tutta larghezza,
+     così ellissano invece di essere tagliati dall'overflow della riga */
+  .day-params { flex-basis: 100%; min-width: 0; }
+  .day-chips { flex: 1 1 100%; min-width: 0; align-items: flex-start; }
+}
+
+/* ── A11y (audit R1/UI-02): focus da tastiera VISIBILE ovunque. Le righe
+   .day usano gia' l'outline per la selezione: li' il focus e' un ring
+   interno via box-shadow, che non sposta il layout. ── */
+:focus-visible { outline: 2px solid var(--oggi); outline-offset: 2px; }
+.day:focus-visible { outline-offset: -2px; box-shadow: inset 0 0 0 2px var(--w-75, rgba(255,255,255,0.75)); }
+
+/* ── F1: CTA "Concludi coltivazione" in fondo allo schedule ── */
+.concludi-wrap {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 22px 0 30px;
+}
+.btn-concludi {
+  height: var(--ctl-lg); padding: 0 22px; border-radius: var(--r-full);
+  border: 1px solid var(--fase-essiccazione-25); background: var(--fase-essiccazione-10);
+  color: var(--fase-essiccazione); font-size: 14px; font-weight: 700; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 9px;
+  transition: background .2s, border-color .2s, color .2s;
+}
+.btn-concludi:hover { background: var(--fase-essiccazione-25); }
+.btn-concludi.armed {
+  background: var(--errore-12); border-color: var(--errore-35); color: var(--errore-text);
+}
+.btn-concludi:disabled { opacity: .5; cursor: default; }
+.concludi-hint { font-size: 11.5px; color: var(--fg-2); text-align: center; max-width: 420px; text-wrap: pretty; }
+
+/* AUDIT R2 (cluster F1) — banner stato "coltivazione non attiva" */
+.conclusa-banner {
+  display: flex; align-items: center; gap: 8px;
+  margin: 10px 16px 0;
+  padding: 10px 14px;
+  border-radius: var(--r-12);
+  background: var(--contrast-8);
+  border: 1px solid var(--hairline-strong);
+  color: var(--fg-2);
+  font-size: 13px;
+}
+/* Gli altri due stati particolari, stessa fascia e stessa geometria: cambia
+   solo la tinta, perche' cambia la gravita'. L'offline e' un AVVISO (ricetta
+   gialla dell'app: la serra non e' rotta, e' muta); l'errore pendente e' un
+   guasto vero e prende il rosso del DS. */
+.conclusa-banner--off {
+  background: var(--luce); border-color: transparent; color: var(--ink);
+  font-weight: 500;
+}
+.conclusa-banner--errore {
+  background: var(--errore-12); border-color: var(--errore-35); color: var(--errore-text);
+}
+/* Rimando a un'altra sezione dentro un banner: bottone, ma si legge come un
+   link (stessa ricetta di .cc-link del Controllo). */
+.banner-link {
+  padding: 0; border: 0; background: none; font: inherit; color: inherit; cursor: pointer;
+  font-weight: 700; text-decoration: underline; text-underline-offset: 2px;
+  text-decoration-color: currentColor; opacity: .85;
+}
+.banner-link:hover, .banner-link:focus-visible { opacity: 1; }
