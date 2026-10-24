@@ -11,15 +11,15 @@ Il broker MQTT e le sue credenziali sono stati predisposti nel [passo 07](07-bri
 
 Per le future automazioni delle ventole, Home Assistant deve conoscere temperatura e umidità **dentro la serra** tramite un sensore ambientale già integrato in HA. Il prototipo usa un sensore Aqara Zigbee collocato nella serra: questi valori non arrivano dal VoCore né dai topic pubblicati dal controller.
 
-Le misure di temperatura e umidità della stanza (o le medie dei sensori di casa) permettono anche di evitare la ventilazione quando lo scambio d'aria non aiuterebbe a raffreddare o deumidificare. L'app in preparazione renderà selezionabili queste quattro entità nelle proprie Impostazioni. Per la sola prova MQTT di questo capitolo non serve aggiungere sensori.
+Le misure di temperatura e umidità della stanza (o le medie dei sensori di casa) permettono anche di evitare la ventilazione quando lo scambio d'aria non aiuterebbe a raffreddare o deumidificare. L'app rende selezionabili queste quattro entità nelle proprie Impostazioni. Per la sola prova MQTT di questo capitolo non serve aggiungere sensori.
 
 La [fotocamera interna](../approfondimenti/fotocamera.md) è facoltativa: la pipeline sul Raspberry scatta e trasferisce il JPEG tramite il canale configurato, UART o SSH locale. Installa e prova prima lo script fotografico se vuoi usare pulsante e automazione foto nell'app Home Assistant.
 
 ---
 
-## Anteprima dell'app in test
+## L'app Home Assistant
 
-Questa è la vista **Coltivazione** dell'app completa per Home Assistant. L'app è pronta e in fase di test, ma non è ancora pubblicata nella repository; i passi di questo capitolo servono per verificare il collegamento MQTT prima del rilascio.
+Questa è la vista **Coltivazione** dell'app completa per Home Assistant. L'app è [disponibile nella repository come versione sperimentale](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/app/DOCS.md). Comprende un piano di coltivazione completo con due varianti. Prima di installarla verifica il collegamento MQTT con la prova di questo capitolo; poi segui le [istruzioni dell'app](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/app/DOCS.md) per i file di configurazione, i sensori e l'avvio.
 
 <figure class="ha-preview">
   <a href="../../assets/home-assistant-coltivazione-preview.webp"><img src="../../assets/home-assistant-coltivazione-preview.webp" alt="Anteprima della vista Coltivazione: fasi di crescita, timeline e attività del giorno"></a>
@@ -72,7 +72,7 @@ Il controller e il bridge pubblicano questi topic con il flag **retain**. I cont
 ### Comandi (publish da HA → Raspberry)
 
 > [!TIP] Vuoi provare altri comandi?
-> Nel [riferimento comandi](../riferimento-comandi.md) trovi l'elenco completo, esempi con parametri diversi e la sintassi da usare sul Raspberry o in un client MQTT. Per usare la futura app Linfa in Home Assistant non dovrai digitare questi comandi.
+> Nel [riferimento comandi](../riferimento-comandi.md) trovi l'elenco completo, esempi con parametri diversi e la sintassi da usare sul Raspberry o in un client MQTT. Per usare l'app Linfa in Home Assistant non dovrai digitare questi comandi.
 
 Pubblica su `serra/cmd` oppure su `serra/cmd/<id>` se vuoi ricevere un riscontro associato a un ID.
 
@@ -80,7 +80,7 @@ Per una prima prova con le ventole, usa il payload `fans on`. Per spegnerle con 
 
 ### Prova con MQTT Explorer
 
-Per vedere i topic organizzati e pubblicare comandi di prova, consigliamo **MQTT Explorer**. Se usi **Home Assistant OS**, puoi installare l'[app comunitaria MQTT Explorer](https://github.com/GollumDom/addon-repository): vai in **Impostazioni → App → Installa app**, aggiungi il repository dal menu **⋮ → Repository**, poi installa e avvia MQTT Explorer. È uno strumento facoltativo, separato dall'integrazione MQTT e dall'app Linfa in preparazione.
+Per vedere i topic organizzati e pubblicare comandi di prova, consigliamo **MQTT Explorer**. Se usi **Home Assistant OS**, puoi installare l'[app comunitaria MQTT Explorer](https://github.com/GollumDom/addon-repository): vai in **Impostazioni → App → Installa app**, aggiungi il repository dal menu **⋮ → Repository**, poi installa e avvia MQTT Explorer. È uno strumento facoltativo, separato dall'integrazione MQTT e dall'app Linfa.
 
 Puoi usare anche [MQTT Explorer per Windows, macOS o Linux](https://mqtt-explorer.com/) su un computer della stessa rete: collegalo allo **stesso broker** con credenziali MQTT valide. Il computer non deve entrare in Home Assistant; deve poter raggiungere il broker. Se usi l'app Mosquitto di Home Assistant, indica l'indirizzo di rete di Home Assistant, non il nome interno `core-mosquitto.local.hass.io`.
 
@@ -110,7 +110,7 @@ Nella sezione **Pubblica un pacchetto** inserisci:
 Pubblica il comando e verifica che le ventole si avviino e che compaiano messaggi su `serra/status/last` e `serra/state/fans/*`. Poi invia `fans off` allo stesso topic, sempre senza retain. La procedura di ascolto e pubblicazione è descritta anche nella [guida ufficiale MQTT](https://www.home-assistant.io/integrations/mqtt/#testing-your-setup).
 
 > [!NOTE] Stato dell'integrazione
-> Questa prova conferma che Home Assistant può leggere i topic e inviare comandi attraverso MQTT. **Non crea ancora entità, pulsanti o una dashboard dedicata.** L'app completa per Home Assistant è pronta e in fase di test, ma non è ancora stata pubblicata qui.
+> Questa prova conferma che Home Assistant può leggere i topic e inviare comandi attraverso MQTT. **Da sola non crea entità, pulsanti o l'interfaccia dedicata.** Per ottenerli, installa l'[app sperimentale](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/app/DOCS.md) e i suoi file di configurazione.
 
 
 ---
@@ -135,7 +135,7 @@ A questo punto il percorso di base è completo:
 - ✅ Home Assistant può ascoltare gli stati e pubblicare comandi MQTT senza passare dal cloud Robonica
 - ✅ Il Raspberry traduce i comandi MQTT in istruzioni sul canale scelto per la serra
 - ✅ Gli ultimi stati **logici** noti e gli esiti dei comandi sono osservabili nei topic MQTT
-- ℹ️ L'app completa con controlli e dashboard è pronta e in fase di test, ma non è ancora disponibile nella repository
+- ℹ️ L'app completa con controlli e dashboard è disponibile come [versione sperimentale](https://github.com/Interstellar0verdrive/Linfa-local-control/blob/main/app/DOCS.md); va installata e configurata separatamente
 
 ---
 
