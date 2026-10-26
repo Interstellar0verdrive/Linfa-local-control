@@ -1,0 +1,9 @@
+[Unit]
+Description=Serra: disable VoCore network (net off)
+After=network.target
+
+[Service]
+Type=oneshot
+User=pi
+EnvironmentFile=/etc/serra-mqtt.env
+ExecStart=/usr/local/bin/serra net off

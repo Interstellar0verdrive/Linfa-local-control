@@ -1,0 +1,7 @@
+[Unit]
+Description=Serra: pubblica livello acqua (magnetometro)
+[Service]
+Type=oneshot
+User=pi
+EnvironmentFile=/etc/serra-mqtt.env
+ExecStart=/usr/local/bin/serra water level

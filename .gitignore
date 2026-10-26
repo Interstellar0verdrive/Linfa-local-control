@@ -1,0 +1,12 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+.venv/
+node_modules/
+site/
+*.env
+!*.env.example
+*.har
+*.mitm
+*.zip
+.serra_state.json

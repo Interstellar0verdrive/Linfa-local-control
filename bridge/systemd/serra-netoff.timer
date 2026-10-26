@@ -1,0 +1,10 @@
+[Unit]
+Description=Serra: run net off once after boot (60s)
+
+[Timer]
+OnBootSec=60
+AccuracySec=1s
+Persistent=false
+
+[Install]
+WantedBy=timers.target

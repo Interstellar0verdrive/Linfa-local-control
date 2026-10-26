@@ -1,0 +1,55 @@
+site_name: Linfa Local Control
+site_description: Guida indipendente al controllo locale delle serre Robonica Linfa
+site_url: https://interstellar0verdrive.github.io/Linfa-local-control/
+repo_url: https://github.com/Interstellar0verdrive/Linfa-local-control
+repo_name: Interstellar0verdrive/Linfa-local-control
+edit_uri: edit/main/docs/
+
+plugins:
+  - search
+  - gh-admonitions
+
+theme:
+  name: null
+  custom_dir: theme
+
+extra_css:
+  - stylesheets/site.css
+
+extra_javascript:
+  - javascripts/site.js
+
+hooks:
+  - mkdocs_hooks.py
+
+nav:
+  - Inizia qui: index.md
+  - Percorso guidato:
+      - '01 · Panoramica e obiettivi': setup/01-panoramica.md
+      - '02A · Primo accesso via Wi-Fi': setup/02-wifi.md
+      - '02B · Collegamento USB': setup/02-hardware.md
+      - '03 · Preparare il Raspberry Pi': setup/03-raspberry.md
+      - '04 · Verificare la connessione USB': setup/04-uart.md
+      - '05 · Impostare la password root': setup/05-password-root.md
+      - '06 · Installare il controller CLI': setup/06-controller-cli.md
+      - '07 · Configurare il bridge MQTT': setup/07-bridge-mqtt.md
+      - '08 · Attivare i servizi automatici': setup/08-servizi-automatici.md
+      - '09 · Collegare Home Assistant': setup/09-home-assistant.md
+  - Riferimento:
+      - Riferimento comandi: riferimento-comandi.md
+  - Approfondimenti facoltativi:
+      - Prove e limiti del percorso Wi-Fi: approfondimenti/percorso-wifi-sperimentale.md
+      - Foto della serra: approfondimenti/fotocamera.md
+      - Wi-Fi, token e aggiornamenti: approfondimenti/configurazione-serra.md
+      - Rete della serra durante il setup: approfondimenti/rete-serra.md
+      - Analisi del traffico cloud: approfondimenti/traffico-cloud.md
+      - Accesso e dump del modulo: approfondimenti/accesso-e-dump.md
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: false
+  - pymdownx.superfences

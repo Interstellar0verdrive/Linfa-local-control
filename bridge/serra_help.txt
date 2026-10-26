@@ -1,0 +1,360 @@
+SERRA CONTROLLER — GUIDA RAPIDA CLI
+===================================
+
+SINTASSI GENERALE
+  serra <categoria> <azione> [opzioni]
+  serra --port /dev/ttyUSB1 --baud 115200 <categoria> <azione> [opzioni]
+  serra --transport wifi --ssh-host <IP_SERRA> <categoria> <azione> [opzioni]
+  serra --transport auto --primary wifi --ssh-host <IP_SERRA> <categoria> <azione> [opzioni]
+
+  --port, --baud, --transport, --ssh-host, --ssh-port e --primary sono
+  opzioni globali: mettile PRIMA della categoria.
+  serra --help mostra questa guida.
+
+CATEGORIE DISPONIBILI
+  lights     # Controllo pannello LED (full spectrum / canali colore)
+  fans       # Controllo ventole (Fan1, Fan2, Fan frontale)
+  pump       # Pompe (main ricircolo + nutrienti 0/1/2)
+  ring       # LED ring di stato (RGB)
+  checkup    # Routine test componenti (smoke test)
+  net        # Abilita/Disabilita rete della serra (Wi-Fi + DHCP + NTP)
+  state      # Gestione stato e sincronizzazione MQTT
+  water      # Legge il magnetometro e calcola il livello dell'acqua
+  uptime     # Legge l'uptime della serra e del Raspberry
+  foto       # Avvia la pipeline foto esterna in background
+  auth       # Salva localmente la password console per la CLI manuale
+
+INFORMAZIONI IMPORTANTI
+  • Luci e ring: il parametro "fade" è in secondi approssimati
+    (internamente convertito in valore HEX)
+  • Ventole: sotto ~40% possono bloccarsi; per "low/medium" lo script
+    esegue un WAKE breve al 100% prima di scendere
+  • Nutrienti: il controller invia P#,1,Y (100 unità ≈ 1s nel prototipo)
+  • Pump main: W<N> = N secondi (intero), W0 = stop immediato
+  • state sync non interroga la serra: aggiorna solo lo stato logico locale.
+  • foto richiede il programma esterno /usr/local/bin/serra-foto.
+  • auth save si esegue una volta per utente sul Raspberry; non usa la UART.
+  • uart è il trasporto predefinito. wifi usa SSH locale verso il VoCore.
+  • auto sceglie il trasporto disponibile all'apertura; se un comando ha
+    esito incerto NON lo ritenta sull'altro, per evitare doppi dosaggi.
+  • La modalità wifi/auto richiede sshpass, chiave host SSH verificata e
+    SERRA_SSH_HOST. Il comando net on/off richiede il trasporto UART.
+
+PASSWORD PER I COMANDI MANUALI
+  serra auth save  # Chiede la password due volte, senza mostrarla
+
+La credenziale resta in ~/.config/serra/root-password (file 600, cartella 700).
+Anche i servizi systemd dello stesso utente leggono questo file; non serve
+duplicare la password della serra in /etc/serra-mqtt.env.
+
+============================================================
+LUCI (lights)
+============================================================
+
+COMANDI RAPIDI
+  serra lights on        # Accende TUTTI i LED (canale A), 100%, fade 0
+  serra lights off       # Spegne TUTTI i LED (canale A), fade 0
+
+CANALI DISPONIBILI
+  A    # Tutti i LED (full spectrum)
+  G    # Solo verdi
+  B    # Blu + bianchi
+  R    # Prima metà rossi
+  D    # Seconda metà rossi
+
+ESEMPI
+  serra lights on --intensity 80 --fade 15   # Full spectrum 80%, fade ~15s
+  serra lights off --fade 120                # Spegne tutto con fade ~120s
+  serra lights set G -i 100 -f 10            # Verdi 100% con fade ~10s
+  serra lights set G -i 0                    # Spegne verdi (fade 0)
+  serra lights preset viola -i 60 -f 3       # Ricetta viola al 60%, fade ~3s
+  serra lights preset verde                   # Solo verde al 100%
+  serra lights mix -g 30 -r 70 -d 70 -f 2    # Mix completo; A e B spenti
+
+OPZIONI
+  -i, --intensity   # Intensità 0..100 (default: 100)
+  -f, --fade        # Durata fade in secondi (default: 0)
+
+PRESET E MIX
+  serra lights preset <viola|verde|bianco> [-i 0..100] [-f secondi]
+    viola: R=100%, D=100%, B=40% (ricetta al 100%)
+    verde: G=100% (ricetta al 100%)
+    bianco: A=100% (ricetta al 100%)
+    -i scala tutti i canali della ricetta; i canali non previsti si spengono.
+
+  serra lights mix [-a 0..100] [-g 0..100] [-b 0..100]
+                   [-r 0..100] [-d 0..100] [-f secondi]
+    Imposta insieme A/G/B/R/D. Ogni canale omesso vale 0 e viene spento.
+    mix e preset sostituiscono l'intera configurazione delle luci.
+
+============================================================
+VENTOLE (fans)
+============================================================
+
+COMANDI RAPIDI
+  serra fans on       # Accende tutte le ventole a "medium"
+  serra fans off      # Spegne tutte le ventole
+
+VENTOLE DISPONIBILI
+  1      # Fan 1
+  2      # Fan 2
+  F      # Fan frontale
+  all    # Tutte le ventole
+
+LIVELLI DI INTENSITÀ
+  off       # 0%
+  low       # ~50%  (attenzione: sotto ~40% può bloccarsi)
+  medium    # ~75%
+  high      # 100%
+
+ESEMPI
+  serra fans set 1 -i high      # Fan 1 al 100%
+  serra fans set F -i low       # Fan frontale a ~50% (con wake automatico)
+  serra fans set all -i medium  # Tutte a ~75%
+  serra fans on --intensity low # Tutte a low (wake → low)
+
+OPZIONI
+  -i, --intensity   # Livello: off|low|medium|high (default: medium)
+
+NOTA: Per far partire ventole ferme a low/medium, lo script esegue
+automaticamente un WAKE breve al 100% prima di impostare il livello richiesto.
+
+============================================================
+POMPA PRINCIPALE (pump main)
+============================================================
+
+COMANDI
+  serra pump main on              # ON per 1 secondo (default)
+  serra pump main on --seconds 3  # ON per 3 secondi
+  serra pump main on -s 10        # ON per 10 secondi
+  serra pump main off             # STOP immediato
+
+OPZIONI
+  -s, --seconds   # Durata in secondi, intero (default: 1, max: 300)
+
+ATTENZIONE: 30+ secondi è una durata elevata; usare con cautela.
+
+============================================================
+POMPE NUTRIENTI (pump nutrient)
+============================================================
+
+MAPPATURA GOCCIOLATORI
+  nutrient 0   # Gocciolatore a destra (vasetto verde)    → P0
+  nutrient 1   # Gocciolatore al centro (vasetto azzurro) → P1
+  nutrient 2   # Gocciolatore a sinistra (vasetto rosso)  → P2
+
+ESEMPI
+  serra pump nutrient 0                              # 1s, 1 volta
+  serra pump nutrient 0 -s 0.5 -t 2 -i 2             # 0.5s, 2 volte, pausa 2s
+  serra pump nutrient 1 -s 1 -t 3 -i 1               # 1s, 3 volte, pausa 1s
+  serra pump nutrient 2 --seconds 5 --times 2        # 5s, 2 volte
+
+OPZIONI
+  -s, --seconds    # Durata erogazione in secondi (default: 1.0, max: 60)
+  -t, --times      # Numero ripetizioni (default: 1, max: 100)
+  -i, --interval   # Pausa tra ripetizioni in secondi (default: 1.0, max: 120)
+
+NOTE:
+  • La erogazione dipende da tenuta vasetti e livello liquido
+  • Con ripetizioni multiple, il comando resta attivo fino al termine
+  • Ctrl+C ferma gli invii successivi, ma NON annulla un impulso già inviato
+  • Via MQTT il bridge termina la CLI dopo 120s per default (SERRA_CMD_TIMEOUT)
+  • Il controller può ridurre le ripetizioni per limitare la durata totale
+    della sequenza e non trattenere troppo a lungo la porta UART.
+
+============================================================
+LED RING (ring)
+============================================================
+
+COMANDI BASE
+  serra ring on                 # Accende bianco, fade 0
+  serra ring on -c green -f 5   # Accende verde con fade ~5s
+  serra ring off                # Spegne, fade 0
+  serra ring off --fade 10      # Spegne con fade ~10s
+
+MODALITÀ BLINK
+  serra ring blink                           # 5 lampeggi bianchi (default)
+  serra ring blink -c red -t 3               # 3 lampeggi rossi
+  serra ring blink -c F90023 -t 3 -f 2 -d 3  # 3 lampeggi, colore HEX, fade 2s, ON 3s
+
+COLORI DISPONIBILI
+  white, red, green, yellow, orange, blue, purple, off
+  Oppure codice HEX a 6 cifre (es: F90023, 00FF00)
+
+OPZIONI
+  -c, --color      # Colore nome o HEX (default: white)
+  -f, --fade       # Durata fade in secondi (default: 0)
+  -t, --times      # Numero lampeggi (default: 5, max: 100)
+  -d, --duration   # Durata ON per lampeggio (default: 1s, max: 60s)
+  -i, --interval   # Pausa OFF tra lampeggi (default: 1s, max: 10s)
+
+NOTE:
+  • Il blink resta attivo fino al termine dei cicli; Ctrl+C può lasciare il ring acceso
+  • Valori fade decimali vengono arrotondati (0.5 → 0, nessun fade)
+
+============================================================
+CHECKUP
+============================================================
+
+Esegue una sequenza di test per verificare il funzionamento dei componenti.
+
+⚠️  ATTENZIONE: La routine è INTRUSIVA!
+    Sovrascrive i valori dei gruppi testati e, se termina normalmente, li spegne.
+    Se lo interrompi, controlla fisicamente i componenti: possono restare attivi.
+
+ESEMPI
+  serra checkup                            # Checkup completo
+  serra checkup --fans off --pump-main off # Esclude ventole e pompa main
+  serra checkup -l off -lr off -f off      # Testa solo le pompe
+
+OPZIONI
+  -l,  --lights          # on|off (default: on)
+  -f,  --fans            # on|off (default: on)
+  -lr, --led-ring        # on|off (default: on)
+  -pm, --pump-main       # on|off (default: on)
+  -pn, --pump-nutrients  # on|off (default: on)
+
+SEQUENZA CHECKUP (default)
+  1. Luci: canali singoli G/B/R/D (2s ciascuno) → OFF
+  2. Luci: full spectrum (5s) → OFF
+  3. Ventole: Fan1, Fan2, FanF al 100% (5s ciascuna) → OFF
+  4. Ring: rosso, 3 blink → OFF
+  5. Nutrienti: pompe 0, 1, 2 (~1s ciascuna) → OFF
+  6. Pompa main: 3s → OFF
+  7. State sync finale
+
+============================================================
+RETE (net)
+============================================================
+
+⚠️  ATTENZIONE: I comandi agiscono sulla serra (VoCore), NON sul Raspberry.
+    Obiettivo: disabilitare cloud / ridurre instabilità Wi-Fi.
+
+COMANDI
+  serra net off              # Prova a disabilitare la rete del VoCore
+  serra net off --ntp on     # Rete giù ma NTP attivo (sconsigliato)
+  serra net on               # Riattiva rete (fino al prossimo riavvio)
+
+OPZIONI
+  on|off         # Azione principale
+  -n, --ntp      # on|off (default: segue l'azione principale)
+
+COS'È NTP?
+  NTP sincronizza l'orario via internet (pool.ntp.org).
+  Se la rete è disabilitata, NTP fallisce e può generare spam in console.
+  Per questo viene spento automaticamente con "net off".
+
+============================================================
+STATE / SYNC (MQTT)
+============================================================
+
+COMANDO
+  serra state sync   # Ricalcola stati time-based e ripubblica su MQTT
+
+FUNZIONALITÀ
+  • Aggiorna running_now e le transizioni in base al tempo corrente
+  • Ripubblica gli stati noti su serra/state/* (o sul topic base configurato)
+  • Aggiorna last_seen
+
+NOTE:
+  • Non legge telemetria reale dalla serra (es. ventole attive)
+  • Pubblica lo "stato atteso" basato sui comandi inviati
+  • Non apre la UART e non richiede che la serra sia accesa
+  • Per aggiornamenti automatici, configurare un systemd timer
+    che esegua 'serra state sync' periodicamente
+
+============================================================
+LIVELLO ACQUA (water)
+============================================================
+
+Il magnetometro della serra legge la posizione del galleggiante. La percentuale
+è una stima ottenuta confrontando la lettura con due riferimenti locali.
+Esegui le letture con la pompa ferma e l'acqua a riposo.
+
+COMANDI
+  serra water read             # Mostra la lettura grezza x/y/z
+  serra water calibrate empty  # Registra il riferimento con vasca vuota
+  serra water calibrate full   # Registra il riferimento con vasca piena
+  serra water calibrate earth  # Riferimento opzionale; non usato nel calcolo %
+  serra water level            # Stima 0..100% dopo empty + full
+
+La calibrazione è salvata nello stato locale del Raspberry. water level
+pubblica serra/state/water come messaggio retained se MQTT è configurato.
+water read e water calibrate non pubblicano il livello su MQTT.
+
+============================================================
+UPTIME (uptime)
+============================================================
+
+COMANDO
+  serra uptime  # Legge /proc/uptime della serra e l'uptime del Raspberry
+
+Pubblica serra/state/boot e serra/state/pi_boot come messaggi retained se MQTT
+è configurato. Il timestamp di avvio della serra cambia quando viene rilevato
+un suo riavvio; il comando non riavvia la serra e non spegne la sua rete.
+
+============================================================
+FOTO (foto)
+============================================================
+
+COMANDO
+  serra foto  # Avvia /usr/local/bin/serra-foto e ritorna subito
+
+La pipeline esterna lavora in background e scrive /tmp/serra-foto.log. Richiede
+che /usr/local/bin/serra-foto e la sua configurazione siano già installati.
+Accende temporaneamente le sezioni LED B2 e B5, poi ripristina le luci e
+trasferisce il JPEG via UART. La Wi-Fi della serra rimane spenta.
+Attendi il completamento e verifica il ripristino nel log.
+
+============================================================
+VARIABILI DI AMBIENTE
+============================================================
+
+  SERRA_UART_PORT       # Porta UART (default: /dev/ttyUSB0)
+  SERRA_UART_BAUD       # Baudrate (default: 115200)
+  SERRA_ROOT_USER       # Utente console (default: root)
+  SERRA_ROOT_PASSWORD   # Override facoltativo; normalmente usa serra auth save
+  SERRA_STATE_FILE      # File stato JSON (default: ~/.serra_state.json)
+  SERRA_MQTT_HOST       # Host MQTT (vuoto = MQTT disabilitato)
+  SERRA_MQTT_PORT       # Porta MQTT (default: 1883)
+  SERRA_MQTT_USER       # Utente MQTT
+  SERRA_MQTT_PASS       # Password MQTT
+  SERRA_MQTT_TOPIC      # Topic base MQTT (default: serra)
+  SERRA_CLI             # Nome CLI per logging (default: serra)
+
+============================================================
+RIFERIMENTO RAPIDO
+============================================================
+
+LUCI
+  serra lights on [-i 0..100] [-f secondi]
+  serra lights off [-f secondi]
+  serra lights set <A|G|B|R|D> [-i 0..100] [-f secondi]
+  serra lights preset <viola|verde|bianco> [-i 0..100] [-f secondi]
+  serra lights mix [-a %] [-g %] [-b %] [-r %] [-d %] [-f secondi]
+
+VENTOLE
+  serra fans on [-i off|low|medium|high]
+  serra fans off
+  serra fans set <1|2|F|all> [-i off|low|medium|high]
+
+POMPE
+  serra pump main on [-s secondi]
+  serra pump main off
+  serra pump nutrient <0|1|2> [-s secondi] [-t ripetizioni] [-i intervallo]
+
+RING
+  serra ring on [-c colore] [-f fade]
+  serra ring off [-f fade]
+  serra ring blink [-c colore] [-t volte] [-f fade] [-d durata] [-i intervallo]
+
+ALTRO
+  serra auth save
+  serra checkup [-l on|off] [-f on|off] [-lr on|off] [-pm on|off] [-pn on|off]
+  serra net on/off [-n on|off]
+  serra state sync
+  serra water read
+  serra water level
+  serra water calibrate <empty|full|earth>
+  serra uptime
+  serra foto

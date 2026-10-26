@@ -1,0 +1,304 @@
+#!/usr/bin/env python3
+"""Fotografia Linfa via UART o SSH: profilo LED originale, JPEG integrale."""
+import base64
+import fcntl
+import hashlib
+import json
+import os
+import re
+import sys
+import threading
+import time
+from datetime import datetime
+
+import paho.mqtt.client as mqtt
+
+CONTROLLER_DIR = os.environ.get('SERRA_CONTROLLER_DIR', '/home/pi')
+sys.path.insert(0, CONTROLLER_DIR)
+from serra_controller import ConsoleConfig, make_console, _channels_to_cmd
+
+HOST = os.environ.get('SERRA_MQTT_HOST', '').strip()
+PORT = int(os.environ.get('SERRA_MQTT_PORT', '1883'))
+USER = os.environ.get('SERRA_MQTT_USER', '')
+PASS = os.environ.get('SERRA_MQTT_PASS', '')
+BASE = os.environ.get('SERRA_MQTT_TOPIC', 'serra').rstrip('/')
+ARCHIVE = os.environ.get('SERRA_FOTO_ARCHIVE', '/home/pi/serra/foto')
+REMOTE = '/tmp/serra-photo-uart.jpg'
+LOCK = '/tmp/serra-foto.lock'
+CHUNK = 16384
+CHANNELS = ('a', 'g', 'b', 'r', 'd')
+
+
+def log(s):
+    print('[serra-foto] ' + str(s), flush=True)
+
+
+def check_config():
+    if not ConsoleConfig().password:
+        raise RuntimeError('Password console mancante: esegui serra auth save o imposta SERRA_ROOT_PASSWORD')
+    if not HOST or HOST.startswith('REPLACE_'):
+        raise RuntimeError('SERRA_MQTT_HOST mancante')
+    if not BASE:
+        raise RuntimeError('SERRA_MQTT_TOPIC vuoto')
+    if not os.path.isfile(os.path.join(CONTROLLER_DIR, 'serra_controller.py')):
+        raise RuntimeError('controller Raspberry non trovato')
+    if os.environ.get('SERRA_TRANSPORT', 'uart').lower() in ('wifi', 'auto'):
+        if not os.environ.get('SERRA_SSH_HOST', '').strip():
+            raise RuntimeError('SERRA_SSH_HOST mancante per la foto via Wi-Fi')
+
+
+def mqtt_client():
+    if hasattr(mqtt, 'CallbackAPIVersion'):
+        client = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION2)
+    else:
+        client = mqtt.Client()
+    if USER:
+        client.username_pw_set(USER, PASS)
+    return client
+
+
+def mqtt_receive(topic, timeout=5):
+    client = mqtt_client()
+    event = threading.Event()
+    values = []
+    def on_connect(client, userdata, flags, reason_code, properties=None):
+        if not getattr(reason_code, 'is_failure', reason_code != 0):
+            client.subscribe(topic)
+    def on_message(client, userdata, message):
+        values.append(message.payload)
+        event.set()
+    client.on_connect = on_connect
+    client.on_message = on_message
+    client.connect(HOST, PORT, keepalive=30)
+    client.loop_start()
+    try:
+        return values[0] if event.wait(timeout) else None
+    finally:
+        client.disconnect()
+        client.loop_stop()
+
+
+def mqtt_publish(topic, payload):
+    client = mqtt_client()
+    client.connect(HOST, PORT, keepalive=30)
+    client.loop_start()
+    try:
+        info = client.publish(topic, payload, qos=1, retain=True)
+        info.wait_for_publish(timeout=10)
+        if not info.is_published():
+            raise RuntimeError('pubblicazione MQTT non confermata: ' + topic)
+    finally:
+        client.disconnect()
+        client.loop_stop()
+
+
+def publish_error(message):
+    try:
+        mqtt_publish(BASE + '/status/last', json.dumps({
+            'ok': False, 'component': 'camera', 'action': 'foto',
+            'cmd': str(message)[:120], 'ts': time.time()}))
+    except Exception as exc:
+        log('pubblicazione errore fallita: ' + str(exc))
+
+
+def read_lights():
+    for attempt in range(3):
+        raw = mqtt_receive(BASE + '/state/lights')
+        if raw:
+            try:
+                data = json.loads(raw)
+                if (data.get('last') or {}).get('ok') is not True:
+                    raise ValueError('ultimo comando luci non confermato')
+                channels = (data.get('state') or data)['channels']
+                mix = {ch: int(channels[ch.upper()]) for ch in CHANNELS}
+                if all(0 <= v <= 100 for v in mix.values()):
+                    return mix
+            except (ValueError, TypeError, KeyError, AttributeError):
+                pass
+        log('stato luci incompleto (%d/3)' % (attempt + 1))
+        time.sleep(1)
+    raise RuntimeError('mix luci ignoto: scatto annullato prima di cambiare i LED')
+
+
+def checked(console, command, timeout=15):
+    if not console.run_checked(command, timeout=timeout):
+        raise RuntimeError('comando sulla serra non confermato: ' + command[:80])
+
+
+def connect_console():
+    console = make_console(ConsoleConfig())
+    console.open()
+    try:
+        console.ensure_root_prompt()
+        return console
+    except Exception:
+        console.close()
+        raise
+
+
+def capture():
+    console = connect_console()
+    before = None
+    changed = False
+    restore_ok = True
+    try:
+        before = read_lights()
+        log('mix precedente: ' + json.dumps(before, sort_keys=True))
+        changed = True
+        checked(console, _channels_to_cmd({ch.upper(): 0 for ch in CHANNELS}, 0))
+        checked(console, 'echo 2Bff000 > /dev/tty-local && sleep 0.25 && '
+                         'echo 5Bff000 > /dev/tty-local')
+        time.sleep(1)
+        # Il vecchio prototipo impostava WB manuale: reset esplicito ad Auto.
+        # Nessun crop, flat-field, sharpening o media artificiale dei frame.
+        checked(console, 'rm -f ' + REMOTE + ' && '
+                'fswebcam -D 0 -r 640x480 --jpeg 95 --rotate 180 '
+                '-s "White Balance Temperature, Auto=True" '
+                '--no-banner --save ' + REMOTE + ' >/dev/null 2>&1 && test -s ' + REMOTE,
+                timeout=35)
+        log('scatto eseguito sul VoCore')
+    finally:
+        if changed and before is not None:
+            # B2/B5 si spengono singolarmente prima del ripristino del gruppo B.
+            restore = ('echo 2B00000 > /dev/tty-local && sleep 0.25 && '
+                       'echo 5B00000 > /dev/tty-local && sleep 0.25 && ' +
+                       _channels_to_cmd({ch.upper(): before[ch] for ch in CHANNELS}, 0))
+            restore_ok = False
+            for attempt in range(2):
+                try:
+                    checked(console, restore)
+                    restore_ok = True
+                    log('mix luci ripristinato')
+                    break
+                except Exception as exc:
+                    log('ripristino luci %d/2 fallito: %s' % (attempt + 1, exc))
+                    time.sleep(1)
+        console.close()
+        if not restore_ok:
+            publish_error('ripristino luci dopo foto fallito')
+            raise RuntimeError('ripristino luci dopo foto fallito')
+
+
+def metadata():
+    console = connect_console()
+    try:
+        out = console.run_capture('wc -c < ' + REMOTE + '; sha256sum ' + REMOTE, timeout=8)
+    finally:
+        console.close()
+    m = re.search(r'(?m)^\s*(\d+)\s*\r?\n([0-9a-f]{64})\s', out)
+    if not m:
+        raise RuntimeError('metadati JPEG non leggibili')
+    size, digest = int(m.group(1)), m.group(2)
+    if not 5000 <= size <= 2_000_000:
+        raise RuntimeError('dimensione JPEG inattesa: %d' % size)
+    return size, digest
+
+
+def read_chunk(i):
+    console = connect_console()
+    try:
+        out = console.run_capture('dd if=' + REMOTE + ' bs=' + str(CHUNK) +
+                                  ' skip=' + str(i) + ' count=1 2>/dev/null | uuencode -m chunk',
+                                  timeout=25)
+    finally:
+        console.close()
+    m = re.search(r'begin-base64 644 chunk\s+([A-Za-z0-9+/=\s]+?)\s+====', out)
+    if not m:
+        raise RuntimeError('blocco UART %d incompleto' % i)
+    return base64.b64decode(''.join(m.group(1).split()), validate=True)
+
+
+def transfer():
+    size, digest = metadata()
+    raw = None
+    if os.environ.get('SERRA_TRANSPORT', 'uart').lower() in ('wifi', 'auto'):
+        console = connect_console()
+        try:
+            if getattr(console, 'active_transport', 'uart') == 'wifi':
+                raw = console.run_binary('cat ' + REMOTE, timeout=30)
+        finally:
+            console.close()
+    if raw is not None:
+        if len(raw) != size or hashlib.sha256(raw).hexdigest() != digest:
+            raise RuntimeError('JPEG via Wi-Fi incompleto o checksum diverso')
+        if not raw.startswith(b'\xff\xd8') or not raw.endswith(b'\xff\xd9'):
+            raise RuntimeError('JPEG incompleto')
+        return raw
+    blocks = []
+    for i in range((size + CHUNK - 1) // CHUNK):
+        expected = min(CHUNK, size - i * CHUNK)
+        for attempt in range(3):
+            try:
+                block = read_chunk(i)
+                if len(block) != expected:
+                    raise RuntimeError('blocco %d: ricevuti %d/%d byte' % (i, len(block), expected))
+                blocks.append(block)
+                break
+            except Exception as exc:
+                if attempt == 2:
+                    raise
+                log('ritento blocco %d: %s' % (i, exc))
+                time.sleep(0.3)
+        # Il lock UART viene lasciato dopo ogni blocco per i comandi concorrenti.
+        time.sleep(0.15)
+    raw = b''.join(blocks)
+    if hashlib.sha256(raw).hexdigest() != digest:
+        raise RuntimeError('checksum JPEG diverso da quello sul VoCore')
+    if not raw.startswith(b'\xff\xd8') or not raw.endswith(b'\xff\xd9'):
+        raise RuntimeError('JPEG incompleto')
+    return raw
+
+
+def cleanup():
+    try:
+        console = connect_console()
+        try:
+            checked(console, 'rm -f ' + REMOTE)
+        finally:
+            console.close()
+    except Exception as exc:
+        log('pulizia temporaneo VoCore fallita: ' + str(exc))
+
+
+def publish_photo(raw):
+    ts = datetime.now().astimezone()
+    os.makedirs(ARCHIVE, exist_ok=True)
+    dated = os.path.join(ARCHIVE, ts.strftime('%Y-%m-%d_%H%M') + '.jpg')
+    latest = os.path.join(ARCHIVE, 'latest.jpg')
+    with open(dated, 'wb') as f:
+        f.write(raw)
+    with open(latest, 'wb') as f:
+        f.write(raw)
+    mqtt_publish(BASE + '/camera/latest', raw)
+    mqtt_publish(BASE + '/camera/latest_ts', ts.strftime('%Y-%m-%dT%H:%M:%S%z'))
+    os.remove(dated)  # Archivio definitivo in HA tramite camera.snapshot.
+    log('JPEG integrale pubblicato (%d byte)' % len(raw))
+
+
+def main():
+    check_config()
+    if sys.argv[1:] == ['--check']:
+        log('pipeline foto pronta')
+        return
+    if len(sys.argv) != 1:
+        raise RuntimeError('uso: serra-foto [--check]')
+    with open(LOCK, 'w') as fd:
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            log('uno scatto è già in corso')
+            return
+        try:
+            capture()
+            publish_photo(transfer())
+        finally:
+            cleanup()
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except Exception as exc:
+        log('ERRORE: ' + str(exc))
+        publish_error(str(exc))
+        sys.exit(1)

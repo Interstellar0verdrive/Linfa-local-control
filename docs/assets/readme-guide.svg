@@ -1,0 +1,215 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title description">
+  <title id="title">Tre pagine della guida Linfa Local Control</title>
+  <desc id="description">Mockup della documentazione: in primo piano il capitolo 01 con lo schema serra, Raspberry Pi, MQTT e Home Assistant; in alto a destra l’illustrazione del cablaggio UART pubblicata nel capitolo 02, TX con RX, RX con TX e GND con GND, senza collegare VCC; in basso a destra i topic MQTT del capitolo 07.</desc>
+  <defs>
+    <linearGradient id="backdrop" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1812"/>
+      <stop offset=".62" stop-color="#14271b"/>
+      <stop offset="1" stop-color="#253f2d"/>
+    </linearGradient>
+    <linearGradient id="diagram" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1b2b20"/>
+      <stop offset="1" stop-color="#233a29"/>
+    </linearGradient>
+    <filter id="window-shadow" x="-30%" y="-30%" width="160%" height="180%">
+      <feDropShadow dx="0" dy="20" stdDeviation="28" flood-color="#020a05" flood-opacity=".55"/>
+    </filter>
+    <filter id="soft-shadow" x="-30%" y="-30%" width="160%" height="180%">
+      <feDropShadow dx="0" dy="15" stdDeviation="19" flood-color="#030d08" flood-opacity=".42"/>
+    </filter>
+    <clipPath id="main-clip"><rect x="72" y="100" width="943" height="706" rx="21"/></clipPath>
+    <clipPath id="hardware-clip"><rect x="960" y="58" width="570" height="400" rx="19"/></clipPath>
+    <clipPath id="mqtt-clip"><rect x="994" y="462" width="548" height="335" rx="19"/></clipPath>
+    <style>
+      text { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .soft { fill: #a8b9ad; }
+      .micro { font-size: 11px; font-weight: 700; letter-spacing: 2px; }
+      .sidebar { font-size: 12px; font-weight: 600; fill: #b5c7b9; }
+      .card-title { font-size: 17px; font-weight: 750; fill: #eff6ee; }
+      .card-subtitle { font-size: 12px; fill: #acbfb0; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#backdrop)"/>
+  <circle cx="1390" cy="155" r="275" fill="#8dda9d" opacity=".045"/>
+  <circle cx="125" cy="815" r="240" fill="#c3efad" opacity=".035"/>
+  <path d="M0 836C348 770 480 824 747 880M1170 0c45 192 185 220 430 223" fill="none" stroke="#a3dca9" stroke-opacity=".11" stroke-width="2"/>
+  <text x="73" y="56" class="micro" fill="#b9e6bf">LINFA LOCAL CONTROL <tspan fill="#759c7b"> / </tspan> DOCUMENTAZIONE</text>
+  <text x="74" y="858" font-size="15" font-weight="650" fill="#bbd1bd">Dal collegamento fisico al controllo locale.</text>
+  <text x="1532" y="858" text-anchor="end" class="micro" fill="#8fb696">INSTALLAZIONE 01—09</text>
+
+  <!-- Capitolo 02: il cablaggio UART presente nella guida, con ogni collegamento su una riga distinta. -->
+  <g transform="translate(48 0)">
+  <g filter="url(#soft-shadow)">
+    <rect x="960" y="58" width="570" height="400" rx="19" fill="#f2f6ed" stroke="#adc7ae" stroke-width="2"/>
+  </g>
+  <g clip-path="url(#hardware-clip)">
+    <rect x="960" y="58" width="570" height="43" fill="#e4ece1"/>
+    <circle cx="986" cy="80" r="5" fill="#9fbb9f"/>
+    <circle cx="1002" cy="80" r="5" fill="#9fbb9f"/>
+    <circle cx="1018" cy="80" r="5" fill="#9fbb9f"/>
+    <text x="1054" y="84" font-size="12" font-weight="650" fill="#4c7053">GUIDA / HARDWARE</text>
+    <rect x="995" y="124" width="38" height="4" rx="2" fill="#6ba17a"/>
+    <text x="995" y="165" font-size="26" font-weight="800" fill="#203e2a">02B. Collegamento USB</text>
+    <text x="995" y="190" font-size="13" fill="#6b806d">Cablaggio UART · console del VoCore2</text>
+    <svg x="995" y="200" width="500" height="245" viewBox="0 0 800 392">
+      <defs>
+        <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#15271b"/><stop offset="1" stop-color="#203a28"/></linearGradient>
+        <marker id="right" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1L7 4 1 7" fill="none" stroke="#a8dfa9" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
+        <marker id="left" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1L7 4 1 7" fill="none" stroke="#a8dfa9" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
+        <style>
+          text{font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+          .eyebrow{font-size:12px;font-weight:800;letter-spacing:1.8px;fill:#a8dfa9}
+          .head{font-size:20px;font-weight:750;fill:#edf6eb}
+          .sub{font-size:13px;fill:#b5c9b7}
+          .pin{font-size:18px;font-weight:800;fill:#f2f8f0}
+          .label{font-size:13px;font-weight:700;fill:#bde3bc}
+        </style>
+      </defs>
+      <rect x="1" y="1" width="798" height="390" rx="22" fill="url(#bg)" stroke="#4b7051" stroke-width="2"/>
+      <text x="34" y="38" class="eyebrow">02 / COLLEGAMENTO FISICO</text>
+      <text x="34" y="70" class="head">Tre segnali, alimentazioni separate</text>
+      <rect x="34" y="94" width="243" height="42" rx="9" fill="#2c4732" stroke="#678c6b"/>
+      <text x="51" y="120" class="label">ADATTATORE USB → TTL · 3,3 V</text>
+      <rect x="523" y="94" width="243" height="42" rx="9" fill="#2c4732" stroke="#678c6b"/>
+      <text x="540" y="120" class="label">SCHEDA SUPERIORE · UART2</text>
+      <path d="M278 165H522M278 213H522M278 261H522" stroke="#789b7d" stroke-width="1" stroke-dasharray="3 6"/>
+      <g fill="#263e2d" stroke="#709b75" stroke-width="1.5">
+        <rect x="46" y="149" width="109" height="35" rx="9"/><rect x="645" y="149" width="109" height="35" rx="9"/>
+        <rect x="46" y="197" width="109" height="35" rx="9"/><rect x="645" y="197" width="109" height="35" rx="9"/>
+        <rect x="46" y="245" width="109" height="35" rx="9"/><rect x="645" y="245" width="109" height="35" rx="9"/>
+      </g>
+      <text x="100" y="172" class="pin" text-anchor="middle">TX</text><text x="700" y="172" class="pin" text-anchor="middle">RX</text>
+      <text x="100" y="220" class="pin" text-anchor="middle">RX</text><text x="700" y="220" class="pin" text-anchor="middle">TX</text>
+      <text x="100" y="268" class="pin" text-anchor="middle">GND</text><text x="700" y="268" class="pin" text-anchor="middle">GND</text>
+      <path d="M163 166H627" stroke="#a8dfa9" stroke-width="3" stroke-linecap="round" marker-end="url(#right)"/>
+      <path d="M637 214H173" stroke="#a8dfa9" stroke-width="3" stroke-linecap="round" marker-end="url(#left)"/>
+      <path d="M163 262H637" stroke="#a3baa5" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="400" cy="262" r="5" fill="#a3baa5"/>
+      <rect x="46" y="292" width="109" height="35" rx="9" fill="#4a3225" stroke="#bb7854"/>
+      <text x="100" y="315" text-anchor="middle" font-size="18" font-weight="800" fill="#ffdbbe">VCC</text>
+      <path d="M163 310H310" stroke="#d69670" stroke-width="2" stroke-dasharray="5 5"/>
+      <circle cx="327" cy="310" r="15" fill="#68402d"/>
+      <path d="M321 304l12 12m0-12-12 12" stroke="#ffdbc0" stroke-width="2.5" stroke-linecap="round"/>
+      <text x="358" y="315" font-size="15" font-weight="750" fill="#ffdbc0">NON COLLEGARE</text>
+      <path d="M34 344H766" stroke="#426348"/>
+      <text x="34" y="369" class="sub">Schema dei segnali, non della posizione fisica dei pin: usa la foto della scheda per individuarli.</text>
+    </svg>
+
+  </g>
+  </g>
+
+  <!-- Capitolo 07: topics e stato del bridge MQTT. -->
+  <g filter="url(#soft-shadow)">
+    <rect x="994" y="462" width="548" height="335" rx="19" fill="#17251b" stroke="#53765b" stroke-width="2"/>
+  </g>
+  <g clip-path="url(#mqtt-clip)">
+    <rect x="994" y="462" width="548" height="43" fill="#213426"/>
+    <circle cx="1020" cy="484" r="5" fill="#729579"/>
+    <circle cx="1036" cy="484" r="5" fill="#729579"/>
+    <circle cx="1052" cy="484" r="5" fill="#729579"/>
+    <text x="1087" y="488" font-size="12" font-weight="650" fill="#a6d4ad">GUIDA / INTEGRAZIONE</text>
+    <text x="1028" y="547" font-size="25" font-weight="800" fill="#edf5eb">07. Configurare il bridge MQTT</text>
+    <text x="1028" y="574" font-size="13" fill="#a7baa9">Stati e comandi, senza passare dal cloud</text>
+    <rect x="1027" y="598" width="474" height="47" rx="9" fill="#213629" stroke="#42674b"/>
+    <circle cx="1050" cy="622" r="6" fill="#a6e6aa"/>
+    <text x="1068" y="626" font-size="13" font-weight="650" fill="#e4f1e1">serra/status/online</text>
+    <rect x="1418" y="610" width="62" height="24" rx="12" fill="#315a3b"/>
+    <text x="1449" y="626" text-anchor="middle" font-size="10" font-weight="800" fill="#c3f5c2">ONLINE</text>
+    <rect x="1027" y="655" width="474" height="47" rx="9" fill="#213629" stroke="#42674b"/>
+    <circle cx="1050" cy="679" r="6" fill="#9bd4a4"/>
+    <text x="1068" y="683" font-size="13" font-weight="650" fill="#e4f1e1">serra/state/lights</text>
+    <text x="1457" y="683" text-anchor="end" font-size="12" fill="#acd9ae">on</text>
+    <rect x="1027" y="712" width="474" height="47" rx="9" fill="#213629" stroke="#42674b"/>
+    <circle cx="1050" cy="736" r="6" fill="#9bd4a4"/>
+    <text x="1068" y="740" font-size="13" font-weight="650" fill="#e4f1e1">serra/cmd</text>
+    <text x="1457" y="740" text-anchor="end" font-size="12" fill="#acd9ae">lights on →</text>
+  </g>
+
+  <!-- Capitolo 01 in primo piano: riproduce la struttura reale della guida. -->
+  <g filter="url(#window-shadow)">
+    <rect x="72" y="100" width="943" height="706" rx="21" fill="#111b15" stroke="#7da982" stroke-width="2"/>
+  </g>
+  <g clip-path="url(#main-clip)">
+    <rect x="72" y="100" width="943" height="48" fill="#18241b"/>
+    <path d="M72 148h943" stroke="#3a5040"/>
+    <circle cx="99" cy="124" r="5" fill="#698c70"/>
+    <circle cx="115" cy="124" r="5" fill="#698c70"/>
+    <circle cx="131" cy="124" r="5" fill="#698c70"/>
+    <text x="167" y="128" font-size="12" font-weight="600" fill="#bdcfbd">Documentazione  /  Passo 01</text>
+    <rect x="882" y="113" width="101" height="23" rx="7" fill="#263d2b" stroke="#496b50"/>
+    <text x="932" y="129" text-anchor="middle" font-size="11" font-weight="750" fill="#b5dfb8">☼  Sistema</text>
+
+    <rect x="72" y="148" width="198" height="658" fill="#17231b"/>
+    <path d="M270 148v658" stroke="#314537"/>
+    <rect x="91" y="173" width="31" height="31" rx="7" fill="#bce8b9"/>
+    <text x="107" y="194" text-anchor="middle" font-size="21" font-weight="900" fill="#264631">L</text>
+    <text x="131" y="187" font-size="14" font-weight="800" fill="#eff5ed">Linfa</text>
+    <text x="131" y="202" font-size="10" fill="#9fbaa3">Local Control</text>
+    <text x="95" y="258" class="micro" fill="#94a998">DOCUMENTAZIONE</text>
+    <text x="95" y="291" class="sidebar">Indice completo</text>
+    <path d="M95 311h150" stroke="#354a39"/>
+    <text x="95" y="340" class="micro" fill="#94a998">INSTALLAZIONE</text>
+    <rect x="86" y="355" width="169" height="37" rx="7" fill="#2b4731" stroke="#719d77"/>
+    <text x="96" y="379" class="sidebar" fill="#d2efd1">01</text>
+    <text x="121" y="379" class="sidebar" fill="#e6f6e4">Panoramica</text>
+    <text x="96" y="417" class="sidebar">02B</text><text x="121" y="417" class="sidebar">Collegamento USB</text>
+    <text x="96" y="455" class="sidebar">03</text><text x="121" y="455" class="sidebar">Raspberry Pi</text>
+    <text x="96" y="493" class="sidebar">04</text><text x="121" y="493" class="sidebar">Connessione USB</text>
+    <text x="96" y="531" class="sidebar">05</text><text x="121" y="531" class="sidebar">Password root</text>
+    <text x="96" y="569" class="sidebar">06</text><text x="121" y="569" class="sidebar">Controller CLI</text>
+    <text x="96" y="607" class="sidebar">07</text><text x="121" y="607" class="sidebar">Bridge MQTT</text>
+    <text x="96" y="645" class="sidebar">08</text><text x="121" y="645" class="sidebar">Servizi automatici</text>
+    <text x="96" y="683" class="sidebar">09</text><text x="121" y="683" class="sidebar">Home Assistant</text>
+    <path d="M95 708h150" stroke="#354a39"/>
+    <text x="95" y="737" class="micro" fill="#94a998">APPROFONDIMENTI</text>
+    <text x="95" y="764" font-size="11" fill="#b7c9b8">Traffico cloud  ↗</text>
+
+    <rect x="307" y="183" width="538" height="4" rx="2" fill="#344b37"/>
+    <rect x="307" y="183" width="74" height="4" rx="2" fill="#a4e4aa"/>
+    <text x="307" y="221" class="micro" fill="#a5d9a9">◆  PASSO 01  —  ORIENTAMENTO</text>
+    <text x="307" y="269" font-size="40" font-weight="850" letter-spacing="-2" fill="#f3f8f0">01. Panoramica e obiettivi</text>
+    <text x="307" y="301" font-size="14" fill="#aebfb0">Componenti, responsabilità e limiti del controllo locale.</text>
+    <rect x="307" y="328" width="31" height="27" rx="6" fill="#213127" stroke="#4a6b50"/>
+    <text x="322" y="347" text-anchor="middle" font-size="11" font-weight="800" fill="#bde9c0">01</text>
+    <text x="350" y="348" font-size="22" font-weight="760" fill="#eff5ed">Cosa stiamo facendo e perché</text>
+    <text x="307" y="378" font-size="12" fill="#afc1b0">Controllare Linfa in locale, senza dipendere dal cloud.</text>
+
+    <rect x="307" y="397" width="540" height="360" rx="14" fill="url(#diagram)" stroke="#48634b"/>
+    <rect x="369" y="413" width="416" height="58" rx="10" fill="#1c2d22" stroke="#55735a"/>
+    <circle cx="394" cy="442" r="15" fill="#2d4d34" stroke="#64876a"/>
+    <text x="394" y="446" text-anchor="middle" font-size="10" font-weight="800" fill="#cce8c9">01</text>
+    <text x="421" y="439" class="card-title">Serra Linfa · VoCore2</text>
+    <text x="421" y="456" class="card-subtitle">Luci, ventole, pompe e LED</text>
+    <path d="M577 474v22m-5-17 5-6 5 6m-10 11 5 6 5-6" stroke="#b5e4b5" stroke-width="2" fill="none"/>
+    <text x="592" y="489" font-size="10" font-weight="800" fill="#c1e8bc">USB → UART · 3,3 V</text>
+    <rect x="369" y="501" width="416" height="58" rx="10" fill="#2d4933" stroke="#719176"/>
+    <circle cx="394" cy="530" r="15" fill="#345a3c" stroke="#759579"/>
+    <text x="394" y="534" text-anchor="middle" font-size="10" font-weight="800" fill="#d7eed3">02</text>
+    <text x="421" y="527" class="card-title">Raspberry Pi</text>
+    <text x="421" y="544" class="card-subtitle">Controller CLI e bridge MQTT</text>
+    <path d="M577 562v22m-5-17 5-6 5 6m-10 11 5 6 5-6" stroke="#b5e4b5" stroke-width="2" fill="none"/>
+    <text x="592" y="577" font-size="10" font-weight="800" fill="#c1e8bc">MQTT</text>
+    <rect x="369" y="589" width="416" height="58" rx="10" fill="#1c2d22" stroke="#55735a"/>
+    <circle cx="394" cy="618" r="15" fill="#2d4d34" stroke="#64876a"/>
+    <text x="394" y="622" text-anchor="middle" font-size="10" font-weight="800" fill="#cce8c9">03</text>
+    <text x="421" y="615" class="card-title">Broker MQTT</text>
+    <text x="421" y="632" class="card-subtitle">Scambia topic di comando e stato</text>
+    <path d="M577 650v22m-5-17 5-6 5 6m-10 11 5 6 5-6" stroke="#b5e4b5" stroke-width="2" fill="none"/>
+    <text x="592" y="665" font-size="10" font-weight="800" fill="#c1e8bc">MQTT</text>
+    <rect x="369" y="677" width="416" height="58" rx="10" fill="#1c2d22" stroke="#55735a"/>
+    <circle cx="394" cy="706" r="15" fill="#2d4d34" stroke="#64876a"/>
+    <text x="394" y="710" text-anchor="middle" font-size="10" font-weight="800" fill="#cce8c9">04</text>
+    <text x="421" y="703" class="card-title">Home Assistant</text>
+    <text x="421" y="720" class="card-subtitle">Dashboard e automazioni</text>
+
+    <path d="M864 206v234" stroke="#3d5844"/>
+    <text x="881" y="225" font-size="9" font-weight="800" letter-spacing="1.6" fill="#8fa793">IN QUESTA PAGINA</text>
+    <rect x="864" y="248" width="3" height="29" fill="#a5e5a9"/>
+    <text x="880" y="261" font-size="10" font-weight="700" fill="#addaae">Cosa stiamo</text>
+    <text x="880" y="275" font-size="10" font-weight="700" fill="#addaae">facendo</text>
+    <text x="880" y="312" font-size="10" fill="#a8b9ac">Sicurezza</text>
+    <text x="880" y="345" font-size="10" fill="#a8b9ac">Cosa serve</text>
+    <text x="880" y="378" font-size="10" fill="#a8b9ac">Architettura</text>
+  </g>
+</svg>
